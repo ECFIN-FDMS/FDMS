@@ -4,7 +4,7 @@
 import unittest
 import pandas as pd
 
-from fdms.helpers.splicer import Splicer
+from fdms.helpers.splicer import get_series, Splicer
 
 
 class TestSplice(unittest.TestCase):
@@ -15,8 +15,8 @@ class TestSplice(unittest.TestCase):
         self.splice_dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='test_splice1', index_col=[0, 1])
 
     def test_butt_splice(self):
-        base_series = self.base_dataframe.loc[('BE', 'UTVTBP')].filter(regex='\d{4}')
-        splice_series = self.splice_dataframe.loc[('BE', 'UTVTBP.1.0.0.0')].filter(regex='\d{4}')
+        base_series = get_series(self.base_dataframe, 'BE', 'UTVTBP')
+        splice_series = get_series(self.splice_dataframe, 'BE', 'UTVTBP.1.0.0.0')
         self.assertEqual(base_series.first_valid_index(), 2000)
         self.assertEqual(base_series.last_valid_index(), 2013)
         self.assertEqual(base_series.index[0], 1996)
