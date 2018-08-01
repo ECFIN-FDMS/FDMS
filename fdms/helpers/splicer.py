@@ -51,13 +51,20 @@ class Splicer:
             base_last_index = base_series.index[-1]
             splice_end = splice_series.last_valid_index()
             if base_last_valid > splice_end:
-                logger.warning('Failed to splice {} forward, country {}, Splice series ends before base series').format(
-                    base_series.name[0], base_series.name[1])
+                logger.warning('Failed to splice {} forward, country {}, Splice series ends before base series'.format(
+                    base_series.name[1], base_series.name[0]))
             else:
                 base_last_valid_loc = base_series.index.get_loc(base_last_valid)
-                forward_splice_start_loc = splice_series.index.get_loc(base_last_valid) + 1
+                forward_splice_start_loc = None
+                try:
+                    forward_splice_start_loc = splice_series.index.get_loc(base_last_valid) + 1
+                    import code;code.interact(local=locals())
+                except KeyError:
+                    logger.warning('Failed to splice {} forward, country {}, Splice series ends before base series'.format(
+                        base_series.name[1], base_series.name[0]))
                 splice_end_loc = splice_series.index.get_loc(splice_end)
-                result.iloc[base_last_valid_loc + 1:] = splice_series.iloc[forward_splice_start_loc:splice_end_loc]
+                if forward_splice_start_loc is not None:
+                    result.iloc[base_last_valid_loc + 1:] = splice_series.iloc[forward_splice_start_loc:splice_end_loc]
                 if splice_series.index[-1] > base_last_index:
                     splice_overflow_start_loc = splice_series.index.get_loc(base_last_index + 1)
                     result = result.append(splice_series.iloc[splice_overflow_start_loc:])
@@ -68,14 +75,20 @@ class Splicer:
             base_first_index = base_series.index[0]
             splice_start = splice_series.first_valid_index()
             if base_first_valid < splice_start:
-                logger.warning('Failed to splice {}, country {}, Splice series starts after base series').format(
-                    base_series.name[0], base_series.name[1])
+                logger.warning('Failed to splice {}, country {}, Splice series starts after base series'.format(
+                    base_series.name[1], base_series.name[0]))
             else:
                 base_first_valid_loc = base_series.index.get_loc(base_first_valid)
-                backward_splice_start_loc = splice_series.index.get_loc(base_first_index)
+                backward_splice_start_loc = None
+                try:
+                    backward_splice_start_loc = splice_series.index.get_loc(base_first_index)
+                except KeyError:
+                    logger.warning('Failed to splice {}, country {}, Splice series starts after base series'.format(
+                        base_series.name[1], base_series.name[0]))
                 splice_end_loc = splice_series.index.get_loc(base_first_valid)
-                result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc]
-                if splice_series.index[0] < base_first_index:
+                if backward_splice_start_loc is not None:
+                    result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc]
+                if splice_series.index[1] < base_first_index:
                     splice_overflow_end = splice_series.index.get_loc(base_first_index)
                     result = pd.concat([splice_series.iloc[:splice_overflow_end], result])
                     result.name = name

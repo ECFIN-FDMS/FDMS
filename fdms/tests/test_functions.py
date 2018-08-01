@@ -7,6 +7,8 @@ import numpy as np
 from pandas.testing import assert_series_equal
 
 from fdms.helpers.splicer import get_series, Splicer
+from fdms.config.country_groups import *
+from fdms.config.variable_groups import *
 
 
 class TestSplice(unittest.TestCase):
@@ -14,7 +16,12 @@ class TestSplice(unittest.TestCase):
 
     def setUp(self):
         self.base_dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='base_series1', index_col=[0, 2])
-        self.splice_dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='test_splice1', index_col=[0, 1])
+        self.splice_dataframe = pd.read_excel(
+            'fdms/tests/sample_data.xlsx', sheet_name='test_splice1', index_col=[0, 1])
+        self.quarterly_dataframe = pd.read_excel(
+            'fdms/tests/sample_data.xlsx', sheet_name='quarterly_series', index_col=[0, 2])
+        self.bad_index_dataframe = pd.read_excel(
+            'fdms/tests/sample_data.xlsx', sheet_name='empty_series', index_col=[0, 2])
 
     def test_butt_splice(self):
         base_series = get_series(self.base_dataframe, 'BE', 'UTVTBP')
@@ -22,7 +29,7 @@ class TestSplice(unittest.TestCase):
         name = base_series.name
 
         base_series_data = [np.nan] * 4 + [
-            714520000, 808580000, 918200000, 999350000, 1187470000, 1364510000, 1726780000, 2072000000,
+            714520000, np.nan, np.nan, 999350000, 1187470000, 1364510000, 1726780000, 2072000000,
             1894140000, 1965010000, 1934920000, 2150610000, 2366150000, 2417210000
         ] + [np.nan] * 7
         base_series_index = pd.Index([x for x in range(1996, 2021)], dtype='object')
@@ -61,3 +68,25 @@ class TestSplice(unittest.TestCase):
         assert_series_equal(result_backward, expected_backward_series)
         assert_series_equal(result_forward, expected_forward_series)
         assert_series_equal(result_both, expected_both_series)
+
+    def test_quarterly_and_empty_series(self):
+        quarterly_series = get_series(self.quarterly_dataframe, 'BE', 'UTVTBP')
+        empty_series = get_series(self.bad_index_dataframe, 'BE', 'UTVTBP')
+        self.assertEqual(len(quarterly_series), 16)
+        self.assertIsNone(empty_t series)
+
+    def test_splice_series_short_is_logged(self):
+        base_series = get_series(self.base_dataframe, 'BE', 'UTVTBP')
+        splice_series = get_series(self.splice_dataframe, 'BE', 'UTVTBP.1.0.0.0')
+        short_splice_start = splice_series.index.get_loc(base_series.first_valid_index())
+        short_splice_end = splice_series.index.get_loc(base_series.last_valid_index())
+        short_splice_series1 = splice_series.iloc[short_splice_start:short_splice_end]
+        short_splice_series2 = splice_series.iloc[short_splice_start + 2:short_splice_end - 10]
+        splicer = Splicer()
+        msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, '
+               'Splice series ends before base series')
+        with self.assertLogs() as logs:
+            result_both1 = splicer.butt_splice(base_series, short_splice_series1, kind='both')
+            result_both2 = splicer.butt_splice(base_series, short_splice_series2, kind='both')
+        self.assertIn(msg, logs.output)
+        self.assertEqual(len(logs.output), 4)
