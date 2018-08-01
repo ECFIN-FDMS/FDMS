@@ -61,6 +61,7 @@ class Splicer:
                 if splice_series.index[-1] > base_last_index:
                     splice_overflow_start_loc = splice_series.index.get_loc(base_last_index + 1)
                     result = result.append(splice_series.iloc[splice_overflow_start_loc:])
+                    result.name = name
 
         if kind == 'backward' or kind == 'both':
             base_first_valid = base_series.first_valid_index()
@@ -72,8 +73,8 @@ class Splicer:
             else:
                 base_first_valid_loc = base_series.index.get_loc(base_first_valid)
                 backward_splice_start_loc = splice_series.index.get_loc(base_first_index)
-                splice_end_loc = splice_series.index.get_loc(base_first_valid - 1)
-                result.iloc[:base_first_valid_loc - 1] = splice_series.iloc[backward_splice_start_loc:splice_end_loc]
+                splice_end_loc = splice_series.index.get_loc(base_first_valid)
+                result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc]
                 if splice_series.index[0] < base_first_index:
                     splice_overflow_end = splice_series.index.get_loc(base_first_index)
                     result = pd.concat([splice_series.iloc[:splice_overflow_end], result])
