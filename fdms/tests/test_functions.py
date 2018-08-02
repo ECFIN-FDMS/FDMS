@@ -79,12 +79,12 @@ class TestSplice(unittest.TestCase):
         base_series = get_series(self.base_dataframe, 'BE', 'UTVTBP')
         splice_series = get_series(self.splice_dataframe, 'BE', 'UTVTBP.1.0.0.0')
         short_splice_start = splice_series.index.get_loc(base_series.first_valid_index())
-        short_splice_end = splice_series.index.get_loc(base_series.last_valid_index())
+        short_splice_end = splice_series.index.get_loc(base_series.last_valid_index() + 1)
         short_splice_series1 = splice_series.iloc[short_splice_start:short_splice_end]
         short_splice_series2 = splice_series.iloc[short_splice_start + 2:short_splice_end - 10]
         splicer = Splicer()
         msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, '
-               'Splice series ends before base series')
+               'splice series ends before base series')
         with self.assertLogs() as logs:
             result_both1 = splicer.butt_splice(base_series, short_splice_series1, kind='both')
             result_both2 = splicer.butt_splice(base_series, short_splice_series2, kind='both')
