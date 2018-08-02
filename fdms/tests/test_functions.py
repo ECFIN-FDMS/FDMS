@@ -17,7 +17,7 @@ class TestSplice(unittest.TestCase):
     def setUp(self):
         self.base_dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='base_series1', index_col=[0, 2])
         self.splice_dataframe = pd.read_excel(
-            'fdms/tests/sample_data.xlsx', sheet_name='test_splice1', index_col=[0, 1])
+            'fdms/tests/sample_data.xlsx', sheet_name='ameco1', index_col=[0, 1])
         self.quarterly_dataframe = pd.read_excel(
             'fdms/tests/sample_data.xlsx', sheet_name='quarterly_series', index_col=[0, 2])
         self.bad_index_dataframe = pd.read_excel(
@@ -83,10 +83,26 @@ class TestSplice(unittest.TestCase):
         short_splice_series1 = splice_series.iloc[short_splice_start:short_splice_end]
         short_splice_series2 = splice_series.iloc[short_splice_start + 2:short_splice_end - 10]
         splicer = Splicer()
-        msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, '
-               'splice series ends before base series')
+        msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, splice series ends before '
+               'base series')
         with self.assertLogs() as logs:
             result_both1 = splicer.butt_splice(base_series, short_splice_series1, kind='both')
             result_both2 = splicer.butt_splice(base_series, short_splice_series2, kind='both')
         self.assertIn(msg, logs.output)
         self.assertEqual(len(logs.output), 4)
+
+
+    def test_ratio_splice(self):
+        dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='ratiosplice', index_col=3)
+        base_series = dataframe.loc['base_series']
+        splice_series = dataframe.loc['splice_series']
+        expected_result = dataframe.loc['ratio_splice']
+
+        splicer = Splicer()
+        # result_backward = splicer.ratio_splice(base_series, splice_series, kind='backward')
+        # result_forward = splicer.butt_splice(base_series, splice_series, kind='forward')
+        result_both = splicer.ratio_splice(base_series, splice_series, kind='both')
+
+        # assert_series_equal(result_backward, expected_backward_series)
+        # assert_series_equal(result_forward, expected_forward_series)
+        # assert_series_equal(result_both, expected_result)

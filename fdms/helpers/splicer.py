@@ -88,7 +88,7 @@ class Splicer:
             if forward_splice_boundaries is not None:
                 base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc = (
                     forward_splice_boundaries)
-                result.iloc[base_last_valid_loc + 1:] = splice_series.iloc[forward_splice_start_loc:splice_end_loc]
+                result.iloc[base_last_valid_loc + 1:] = splice_series.iloc[forward_splice_start_loc:splice_end_loc + 1]
                 if splice_series.index[-1] > base_last_index:
                     splice_overflow_start_loc = splice_series.index.get_loc(base_last_index + 1)
                     result = result.append(splice_series.iloc[splice_overflow_start_loc:])
@@ -102,7 +102,7 @@ class Splicer:
             if backward_splice_boundaries is not None:
                 base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc = (
                     backward_splice_boundaries)
-                result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc]
+                result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc + 1]
                 if splice_series.index[1] < base_first_index:
                     splice_overflow_end = splice_series.index.get_loc(base_first_index)
                     result = pd.concat([splice_series.iloc[:splice_overflow_end], result])
@@ -118,4 +118,36 @@ class Splicer:
         RATIOSPLICE extends the base series by taking the period-over-period ratio (percent change) in the splice
          series, and applying the ratio to the base series.
         '''
-        pass
+        get_loc = base_series.index.get_loc
+        start, end = get_loc(base_series.first_valid_index()), get_loc(base_series.last_valid_index())
+        result = base_series.iloc[start:end]
+        name = result.name
+        if kind == 'forward' or kind == 'both':
+            forward_splice_boundaries = self._get_forward_splice_boundaries(base_series, splice_series)
+            if forward_splice_boundaries is not None:
+                base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc = (
+                    forward_splice_boundaries)
+                pct_change = splice_series.iloc[forward_splice_start_loc - 1:splice_end_loc + 1].pct_change()[1:]
+                new_data = pct_change.copy()
+                for index, item in pct_change.iteritems():
+                    new_data[index] = item * base_series.loc[index - 1]
+                result = pd.concat([result, new_data])
+            else:
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    base_series.name[1], base_series.name[0]))
+
+        if kind == 'backward' or kind == 'both':
+            backward_splice_boundaries = self._get_backward_splice_boundaries(base_series, splice_series)
+            if backward_splice_boundaries is not None:
+                base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc = (
+                    backward_splice_boundaries)
+                pct_change = splice_series.iloc[backward_splice_start_loc - 1:splice_end_loc + 1].pct_change()[1:]
+                new_data = pct_change.copy()
+                for index in reversed(pct_change.index):
+                    new_data[index] = pct_change.loc[index] * base_series.loc[index + 1]
+                result = pd.concat([result, new_data])
+            else:
+                logger.warning('Failed to splice {} backward, country {}, splice starts after base series'.format(
+                    base_series.name[1], base_series.name[0]))
+
+        return result
