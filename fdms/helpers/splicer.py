@@ -58,7 +58,6 @@ class Splicer:
                 forward_splice_start_loc = None
                 try:
                     forward_splice_start_loc = splice_series.index.get_loc(base_last_valid) + 1
-                    import code;code.interact(local=locals())
                 except KeyError:
                     logger.warning('Failed to splice {} forward, country {}, Splice series ends before base series'.format(
                         base_series.name[1], base_series.name[0]))

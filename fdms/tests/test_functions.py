@@ -73,7 +73,7 @@ class TestSplice(unittest.TestCase):
         quarterly_series = get_series(self.quarterly_dataframe, 'BE', 'UTVTBP')
         empty_series = get_series(self.bad_index_dataframe, 'BE', 'UTVTBP')
         self.assertEqual(len(quarterly_series), 16)
-        self.assertIsNone(empty_t series)
+        self.assertIsNone(empty_series)
 
     def test_splice_series_short_is_logged(self):
         base_series = get_series(self.base_dataframe, 'BE', 'UTVTBP')
