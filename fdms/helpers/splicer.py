@@ -113,41 +113,77 @@ class Splicer:
 
         return result
 
+    def _strip_nan(self, series, direction='both'):
+        start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(series.last_valid_index())
+        if direction == 'forward':
+            return series.iloc[:end + 1]
+        elif direction == 'backward':
+            return series.iloc[start:]
+        elif direction == 'both':
+            return series.iloc[start:end + 1]
+
+    def _strip_and_get_forward_splice_boundaries(self, base_series, splice_series):
+        '''
+        :return: tuple(base_first_index, splice_end_loc) or None
+        '''
+        stripped_base = self._strip_nan(base_series, direction='forward')
+        stripped_splice = self._strip_nan(splice_series, direction='forward')
+        if stripped_base.index[-1] < stripped_splice.index[-1] and stripped_base.index[-1] in stripped_splice.index:
+            return stripped_base, stripped_splice, stripped_splice.index.get_loc(stripped_base.index[-1])
+        return None
+
+    def _strip_and_get_backward_splice_boundaries(self, base_series, splice_series):
+        '''
+        :return: tuple(base_first_index, splice_end_loc) or None
+        '''
+        stripped_base = self._strip_nan(base_series, direction='backward')
+        stripped_splice = self._strip_nan(splice_series, direction='backward')
+        if stripped_base.index[0] > stripped_splice.index[0] and stripped_base.index[0] in stripped_splice.index:
+            return stripped_base, stripped_splice, stripped_splice.index.get_loc(stripped_base.index[0])
+        return None
+
     def ratio_splice(self, base_series, splice_series, kind='both', period=None):
         '''
         RATIOSPLICE extends the base series by taking the period-over-period ratio (percent change) in the splice
          series, and applying the ratio to the base series.
         '''
-        get_loc = base_series.index.get_loc
-        start, end = get_loc(base_series.first_valid_index()), get_loc(base_series.last_valid_index())
-        result = base_series.iloc[start:end]
-        name = result.name
+        name = base_series.name
+        result = None
         if kind == 'forward' or kind == 'both':
-            forward_splice_boundaries = self._get_forward_splice_boundaries(base_series, splice_series)
-            if forward_splice_boundaries is not None:
-                base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc = (
-                    forward_splice_boundaries)
-                pct_change = splice_series.iloc[forward_splice_start_loc - 1:splice_end_loc + 1].pct_change()[1:]
-                new_data = pct_change.copy()
-                for index, item in pct_change.iteritems():
-                    new_data[index] = item * base_series.loc[index - 1]
-                result = pd.concat([result, new_data])
+            start_splice_loc = None
+            stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
+                base_series, splice_series)
+            if start_splice_loc is not None:
+                pct_change = stripped_splice.iloc[start_splice_loc - 1:].pct_change()[1:]
+                new_data = pct_change[1:].copy()
+                new_data.iloc[0] = stripped_base.iloc[-1] * (new_data.iloc[0] + 1)
+                for index, item in list(pct_change.iteritems())[2:]:
+                    new_data.loc[index] = new_data.loc[index - 1] * (item + 1)
+                result = pd.concat([stripped_base, new_data, splice_series.iloc[splice_series.index.get_loc(
+                    stripped_splice.index[-1]) + 1:]])
+                result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
         if kind == 'backward' or kind == 'both':
-            backward_splice_boundaries = self._get_backward_splice_boundaries(base_series, splice_series)
-            if backward_splice_boundaries is not None:
-                base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc = (
-                    backward_splice_boundaries)
-                pct_change = splice_series.iloc[backward_splice_start_loc - 1:splice_end_loc + 1].pct_change()[1:]
-                new_data = pct_change.copy()
-                for index in reversed(pct_change.index):
-                    new_data[index] = pct_change.loc[index] * base_series.loc[index + 1]
-                result = pd.concat([result, new_data])
+            greater_splice_loc = None
+            stripped_base, stripped_splice, greater_splice_loc = self._strip_and_get_backward_splice_boundaries(
+                base_series, splice_series)
+            stripped_result = stripped_base
+            if result is not None:
+                stripped_result = result.iloc[result.index.get_loc(stripped_base.index[0]):]
+            if greater_splice_loc is not None:
+                pct_change = stripped_splice.iloc[:greater_splice_loc + 2].pct_change()[:-1]
+                new_data = pct_change[:-1].copy()
+                new_data.iloc[-1] = stripped_base.iloc[0] / (pct_change.iloc[-1] + 1)
+                for index, item in list(reversed(list(pct_change.iteritems())))[2:-1]:
+                    new_data.loc[index] = new_data.loc[index + 1] / (item + 1)
+                result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(
+                    stripped_splice.index[0])], new_data, stripped_result])
+                result.name = name
             else:
-                logger.warning('Failed to splice {} backward, country {}, splice starts after base series'.format(
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
         return result

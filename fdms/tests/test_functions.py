@@ -94,14 +94,17 @@ class TestSplice(unittest.TestCase):
 
     def test_ratio_splice(self):
         dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='ratiosplice', index_col=3)
-        base_series = dataframe.loc['base_series']
-        splice_series = dataframe.loc['splice_series']
-        expected_result = dataframe.loc['ratio_splice']
+        base_series = dataframe.loc['base_series'].filter(regex='\d{4}')
+        splice_series = dataframe.loc['splice_series'].filter(regex='\d{4}')
+        expected_result = dataframe.loc['ratio_splice'].filter(regex='\d{4}')
 
         splicer = Splicer()
         # result_backward = splicer.ratio_splice(base_series, splice_series, kind='backward')
         # result_forward = splicer.butt_splice(base_series, splice_series, kind='forward')
         result_both = splicer.ratio_splice(base_series, splice_series, kind='both')
+        result_both.name = expected_result.name
+        result_both.index = pd.Index(result_both.index, dtype='object')
+        # assert_series_equal(result_both, expected_result)
 
         # assert_series_equal(result_backward, expected_backward_series)
         # assert_series_equal(result_forward, expected_forward_series)
