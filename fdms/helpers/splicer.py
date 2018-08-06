@@ -28,44 +28,6 @@ class Splicer:
      extend series in the working database with historical data from the archive database.
     '''
 
-    def _get_forward_splice_boundaries(self, base_series, splice_series):
-        '''
-        :return: tuple(base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc) or None
-        '''
-        base_last_valid = base_series.last_valid_index()
-        base_last_index = base_series.index[-1]
-        splice_end = splice_series.last_valid_index()
-        forward_splice_start_loc = None
-        if base_last_valid < splice_end:
-            base_last_valid_loc = base_series.index.get_loc(base_last_valid)
-            try:
-                forward_splice_start_loc = splice_series.index.get_loc(base_last_valid + 1)
-            except KeyError:
-                pass
-            splice_end_loc = splice_series.index.get_loc(splice_end)
-        if forward_splice_start_loc is not None:
-            return base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc
-        return None
-
-    def _get_backward_splice_boundaries(self, base_series, splice_series):
-        '''
-        :return: tuple(base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc) or None
-        '''
-        base_first_valid = base_series.first_valid_index()
-        base_first_index = base_series.index[0]
-        splice_start = splice_series.first_valid_index()
-        backward_splice_start_loc = None
-        if base_first_valid > splice_start:
-            base_first_valid_loc = base_series.index.get_loc(base_first_valid)
-            try:
-                backward_splice_start_loc = splice_series.index.get_loc(base_first_index)
-            except KeyError:
-                pass
-            splice_end_loc = splice_series.index.get_loc(base_first_valid)
-        if backward_splice_start_loc is not None:
-            return base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc
-        return None
-
     def _strip_nan(self, series, direction='both'):
         start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(series.last_valid_index())
         if direction == 'forward':
@@ -137,39 +99,6 @@ class Splicer:
 
         return result
 
-
-
-        # result = base_series.copy(deep=True)
-        # name = result.name
-        # if kind == 'forward' or kind == 'both':
-        #     forward_splice_boundaries = self._get_forward_splice_boundaries(base_series, splice_series)
-        #     if forward_splice_boundaries is not None:
-        #         base_last_valid_loc, base_last_index, forward_splice_start_loc, splice_end_loc = (
-        #             forward_splice_boundaries)
-        #         result.iloc[base_last_valid_loc + 1:] = splice_series.iloc[forward_splice_start_loc:splice_end_loc + 1]
-        #         if splice_series.index[-1] > base_last_index:
-        #             splice_overflow_start_loc = splice_series.index.get_loc(base_last_index + 1)
-        #             result = result.append(splice_series.iloc[splice_overflow_start_loc:])
-        #             result.name = name
-        #     else:
-        #         logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-        #             base_series.name[1], base_series.name[0]))
-        #
-        # if kind == 'backward' or kind == 'both':
-        #     backward_splice_boundaries = self._get_backward_splice_boundaries(base_series, splice_series)
-        #     if backward_splice_boundaries is not None:
-        #         base_first_valid_loc, base_first_index, backward_splice_start_loc, splice_end_loc = (
-        #             backward_splice_boundaries)
-        #         result.iloc[:base_first_valid_loc] = splice_series.iloc[backward_splice_start_loc:splice_end_loc + 1]
-        #         if splice_series.index[1] < base_first_index:
-        #             splice_overflow_end = splice_series.index.get_loc(base_first_index)
-        #             result = pd.concat([splice_series.iloc[:splice_overflow_end], result])
-        #             result.name = name
-        #     else:
-        #         logger.warning('Failed to splice {} backward, country {}, splice starts after base series'.format(
-        #             base_series.name[1], base_series.name[0]))
-        #
-        # return result
 
     def ratio_splice(self, base_series, splice_series, kind='both', period=None):
         '''
