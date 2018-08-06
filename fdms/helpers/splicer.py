@@ -39,7 +39,7 @@ class Splicer:
 
     def _strip_and_get_forward_splice_boundaries(self, base_series, splice_series):
         '''
-        :return: tuple(base_first_index, splice_end_loc) or None
+        :return: tuple(stripped_base_series, stripped_splice_series, start_splice_loc) or (None, None, None)
         '''
         stripped_base = self._strip_nan(base_series, direction='forward')
         stripped_splice = self._strip_nan(splice_series, direction='forward')
@@ -49,7 +49,7 @@ class Splicer:
 
     def _strip_and_get_backward_splice_boundaries(self, base_series, splice_series):
         '''
-        :return: tuple(base_first_index, splice_end_loc) or None
+        :return: tuple(stripped_base_series, stripped_splice_series, greater_splice_loc) or (None, None, None)
         '''
         stripped_base = self._strip_nan(base_series, direction='backward')
         stripped_splice = self._strip_nan(splice_series, direction='backward')
