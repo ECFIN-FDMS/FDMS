@@ -104,7 +104,7 @@ class TestSplice(unittest.TestCase):
         result_both = splicer.ratio_splice(base_series, splice_series, kind='both')
         result_both.name = expected_result.name
         result_both.index = pd.Index(result_both.index, dtype='object')
-        # assert_series_equal(result_both, expected_result)
+        assert_series_equal(result_both, expected_result)
 
         # assert_series_equal(result_backward, expected_backward_series)
         # assert_series_equal(result_forward, expected_forward_series)
