@@ -39,7 +39,7 @@ class Splicer:
 
     def _strip_and_get_forward_splice_boundaries(self, base_series, splice_series):
         '''
-        :return: tuple(base_first_index, splice_end_loc) or None
+        :return: tuple(stripped_base_series, stripped_splice_series, start_splice_loc) or (None, None, None)
         '''
         stripped_base = self._strip_nan(base_series, direction='forward')
         stripped_splice = self._strip_nan(splice_series, direction='forward')
@@ -49,7 +49,7 @@ class Splicer:
 
     def _strip_and_get_backward_splice_boundaries(self, base_series, splice_series):
         '''
-        :return: tuple(base_first_index, splice_end_loc) or None
+        :return: tuple(stripped_base_series, stripped_splice_series, greater_splice_loc) or (None, None, None)
         '''
         stripped_base = self._strip_nan(base_series, direction='backward')
         stripped_splice = self._strip_nan(splice_series, direction='backward')
@@ -99,7 +99,6 @@ class Splicer:
 
         return result
 
-
     def ratio_splice(self, base_series, splice_series, kind='both', period=None):
         '''
         RATIOSPLICE extends the base series by taking the period-over-period ratio (percent change) in the splice
@@ -135,6 +134,54 @@ class Splicer:
                 new_data.iloc[-1] = stripped_base.iloc[0] / (pct_change.iloc[-1] + 1)
                 for index, item in list(reversed(list(pct_change.iteritems())))[1:-1]:
                     new_data.loc[index - 1] = new_data.loc[index] / (item + 1)
+                result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(
+                    stripped_splice.index[0])], new_data, stripped_result])
+                result.name = name
+            else:
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    base_series.name[1], base_series.name[0]))
+
+        return result
+
+    def level_splice(self, base_series, splice_series, kind='both', period=None):
+        '''
+        LEVELSPLICE extends the base series by taking the period-over-period difference in the splice series, and
+         applying the difference to the base series.
+        '''
+        name = base_series.name
+        result = None
+        if kind == 'forward' or kind == 'both':
+            stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
+                base_series, splice_series)
+            if start_splice_loc is not None:
+                diff = (stripped_splice.iloc[
+                        start_splice_loc - 1:] - stripped_splice.iloc[start_splice_loc - 1:].shift(1))[1:]
+                new_data = diff[1:].copy()
+                new_data.iloc[0] = stripped_base.iloc[-1] + new_data.iloc[0]
+                for index, item in list(diff.iteritems())[2:]:
+                    new_data.loc[index] = new_data.loc[index - 1] + item
+                result = pd.concat([stripped_base, new_data, splice_series.iloc[splice_series.index.get_loc(
+                    stripped_splice.index[-1]) + 1:]])
+                result.name = name
+            else:
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    base_series.name[1], base_series.name[0]))
+
+        if kind == 'backward' or kind == 'both':
+            stripped_base, stripped_splice, greater_splice_loc = self._strip_and_get_backward_splice_boundaries(
+                base_series, splice_series)
+            stripped_result = stripped_base
+            if result is not None:
+                stripped_result = result.iloc[result.index.get_loc(stripped_base.index[0]):]
+            if greater_splice_loc is not None:
+                diff = (stripped_splice.iloc[
+                        :greater_splice_loc + 2] - stripped_splice.iloc[:greater_splice_loc + 2].shift(1))[:-1]
+                # pct_change = stripped_splice.iloc[:greater_splice_loc + 2].pct_change()[:-1]
+                # new_data = pct_change[:-1].copy()
+                new_data = diff[:-1].copy()
+                new_data.iloc[-1] = stripped_base.iloc[0] - diff.iloc[-1]
+                for index, item in list(reversed(list(diff.iteritems())))[1:-1]:
+                    new_data.loc[index - 1] = new_data.loc[index] - item
                 result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(
                     stripped_splice.index[0])], new_data, stripped_result])
                 result.name = name
