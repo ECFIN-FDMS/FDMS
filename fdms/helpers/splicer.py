@@ -6,16 +6,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', level=logging.INFO)
 
 
-def get_series(dataframe, country_ameco, variable_code):
-    '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
-    series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
-    if series.empty:
-        series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
-    if series.empty:
-        return None
-    return series
-
-
 class Splicer:
     '''
     Splicing extends the ends of the base series with data values from another series. Splicing does not fill gaps
