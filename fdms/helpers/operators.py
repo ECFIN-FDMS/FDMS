@@ -44,3 +44,6 @@ class Operators:
         if value_if_not_null is not None:
             series = series.where(series.isna(), value_if_not_null)
         return series.where(series.notna(), value_if_null)
+
+    def pch(self, series):
+        return series.pct_change() * 100

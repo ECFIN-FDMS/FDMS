@@ -31,3 +31,10 @@ class TestOperators(unittest.TestCase):
         result = calc.iin(src, new_data, src / 1000000)
         result.name = ('BE', 'expected')
         assert_series_equal(result, expected)
+
+    def test_pch(self):
+        dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='iin', index_col=[0, 2])
+        src = get_series(dataframe, 'BE', 'UTVTBP')
+        calc = Operators()
+        result = calc.pch(src)
+        assert_series_equal(result, src.pct_change() * 100)
