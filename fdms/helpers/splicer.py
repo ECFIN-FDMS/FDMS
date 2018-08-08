@@ -166,8 +166,6 @@ class Splicer:
             if greater_splice_loc is not None:
                 diff = (stripped_splice.iloc[
                         :greater_splice_loc + 2] - stripped_splice.iloc[:greater_splice_loc + 2].shift(1))[:-1]
-                # pct_change = stripped_splice.iloc[:greater_splice_loc + 2].pct_change()[:-1]
-                # new_data = pct_change[:-1].copy()
                 new_data = diff[:-1].copy()
                 new_data.iloc[-1] = stripped_base.iloc[0] - diff.iloc[-1]
                 for index, item in list(reversed(list(diff.iteritems())))[1:-1]:

@@ -32,13 +32,15 @@ class Operators:
         '''
         return dataframe.bfill(axis=0).iloc[0, :].filter(regex='\d{4}')
 
-    # def iin(self, dataframe, value_if_null, value_if_not_null=None):
-    #     '''
-    #     Iin evaluates the input on a per-observation level, and returns one value if an individual observation is
-    #      empty, and another value if not.
-    #     :param series: Required.
-    #     :param value_if_null: Required.
-    #     :param value_if_not_null: Optional. if not present it will return the original value in the output.
-    #     :return:
-    #     '''
-    #     return dataframe.mask(dataframe.isnull(), )
+    def iin(self, series, value_if_null, value_if_not_null=None):
+        '''
+        Iin evaluates the input on a per-observation level, and returns one value if an individual observation is
+         empty, and another value if not.
+        :param series: Required.
+        :param value_if_null: Required.
+        :param value_if_not_null: Optional. if not present it will return the original value in the output.
+        :return:
+        '''
+        if value_if_not_null is not None:
+            series = series.where(series.isna(), value_if_not_null)
+        return series.where(series.notna(), value_if_null)
