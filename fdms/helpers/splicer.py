@@ -24,8 +24,6 @@ class Splicer:
             return series.iloc[:end + 1]
         elif direction == 'backward':
             return series.iloc[start:]
-        elif direction == 'both':
-            return series.iloc[start:end + 1]
 
     def _strip_and_get_forward_splice_boundaries(self, base_series, splice_series):
         '''
