@@ -109,7 +109,7 @@ class TestSplice(unittest.TestCase):
         # assert_series_equal(result_backward, expected_backward_series)
         # assert_series_equal(result_forward, expected_forward_series)
         # assert_series_equal(result_both, expected_result)
-        # TODO: Add more tests for ratio_splice
+        # TODO: Add more tests for ratio_splice (backward, forward...)
 
     def test_ratio_splice_series_short_is_logged(self):
         dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='ratiosplice', index_col=3)
@@ -156,4 +156,4 @@ class TestSplice(unittest.TestCase):
             result_both1 = splicer.level_splice(base_series, short_splice_series1, kind='both')
             result_both2 = splicer.level_splice(base_series, short_splice_series2, kind='both')
         self.assertEqual(len(logs.output), 4)
-       # TODO: Add more tests for level_splice
+       # TODO: Add more tests for level_splice (backward, forward...)
