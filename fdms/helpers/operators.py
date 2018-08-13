@@ -14,7 +14,19 @@ def get_series(dataframe, country_ameco, variable_code):
         series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
     if series.empty:
         return None
+    # TODO: Log these and make sure that this is correct, check values and get the best one
+    if len(series.shape) > 1:
+        series = series.iloc[0]
+    series = series.squeeze()
     return series
+
+# TODO: also fix (two times this returns two series)
+def get_scale(dataframe, country_ameco, variable_code):
+    return dataframe.loc[(country_ameco, variable_code)]['Scale'].squeeze()
+
+
+def get_frequency(dataframe, country_ameco, variable_code):
+    return dataframe.loc[(country_ameco, variable_code)]['Frequency'].squeeze()
 
 
 class Operators:
