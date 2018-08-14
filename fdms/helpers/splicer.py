@@ -1,9 +1,11 @@
 import logging
-import pandas as pd
-
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+                    level=logging.INFO)
+
+import pandas as pd
+
 
 
 class Splicer:
@@ -68,8 +70,9 @@ class Splicer:
                 result = pd.concat([stripped_base, splice_series.iloc[start_splice_loc + 1:]])
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series. '
+                               'Returning original series'.format(base_series.name[1], base_series.name[0]))
+                return base_series
 
         if kind == 'backward' or kind == 'both':
             stripped_base, stripped_splice, greater_splice_loc = self._strip_and_get_backward_splice_boundaries(
@@ -82,8 +85,9 @@ class Splicer:
                                     stripped_result])
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                logger.warning('Failed to splice {} backward, country {}, splice series starts after base series. '
+                               'Returning original series'.format(base_series.name[1], base_series.name[0]))
+                return base_series
 
         return result
 
