@@ -9,6 +9,7 @@ logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', 
 
 def get_series(dataframe, country_ameco, variable_code):
     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
+    dataframe.sort_index(level=1, inplace=True)
     series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
     if series.empty:
         series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
@@ -22,10 +23,12 @@ def get_series(dataframe, country_ameco, variable_code):
 
 # TODO: also fix (two times this returns two series)
 def get_scale(dataframe, country_ameco, variable_code):
+    dataframe.sort_index(level=1, inplace=True)
     return dataframe.loc[(country_ameco, variable_code)]['Scale'].squeeze()
 
 
 def get_frequency(dataframe, country_ameco, variable_code):
+    dataframe.sort_index(level=1, inplace=True)
     return dataframe.loc[(country_ameco, variable_code)]['Frequency'].squeeze()
 
 
