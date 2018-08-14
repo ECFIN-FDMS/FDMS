@@ -70,7 +70,7 @@ class Splicer:
                 result = pd.concat([stripped_base, splice_series.iloc[start_splice_loc + 1:]])
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series. '
                                'Returning original series'.format(base_series.name[1], base_series.name[0]))
                 return base_series
 
@@ -85,7 +85,7 @@ class Splicer:
                                     stripped_result])
                 result.name = name
             else:
-                logger.warning('Failed to splice {} backward, country {}, splice series starts after base series'
+                logger.warning('Failed to splice {} backward, country {}, splice series starts after base series. '
                                'Returning original series'.format(base_series.name[1], base_series.name[0]))
                 return base_series
 

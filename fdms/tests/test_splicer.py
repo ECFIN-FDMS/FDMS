@@ -85,12 +85,12 @@ class TestSplice(unittest.TestCase):
         short_splice_series2 = splice_series.iloc[short_splice_start + 2:short_splice_end - 10]
         splicer = Splicer()
         msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, splice series ends before '
-               'base series')
+               'base series. Returning original series')
         with self.assertLogs() as logs:
             result_both1 = splicer.butt_splice(base_series, short_splice_series1, kind='both')
             result_both2 = splicer.butt_splice(base_series, short_splice_series2, kind='both')
         self.assertIn(msg, logs.output)
-        self.assertEqual(len(logs.output), 4)
+        self.assertEqual(len(logs.output), 2)
 
     def test_ratio_splice(self):
         dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='ratiosplice', index_col=3)
