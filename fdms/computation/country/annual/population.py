@@ -6,9 +6,7 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
-from fdms.config.variable_groups import TM, NA_VO, TM_TBBO, TM_TBM
 from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import Operators
 from fdms.helpers.operators import get_series, get_scale, get_frequency
 
 
