@@ -24,12 +24,18 @@ def get_series(dataframe, country_ameco, variable_code):
 # TODO: also fix (two times this returns two series)
 def get_scale(dataframe, country_ameco, variable_code):
     dataframe.sort_index(level=1, inplace=True)
-    return dataframe.loc[(country_ameco, variable_code)]['Scale'].squeeze()
+    scale = dataframe.loc[(country_ameco, variable_code)]['Scale']
+    if type(scale) == str:
+        return scale
+    return scale.squeeze()
 
 
 def get_frequency(dataframe, country_ameco, variable_code):
     dataframe.sort_index(level=1, inplace=True)
-    return dataframe.loc[(country_ameco, variable_code)]['Frequency'].squeeze()
+    frequency = dataframe.loc[(country_ameco, variable_code)]['Frequency']
+    if type(frequency) == str:
+        return frequency
+    return frequency.squeeze()
 
 
 class Operators:
