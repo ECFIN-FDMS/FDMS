@@ -3,6 +3,7 @@ import re
 
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
+from fdms.computation.country.annual.national_accounts_components import GDPComponents, AdditionalComponents
 
 
 FORECAST = 'fdms/sample_data/BE.Forecast.0908.xlsm'
@@ -39,6 +40,25 @@ class Compute:
         step_2_df = result_1.loc[result_1.index.isin(step_2_vars, level='Variable Code')].copy()
         step_2 = Population()
         result_2 = step_2.perform_computation(step_2_df, ameco_df)
+
+        # National Accounts - Calculate additional GDP components
+        ####################################################################################
+
+        step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
+                       'UIGDW', 'UCPH', 'UCTG', 'UIGT', 'UIST']
+        step_3_df = result_1.loc[result_1.index.isin(step_3_vars, level='Variable Code')].copy()
+        step_3 = GDPComponents()
+        result_3 = step_3.perform_computation(step_3_df)
+
+        # National Accounts (Value) - calculate additional components
+        ####################################################################################
+
+        step_4_vars = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0',
+                       'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UIGG0.1.0.0.0', 'UIGT.1.0.0.0', 'UIGG.1.0.0.0', 'UIGCO.1.0.0.0',
+                       'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0', 'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
+        step_4_df = result_1.loc[result_1.index.isin(step_4_vars, level='Variable Code')].copy()
+        step_4 = AdditionalComponents()
+        result_4 = step_4.perform_computation(step_4_df)
 
 
     def read_raw_data(self, country_forecast_filename, ameco_filename, ameco_sheet_name, frequency='annual'):
