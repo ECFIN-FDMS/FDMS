@@ -80,5 +80,6 @@ class TransferMatrix:
         export_data = result.copy()
         export_data = export_data.reset_index()
         writer = pd.ExcelWriter('output1.xlsx', engine='xlsxwriter')
-        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')], sheet_name='Sheet1', index=False)
+        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
+                                           sheet_name='Sheet1', index=False)
         return result
