@@ -4,6 +4,7 @@ import re
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents, AdditionalComponents
+from fdms.helpers.operators import read_raw_data
 
 
 FORECAST = 'fdms/sample_data/BE.Forecast.0908.xlsm'
@@ -18,7 +19,7 @@ class Compute:
         self.ameco_sheet_name = ameco_sheet_name
 
     def perform_computation(self):
-        df, ameco_df = self.read_raw_data(self.excel_raw, self.ameco_filename, self.ameco_sheet_name)
+        df, ameco_df = read_raw_data(self.excel_raw, self.ameco_filename, self.ameco_sheet_name)
 
         ##################################################################
         # If Country in group 'Forecast: Countries from transfer matrix' #
@@ -60,10 +61,3 @@ class Compute:
         step_4 = AdditionalComponents()
         result_4 = step_4.perform_computation(step_4_df)
 
-
-    def read_raw_data(self, country_forecast_filename, ameco_filename, ameco_sheet_name, frequency='annual'):
-        sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
-        df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
-        ameco_df = pd.read_excel(ameco_filename, sheet_name=ameco_sheet_name, index_col=[0, 1])
-        ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
-        return df, ameco_df
