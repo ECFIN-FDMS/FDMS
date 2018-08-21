@@ -1,5 +1,8 @@
 import logging
 
+import pandas as pd
+import re
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', level=logging.INFO)
@@ -34,6 +37,14 @@ def get_frequency(dataframe, country_ameco, variable_code):
     if type(frequency) == str:
         return frequency
     return frequency.squeeze()
+
+
+def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, frequency='annual'):
+    sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
+    df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    ameco_df = pd.read_excel(ameco_filename, sheet_name=ameco_sheet_name, index_col=[0, 1])
+    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
+    return df, ameco_df
 
 
 class Operators:
