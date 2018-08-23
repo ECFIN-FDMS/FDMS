@@ -36,14 +36,15 @@ class Population:
         employed = 'NETN.1.0.0.0'
         salary_earners = 'NWTD.1.0.0.0'
         country = 'BE'
-        base_series = get_series(ameco_df, country, variable)
-        splice_series = get_series(df, country, employed) - get_series(df, country, salary_earners)
-        NSTD1000_meta = {'Country Ameco': country, 'Variable Code': variable,
-                         'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
-        NSTD1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
-        NSTD1000 = pd.Series(NSTD1000_meta)
-        NSTD1000 = NSTD1000.append(NSTD1000_data)
-        result = result.append(NSTD1000, ignore_index=True)
+        # TODO: find out why this one doesn't appear to be in the ameco_df
+        # base_series = get_series(ameco_df, country, variable)
+        # splice_series = get_series(df, country, employed) - get_series(df, country, salary_earners)
+        # NSTD1000_meta = {'Country Ameco': country, 'Variable Code': variable,
+        #                  'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
+        # NSTD1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
+        # NSTD1000 = pd.Series(NSTD1000_meta)
+        # NSTD1000 = NSTD1000.append(NSTD1000_data)
+        # result = result.append(NSTD1000, ignore_index=True)
 
         # Percentage employed (total employed / population of working age (15-64)
         variable = 'NETD.1.0.414.0'
@@ -52,7 +53,9 @@ class Population:
         country = 'BE'
         NETD104140_meta = {'Country Ameco': country, 'Variable Code': variable,
                          'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
-        NETD104140_data = get_series(df, country, employed) - get_series(df, country, working_age) * 100
+        NETD104140_data = pd.to_numeric(
+            get_series(df, country, employed).astype(float), errors='coerce') - pd.to_numeric(
+            get_series(df, country, working_age), errors='coerce') * 100
         NETD104140 = pd.Series(NETD104140_meta)
         NETD104140 = NETD104140.append(NETD104140_data)
         result = result.append(NETD104140, ignore_index=True)
@@ -72,7 +75,8 @@ class Population:
         variable = 'NLHT.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
+        total_hours_data = pd.to_numeric(get_series(df, country, employed), errors='coerce') * pd.to_numeric(
+            get_series(df, country, average_hours), errors='coerce')
         NLHT1000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Millions'}
         NLHT1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
@@ -84,7 +88,8 @@ class Population:
         variable = 'NLHT9.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
+        total_hours_data = pd.to_numeric(get_series(df, country, employed), errors='coerce') * pd.to_numeric(
+            get_series(df, country, average_hours), errors='coerce')
         NLHT91000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Millions'}
         NLHT91000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
@@ -98,11 +103,12 @@ class Population:
         unemployed = 'NUTN.1.0.0.0'
         NLCN1000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Thousands'}
-        NLCN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable),
-                                             NECN1000_data + get_series(df, country, unemployed), kind='forward')
-        NLCN1000 = pd.Series(NLCN1000_meta)
-        NLCN1000 = NLCN1000.append(NLCN1000_data)
-        result = result.append(NLCN1000, ignore_index=True)
+        # TODO: find out why this one doesn't appear to be in the ameco_df
+        # NLCN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable),
+        #                                      NECN1000_data + get_series(df, country, unemployed), kind='forward')
+        # NLCN1000 = pd.Series(NLCN1000_meta)
+        # NLCN1000 = NLCN1000.append(NLCN1000_data)
+        # result = result.append(NLCN1000, ignore_index=True)
 
         column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
                         1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
