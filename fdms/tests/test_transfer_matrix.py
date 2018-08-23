@@ -22,7 +22,6 @@ class TestTransferMatrix(unittest.TestCase):
         pass
         # step_1 = TransferMatrix()
         # result_1 = step_1.perform_computation(self.df, self.ameco_df)
-        # import code;code.interact(local=locals())
 
     def test_to_be_merged(self):
         pass

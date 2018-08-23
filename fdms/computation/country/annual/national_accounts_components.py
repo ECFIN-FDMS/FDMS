@@ -26,7 +26,20 @@ class GDPComponents:
         for index, variable in enumerate(variables):
             series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
                            'Scale': 'billions'}
-            series_data = get_series(df, country, goods[index]) + get_series(df, country, services[index])
+            series_data = get_series(df, country, goods[index]).astype(float) + get_series(
+                df, country, services[index]).astype(float)
+            series = pd.Series(series_meta)
+            series = series.append(series_data)
+            result = result.append(series, ignore_index=True, sort=True)
+
+        # Gross fixed capital formation at current prices: general government
+        variables = ['UIGG', 'UIGG.1.0.0.0']
+        grossfcf = ['UIGG0', 'UIGG0.1.0.0.0']
+        country = 'BE'
+        for index, variable in enumerate(variables):
+            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'billions'}
+            series_data = get_series(df, country, grossfcf[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)
@@ -46,24 +59,22 @@ class GDPComponents:
             try:
                 exports_data = get_series(df, country, exports_goods_and_services[index])
             except KeyError:
-                exports_data = result.loc[result['Variable Code'] == exports_goods_and_services[index]]
+                exports_data = result.loc[result['Variable Code'] == exports_goods_and_services[index]].filter(
+                    regex='^\d{4}$')
             try:
                 imports_data = get_series(df, country, imports_goods_and_services[index])
             except KeyError:
-                imports_data = result.loc[result['Variable Code'] == imports_goods_and_services[index]]
-            series_data = exports_data - imports_data
-            series = pd.Series(series_meta)
-            series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
-
-        # Gross fixed capital formation at current prices: general government
-        variables = ['UIGG', 'UIGG.1.0.0.0']
-        grossfcf = ['UIGG0', 'UIGG0.1.0.0.0']
-        country = 'BE'
-        for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, grossfcf[index])
+                imports_data = result.loc[result['Variable Code'] == imports_goods_and_services[index]].filter(
+                    regex='^\d{4}$')
+            if type(exports_data) == pd.DataFrame:
+                exports_data = exports_data.iloc[0]
+            if type(imports_data) == pd.DataFrame:
+                imports_data = imports_data.iloc[0]
+            try:
+                series_data = exports_data.astype(float) - imports_data.astype(float)
+            except ValueError:
+                series_data = pd.to_numeric(exports_data, errors='coerce') - pd.to_numeric(
+                    imports_data, errors='coerce')
             series = pd.Series(series_meta)
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)
@@ -75,7 +86,8 @@ class GDPComponents:
         total = ['UIGT', 'UIGT.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'billions'}
+            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'billions'}
             series_data = get_series(df, country, private_consumption[index]) + get_series(
                 df, country, total[index]) + get_series(df, country, government[index])
             series = pd.Series(series_meta)
@@ -90,7 +102,8 @@ class GDPComponents:
         changes = ['UIST', 'UIST.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'billions'}
+            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'billions'}
             series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
                 index]) + get_series(df, country, government[index]) + get_series(df, country, changes[index])
             series = pd.Series(series_meta)
@@ -107,7 +120,8 @@ class GDPComponents:
         export_services = ['UXSN', 'UXSN.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'billions'}
+            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'billions'}
             series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
                 index]) + get_series(df, country, government[index]) + get_series(df, country, changes[
                 index]) + get_series(df, country, export_goods[index]) + get_series(df, country, export_services[index])
@@ -121,15 +135,14 @@ class GDPComponents:
         changes = ['UIST', 'UIST.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'billions'}
+            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'billions'}
             series_data = get_series(df, country, total[index]) + get_series(df, country, changes[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)
 
-        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1960, 1961, 1962, 1963, 1964, 1965,
-                        1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981,
-                        1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
+        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
                         1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
                         2014, 2015, 2016, 2017, 2018, 2019]
         result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)

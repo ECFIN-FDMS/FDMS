@@ -3,14 +3,50 @@ import logging
 import pandas as pd
 import re
 
+from fdms.config.countries import COUNTRIES
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', level=logging.INFO)
 
 
+def read_country_forecast_excel(country_forecast_filename, frequency='annual'):
+    sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
+    df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    return df
+
+
+def get_iso(ameco_code):
+    return COUNTRIES['ameco_code']
+
+
+def get_ameco(iso_code):
+    return COUNTRIES[COUNTRIES == iso_code].index[0]
+
+
+def get_from_series_code(series_code, param='variable'):
+    parts = series_code.split('.')
+    if param == 'country':
+        return parts[0]
+    return '.'.join([parts[-1], *parts[1:-1]])
+
+
+def read_ameco_txt(ameco_filename='fdms/sample_data/AMECO_H.TXT'):
+    with open(ameco_filename, 'r') as f:
+        lines = [line.strip() for line in f.readlines()]
+    ameco_df = pd.DataFrame.from_records([line.split(',') for line in lines[1:]], columns=lines[0].split(','))
+    ameco_df = ameco_df.set_index('CODE')
+    ameco_df['Country Ameco'] = ameco_df.apply(lambda row: get_ameco(get_from_series_code(row.name, 'country')), axis=1)
+    ameco_df['Variable Code'] = ameco_df.apply(lambda row: get_from_series_code(row.name, 'variable'), axis=1)
+    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
+    ameco_df = ameco_df.reset_index()
+    ameco_df = ameco_df.set_index(['Country Ameco', 'Variable Code'])
+    return ameco_df
+
+
 def get_series(dataframe, country_ameco, variable_code):
     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
-    dataframe.sort_index(level=1, inplace=True)
+    dataframe.sort_index(level=[0, 1], inplace=True)
     series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
     if series.empty:
         series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
@@ -22,9 +58,10 @@ def get_series(dataframe, country_ameco, variable_code):
     series = series.squeeze()
     return series
 
+
 # TODO: also fix (two times this returns two series)
 def get_scale(dataframe, country_ameco, variable_code):
-    dataframe.sort_index(level=1, inplace=True)
+    dataframe.sort_index(level=[0, 1], inplace=True)
     scale = dataframe.loc[(country_ameco, variable_code)]['Scale']
     if type(scale) == str:
         return scale
@@ -32,7 +69,7 @@ def get_scale(dataframe, country_ameco, variable_code):
 
 
 def get_frequency(dataframe, country_ameco, variable_code):
-    dataframe.sort_index(level=1, inplace=True)
+    dataframe.sort_index(level=[0, 1], inplace=True)
     frequency = dataframe.loc[(country_ameco, variable_code)]['Frequency']
     if type(frequency) == str:
         return frequency
