@@ -54,6 +54,8 @@ class Compute:
                                   'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
         step3_vars = set(step_3_vars + step_3_additional_vars)
         step_3_df = result_1.loc[result_1.index.isin(step_3_vars, level='Variable Code')].copy()
+        ameco_series = ameco_df.loc[ameco_df.index.isin(step_3_additional_vars, level='Variable Code')].copy()
+        step_3_df = step_3_df.append(ameco_series)
         step_3 = GDPComponents()
         result_3 = step_3.perform_computation(step_3_df)
 

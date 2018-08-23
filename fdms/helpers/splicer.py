@@ -7,7 +7,6 @@ logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(level
 import pandas as pd
 
 
-
 class Splicer:
     '''
     Splicing extends the ends of the base series with data values from another series. Splicing does not fill gaps
@@ -67,7 +66,7 @@ class Splicer:
             stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
                 base_series, splice_series)
             if start_splice_loc is not None:
-                result = pd.concat([stripped_base, splice_series.iloc[start_splice_loc + 1:]])
+                result = pd.concat([stripped_base, splice_series.iloc[start_splice_loc + 1:]], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series. '
@@ -82,7 +81,7 @@ class Splicer:
                 stripped_result = result.iloc[result.index.get_loc(stripped_base.index[0]):]
             if greater_splice_loc is not None:
                 result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(stripped_splice.index[5])],
-                                    stripped_result])
+                                    stripped_result], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} backward, country {}, splice series starts after base series. '
@@ -102,13 +101,13 @@ class Splicer:
             stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
                 base_series, splice_series)
             if start_splice_loc is not None:
-                pct_change = stripped_splice.iloc[start_splice_loc - 1:].pct_change()[1:]
+                pct_change = pd.to_numeric(stripped_splice.iloc[start_splice_loc - 1:], errors='coerce').pct_change()[1:]
                 new_data = pct_change[1:].copy()
-                new_data.iloc[0] = stripped_base.iloc[-1] * (new_data.iloc[0] + 1)
+                new_data.iloc[0] = pd.to_numeric(stripped_base.iloc[-1], errors='coerce') * (new_data.iloc[0] + 1)
                 for index, item in list(pct_change.iteritems())[2:]:
                     new_data.loc[index] = new_data.loc[index - 1] * (item + 1)
                 result = pd.concat([stripped_base, new_data, splice_series.iloc[splice_series.index.get_loc(
-                    stripped_splice.index[-1]) + 1:]])
+                    stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
@@ -127,7 +126,7 @@ class Splicer:
                 for index, item in list(reversed(list(pct_change.iteritems())))[1:-1]:
                     new_data.loc[index - 1] = new_data.loc[index] / (item + 1)
                 result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(
-                    stripped_splice.index[0])], new_data, stripped_result])
+                    stripped_splice.index[0])], new_data, stripped_result], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
@@ -153,7 +152,7 @@ class Splicer:
                 for index, item in list(diff.iteritems())[2:]:
                     new_data.loc[index] = new_data.loc[index - 1] + item
                 result = pd.concat([stripped_base, new_data, splice_series.iloc[splice_series.index.get_loc(
-                    stripped_splice.index[-1]) + 1:]])
+                    stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
@@ -173,7 +172,7 @@ class Splicer:
                 for index, item in list(reversed(list(diff.iteritems())))[1:-1]:
                     new_data.loc[index - 1] = new_data.loc[index] - item
                 result = pd.concat([splice_series.iloc[:splice_series.index.get_loc(
-                    stripped_splice.index[0])], new_data, stripped_result])
+                    stripped_splice.index[0])], new_data, stripped_result], sort=True)
                 result.name = name
             else:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
