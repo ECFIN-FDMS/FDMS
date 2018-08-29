@@ -43,15 +43,24 @@ class Compute:
         result_2 = step_2.perform_computation(step_2_df, ameco_df)
 
         # National Accounts - Calculate additional GDP components
+        # National Accounts (Value) - calculate additional components
         ####################################################################################
 
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
                        'UIGDW', 'UCPH', 'UCTG', 'UIGT', 'UIST']
+        step_3_additional_vars = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0',
+                                  'UMSN.1.0.0.0', 'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UIGG0.1.0.0.0', 'UIGT.1.0.0.0',
+                                  'UIGG.1.0.0.0', 'UIGCO.1.0.0.0', 'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0',
+                                  'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
+        step3_vars = set(step_3_vars + step_3_additional_vars)
         step_3_df = result_1.loc[result_1.index.isin(step_3_vars, level='Variable Code')].copy()
+        ameco_series = ameco_df.loc[ameco_df.index.isin(step_3_additional_vars, level='Variable Code')].copy()
+        step_3_df = step_3_df.append(ameco_series)
         step_3 = GDPComponents()
         result_3 = step_3.perform_computation(step_3_df)
 
-        # National Accounts (Value) - calculate additional components
+        # National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent
+        #  change, per-capita GDP, and contribution to %change in GDP
         ####################################################################################
 
         step_4_vars = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0',
