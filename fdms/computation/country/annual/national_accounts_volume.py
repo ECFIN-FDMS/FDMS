@@ -14,11 +14,11 @@ from fdms.helpers.operators import Operators
 from fdms.helpers.operators import get_series, get_scale, get_frequency
 
 
-
 class NationalAccountsVolume:
     source_df = pd.DataFrame()
 
-    def perform_computation(self, df, ameco_df):
+    def perform_computation(self, df, ameco_df=None):
+        ameco_df = ameco_df if ameco_df is not None else df
         result = pd.DataFrame()
         for index, row in df.iterrows():
             country = index[0]
@@ -38,6 +38,8 @@ class NationalAccountsVolume:
                     new_series = new_meta.append(new_data)
                     result.append(new_series)
                 else:
+                    s1 = get_series(df, country, variable)
+                    s2 = get_series(df, country, u_variable)
                     new_data = splicer.ratio_splice(get_series(ameco_df, country, u_variable),
                                                     get_series(df, country, variable), kind='forward')
                     new_meta = pd.Series({'Variable Code': new_variable, 'Country Ameco': country,

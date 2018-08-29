@@ -3,7 +3,8 @@ import re
 
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
-from fdms.computation.country.annual.national_accounts_components import GDPComponents, AdditionalComponents
+from fdms.computation.country.annual.national_accounts_components import GDPComponents
+from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
 from fdms.helpers.operators import read_raw_data
 
 
@@ -67,6 +68,6 @@ class Compute:
                        'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UIGG0.1.0.0.0', 'UIGT.1.0.0.0', 'UIGG.1.0.0.0', 'UIGCO.1.0.0.0',
                        'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0', 'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
         step_4_df = result_1.loc[result_1.index.isin(step_4_vars, level='Variable Code')].copy()
-        step_4 = AdditionalComponents()
+        step_4 = NationalAccountsVolume()
         result_4 = step_4.perform_computation(step_4_df)
 
