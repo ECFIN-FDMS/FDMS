@@ -12,9 +12,9 @@ class TestCountryCalculations(unittest.TestCase):
     # National Accounts (Value) - calculate additional components
     def setUp(self):
         self.country = 'BE'
-        forecast_filename, ameco_filename = 'fdms/sample_data/BE.Forecast.0908.xlsm', 'fdms/sample_data/AMECO_H.TXT'
+        forecast_filename, ameco_filename = 'fdms/sample_data/LT.Forecast.SF2018.xlsm', 'fdms/sample_data/AMECO_H.TXT'
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
-        self.expected_df = pd.read_excel('fdms/sample_data/BE_expected.xlsx', sheet_name='Table', index_col=[0, 2])
+        self.expected_df = pd.read_excel('fdms/sample_data/BE.exp.xlsx', sheet_name='Table', index_col=[1, 2])
         step_1 = TransferMatrix()
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
 
