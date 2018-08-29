@@ -70,6 +70,8 @@ class GDPComponents:
                 exports_data = exports_data.iloc[0]
             if type(imports_data) == pd.DataFrame:
                 imports_data = imports_data.iloc[0]
+            if not isinstance(exports_data.name, type(imports_data.name)):
+                imports_data.name = None
             try:
                 series_data = exports_data.astype(float) - imports_data.astype(float)
             except ValueError:
