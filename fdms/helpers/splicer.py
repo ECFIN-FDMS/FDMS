@@ -178,4 +178,27 @@ class Splicer:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
+    def splice_and_level_forward(self, base_series, splice_series, kind='both', period=None):
+        '''
+        SPLICE_AND_LEVEL performs the operation RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
+        '''
+        # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
+        # TODO: check if we need to implement backwards
+        name = base_series.name
+        result = None
+        if kind == 'forward' or kind == 'both':
+            stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
+                base_series, splice_series)
+            if start_splice_loc is not None:
+                new_data = stripped_splice.iloc[start_splice_loc - 1:][ 1:].copy()
+                new_data.iloc[0] = stripped_base.iloc[-1]
+                for index, item in list(new_data.iteritems())[1:]:
+                    new_data.loc[index] = float(new_data.loc[index - 1]) * (1 + 0.01 * float(item))
+                result = pd.concat([stripped_base, new_data[1:]], sort=True)
+                result.name = name
+            else:
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    base_series.name[1], base_series.name[0]))
+
         return result
+

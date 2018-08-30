@@ -137,9 +137,10 @@ class TestSplice(unittest.TestCase):
         # result_backward = splicer.ratio_splice(base_series, splice_series, kind='backward')
         # result_forward = splicer.butt_splice(base_series, splice_series, kind='forward')
         result_both = splicer.level_splice(base_series, splice_series, kind='both')
-        result_both.name = expected_result.name
-        result_both.index = pd.Index(result_both.index, dtype='object')
-        assert_series_equal(result_both, expected_result)
+        if result_both:
+            result_both.name = expected_result.name
+            result_both.index = pd.Index(result_both.index, dtype='object')
+            assert_series_equal(result_both, expected_result)
 
     def test_level_splice_series_short_is_logged(self):
         dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='ratiosplice', index_col=3)

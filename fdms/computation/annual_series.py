@@ -32,6 +32,7 @@ class Compute:
 
         step_1 = TransferMatrix()
         result_1 = step_1.perform_computation(df, ameco_df)
+        self.result = result_1.copy()
 
         # Population and related variables - splice AMECO Historical data with forecast data
         ####################################################################################
@@ -42,6 +43,7 @@ class Compute:
         step_2_df = result_1.loc[result_1.index.isin(step_2_vars, level='Variable Code')].copy()
         step_2 = Population()
         result_2 = step_2.perform_computation(step_2_df, ameco_df)
+        self.result = pd.concat([self.result, result_2], sort=True)
 
         # National Accounts - Calculate additional GDP components
         # National Accounts (Value) - calculate additional components
@@ -59,6 +61,7 @@ class Compute:
         step_3_df = step_3_df.append(ameco_series)
         step_3 = GDPComponents()
         result_3 = step_3.perform_computation(step_3_df)
+        self.result = pd.concat([self.result, result_3], sort=True)
 
         # National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent
         #  change, per-capita GDP, and contribution to %change in GDP
@@ -70,4 +73,5 @@ class Compute:
         step_4_df = result_1.loc[result_1.index.isin(step_4_vars, level='Variable Code')].copy()
         step_4 = NationalAccountsVolume()
         result_4 = step_4.perform_computation(step_4_df)
+        self.result = pd.concat([self.result, result_4], sort=True)
 

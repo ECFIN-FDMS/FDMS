@@ -39,11 +39,11 @@ class TransferMatrix:
                     except KeyError:
                         logger.warning('Missing data for variable {}'.format(new_variable))
                         continue
-                    new_series = base_series.copy()
-                    new_series.name = None
+                    orig_series = splice_series.copy()
+                    orig_series.name = None
                     new_meta = pd.Series(meta)
-                    new_series = new_meta.append(new_series)
-                    result = result.append(new_series, ignore_index=True)
+                    orig_series = new_meta.append(orig_series)
+                    result = result.append(orig_series, ignore_index=True)
                     if variable in TM_TBBO:
                         new_series = splicer.butt_splice(base_series, splice_series, kind='forward')
                         new_series.name = None
