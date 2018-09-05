@@ -46,7 +46,7 @@ class Splicer:
             return stripped_base, stripped_splice, stripped_splice.index.get_loc(stripped_base.index[0])
         return None, None, None
 
-    def butt_splice(self, base_series, splice_series, kind='both', period=None):
+    def butt_splice(self, base_series, splice_series, kind='forward', period=None):
         '''
         BUTTSPLICE extends the base series by taking the values directly from the splice series.
 
@@ -90,7 +90,7 @@ class Splicer:
 
         return result
 
-    def ratio_splice(self, base_series, splice_series, kind='both', period=None):
+    def ratio_splice(self, base_series, splice_series, kind='forward', period=None):
         '''
         RATIOSPLICE extends the base series by taking the period-over-period ratio (percent change) in the splice
          series, and applying the ratio to the base series.
@@ -134,7 +134,7 @@ class Splicer:
 
         return result
 
-    def level_splice(self, base_series, splice_series, kind='both', period=None):
+    def level_splice(self, base_series, splice_series, kind='forward', period=None):
         '''
         LEVELSPLICE extends the base series by taking the period-over-period difference in the splice series, and
          applying the difference to the base series.
@@ -178,7 +178,7 @@ class Splicer:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
-    def splice_and_level_forward(self, base_series, splice_series, kind='both', period=None):
+    def splice_and_level_forward(self, base_series, splice_series, kind='forward', period=None):
         '''
         SPLICE_AND_LEVEL performs the operation RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         '''

@@ -54,7 +54,7 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_3.loc['BE'].index)]
         self.assertFalse(missing_vars)
 
-        # STEP 3
+        # STEP 4
         step_4 = NationalAccountsVolume()
 
         step_4_src_vars = list(NA_VO)
