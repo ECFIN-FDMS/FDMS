@@ -72,7 +72,7 @@ class TransferMatrix:
                         result = result.append(new_series, ignore_index=True)
 
                     # result = result.append(base_series, ignore_index=True)
-                    # TODO: store data needed for other calculations in self.source_df
+                    # TODO: find out about parameter "Source" in series?
                     # src_data = operators.iin(splice_series, '', 'Country desk forecast')
                     # src_data = operators.iin(base_series, src_data)
                     # self.source_df = source_df.append()

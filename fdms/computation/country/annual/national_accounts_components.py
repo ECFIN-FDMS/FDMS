@@ -75,8 +75,7 @@ class GDPComponents:
             try:
                 series_data = exports_data.astype(float) - imports_data.astype(float)
             except ValueError:
-                series_data = pd.to_numeric(exports_data, errors='coerce') - pd.to_numeric(
-                    imports_data, errors='coerce')
+                series_data = exports_data - imports_data
             series = pd.Series(series_meta)
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)

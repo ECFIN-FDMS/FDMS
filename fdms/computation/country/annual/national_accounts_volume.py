@@ -33,7 +33,29 @@ class NationalAccountsVolume:
         series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': frequency, 'Scale': scale}
         series = pd.Series(series_meta)
         series = series.append(series_data)
-        result = self.result.append(series, ignore_index=True, sort=True)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+
+    def _get_data(self, group_number, variables, df=None):
+        splice_series_2 = None
+        for counter, variable in enumerate(variables['variables']):
+            if group_number == 1:
+                base_series = get_series(df, self.country, variables['ameco'][counter])
+                splice_series_1 = get_series(df, self.country, variables['goods'][counter]) + get_series(
+                    df, self.country, variables['services'][counter])
+                if self.country in FCWVACP:
+                    u_series = get_series(df, self.country, variables['u_goods'][counter]) + get_series(
+                        df, self.country, variables['u_services'][counter])
+                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
+                # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
+            elif group_number == 2:
+                base_series = get_series(df, self.country, variables['exports'][counter]) - get_series(
+                    df, self.country, variables['imports'][counter])
+                splice_series_1 = get_series(df, self.country, variables['new_exports'][counter]) - get_series(
+                    df, self.country, variables['new_imports'][counter])
+                if self.country in FCWVACP:
+                    u_series = get_series(df, self.country, variables['u_exports']) - get_series(df, self.country, variables['u_services'])
+                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
+                return base_series, splice_series_1, splice_series_2
 
     def perform_computation(self, df, ameco_df=None):
         ameco_df = ameco_df if ameco_df is not None else df
@@ -116,8 +138,7 @@ class NationalAccountsVolume:
             import_series = get_series(df, self.country, goods_imports) + get_series(df, self.country, services_imports)
             u_exports = get_series(df, self.country, u_goods_exports) + get_series(df, self.country, u_services_exports)
             u_imports = get_series(df, self.country, u_goods_imports) + get_series(df, self.country, u_services_imports)
-            base_series = pd.to_numeric(get_series(df, self.country, ameco_exports)) - pd.to_numeric(
-                get_series(df, self.country, ameco_imports))
+            base_series = get_series(df, self.country, ameco_exports) - get_series(df, self.country, ameco_imports)
             splice_series_1 = export_series - import_series
             splice_series_2 = (export_series - import_series) / (u_exports - u_imports).shift(1) - 1 * 100
             self._update_result(var, base_series, splice_series_1, splice_series_2)
@@ -132,8 +153,7 @@ class NationalAccountsVolume:
             u_investments_2 = 'UIGDW'
             net_series = get_series(df, self.country, investments_1) - get_series(df, self.country, investments_2)
             u_net_series = get_series(df, self.country, u_investments_1) - get_series(df, self.country, u_investments_2)
-            base_series = pd.to_numeric(get_series(df, self.country, ameco_1)) - pd.to_numeric(
-                get_series(df, self.country, ameco_2))
+            base_series = get_series(df, self.country, ameco_1) - get_series(df, self.country, ameco_2)
             splice_series_1 = net_series.copy()
             splice_series_2 = net_series / u_net_series.shift(1) - 1 * 100
             self._update_result(var, base_series, splice_series_1, splice_series_2)
@@ -149,14 +169,12 @@ class NationalAccountsVolume:
             u_new_private_consumption = 'UCPH'
             u_new_government_consumption = 'UCTG'
             u_new_use = 'UIGT'
-            u_series = pd.to_numeric(get_series(df, self.country, u_new_private_consumption)) + pd.to_numeric(
-                get_series(df, self.country, u_new_government_consumption)) + pd.to_numeric(get_series(
-                df, self.country, u_new_use))
-            base_series = pd.to_numeric(get_series(df, self.country, private_consumption)) + pd.to_numeric(get_series(
-                df, self.country, government_consumption)) + pd.to_numeric(get_series(df, self.country, use_ameco))
-            splice_series_1 = pd.to_numeric(get_series(df, self.country, new_private_consumption)) + pd.to_numeric(
-                get_series(df, self.country, new_government_consumption)) + pd.to_numeric(get_series(
-                df, self.country, new_use))
+            u_series = get_series(df, self.country, u_new_private_consumption) + get_series(
+                df, self.country, u_new_government_consumption) + get_series(df, self.country, u_new_use)
+            base_series = get_series(df, self.country, private_consumption) + get_series(
+                df, self.country, government_consumption) + get_series(df, self.country, use_ameco)
+            splice_series_1 = get_series(df, self.country, new_private_consumption) + get_series(
+                df, self.country, new_government_consumption) + get_series(df, self.country, new_use)
             splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
             self._update_result(var, base_series, splice_series_1, splice_series_2)
 
@@ -174,7 +192,7 @@ class NationalAccountsVolume:
                     splice_series_2 = None
                     if self.country not in FCWVACP:
                         u_new_vars = [re.sub('^.', 'U', v) for v in new_vars[1:]]
-                        sum_u_series = sum(pd.to_numeric(get_series(df, self.country, v)) for v in new_vars)
+                        sum_u_series = sum(get_series(df, self.country, v) for v in new_vars)
                         splice_series_2 = splice_series_1.copy() / sum_u_series.shift(1) - 1 * 100
                         if splice_series_2 is not None:
                             self._update_result(var, base_series, splice_series_1, splice_series_2)
@@ -184,25 +202,38 @@ class NationalAccountsVolume:
                     else:
                         self._update_result(var, base_series, splice_series_1, None)
 
-    def _get_data(self, group_number, variables, df=None):
-        splice_series_2 = None
-        for counter, variable in enumerate(variables['variables']):
-            if group_number == 1:
-                base_series = get_series(df, self.country, variables['ameco'][counter])
-                splice_series_1 = get_series(df, self.country, variables['goods'][counter]) + get_series(
-                    df, self.country, variables['services'][counter])
-                if self.country in FCWVACP:
-                    u_series = get_series(df, self.country, variables['u_goods'][counter]) + get_series(
-                        df, self.country, variables['u_services'][counter])
-                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
-                # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
-            elif group_number == 2:
-                base_series = pd.to_numeric(get_series(df, self.country, variables[
-                    'exports'][counter])) - pd.to_numeric(get_series(df, self.country, variables['imports'][counter]))
-                splice_series_1 = get_series(df, self.country, variables['new_exports'][counter]) - get_series(
-                    df, self.country, variables['new_imports'][counter])
-                if self.country in FCWVACP:
-                    u_series = get_series(df, self.country, variables['u_exports']) - get_series(df, self.country, variables['u_services'])
-                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
-                return base_series, splice_series_1, splice_series_2
+            # TODO: Volume, rebase to baseperiod
+            # Volume, rebase to baseperiod
+
+            # Volume, percent change
+            # for index, row in df.iterrows():
+            #     country = index[0]
+            #     variable = index[1]
+            #     new_variable = variable + '.1.0.0.0'
+            #     u_variable = re.sub('^.', 'U', variable)
+            #     variable16 = variable + '.6.0.0.0'
+            #     if variable in NA_VO:
+
+            # Contribution to percent change in GDP
+
+            # Contribution to percent change in GDP (calculation for additional variables)
+
+            # Per-capita GDP
+
+            # Terms of trade
+
+            # Set up OVGD.6.1.212.0 for World GDP volume table
+
+            # Convert percent change of trade variables (volume) from national currency to USD
+
+        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
+                        1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                        2014, 2015, 2016, 2017, 2018, 2019]
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        export_data = self.result.copy()
+        export_data = export_data.reset_index()
+        writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
+        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
+                                           sheet_name='Sheet1', index=False)
+        return self.result
 
