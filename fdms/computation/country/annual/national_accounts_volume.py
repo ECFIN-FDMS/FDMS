@@ -14,9 +14,14 @@ from fdms.helpers.operators import Operators
 from fdms.helpers.operators import get_series, get_scale, get_frequency
 
 
+# TODO: Create config file
+BASE_PERIOD = 2010
+
+
 class NationalAccountsVolume:
     source_df = pd.DataFrame()
     country = 'BE'
+    frequency = 'Annual'
     splicer = Splicer()
     result = pd.DataFrame()
 
@@ -204,8 +209,32 @@ class NationalAccountsVolume:
 
         # TODO: Volume, rebase to baseperiod
         # Volume, rebase to baseperiod
+        for var in NA_VO:
+            new_variable = variable + '.1.0.0.0'
+            u1_variable = re.sub('^.', 'U', variable)
+
+            if new_variable in self.result:
+                if u1_variable in df.index:
+                    result_series_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
+                            self.result['Variable Code'] == new_variable)]
+                    series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
+                                   'Frequency': self.frequency, 'Scale': self.scale}
+                    data_orig = pd.to_numeric(self.result.loc[result_series_index].filter(regex='\d{4}'),
+                                              errors='coerce')
+                    u1_series = get_series(df, self.country, u1_variable)
+                    value_to_rebase = data_orig[BASE_PERIOD] / u1_series[BASE_PERIOD]
+                    series_data = data_orig * value_to_rebase
+                    result.iloc[result_series_index] = new_series
+                    series = pd.Series(series_meta)
+                    series = series.append(series_data)
+                    self.result.iloc[result_series_index] = series
+                else:
+                    logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
+            else:
+                logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
 
         # Volume, percent change
+
         # for index, row in df.iterrows():
         #     country = index[0]
         #     variable = index[1]
@@ -235,6 +264,5 @@ class NationalAccountsVolume:
         writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
         export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
                                            sheet_name='Sheet1', index=False)
-        import code;code.interact(local=locals())
         return self.result
 
