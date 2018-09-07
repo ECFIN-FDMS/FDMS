@@ -19,11 +19,10 @@ BASE_PERIOD = 2010
 
 
 class NationalAccountsVolume:
-    source_df = pd.DataFrame()
+    result = pd.DataFrame()
     country = 'BE'
     frequency = 'Annual'
     splicer = Splicer()
-    result = pd.DataFrame()
 
     def _update_result(self, variable, base_series, splice_series_1, splice_series_2, frequency='Annual',
                       scale='billions'):
@@ -64,7 +63,6 @@ class NationalAccountsVolume:
 
     def perform_computation(self, df, ameco_df=None):
         ameco_df = ameco_df if ameco_df is not None else df
-        result = pd.DataFrame()
         for index, row in df.iterrows():
             country = index[0]
             self.country = country
@@ -123,9 +121,6 @@ class NationalAccountsVolume:
                     logger.error('Missing data for variable {} in national accounts volume'.format(variable))
                 if base_series is not None:
                     self._update_result(variable, base_series, splice_series_1, None)
-                # series = pd.Series(series_meta)
-                # series = series.append(series_data)
-                # result = result.append(series, ignore_index=True, sort=True)
 
         # Net exports goods and services
         var = 'OBGS.1.0.0.0'
@@ -207,24 +202,23 @@ class NationalAccountsVolume:
                 else:
                     self._update_result(var, base_series, splice_series_1, None)
 
-        # TODO: Volume, rebase to baseperiod
         # Volume, rebase to baseperiod
         for var in NA_VO:
-            new_variable = variable + '.1.0.0.0'
-            u1_variable = re.sub('^.', 'U', variable)
+            new_variable = var + '.1.0.0.0'
+            u1_variable = re.sub('^.', 'U', var) + '.1.0.0.0'
 
-            if new_variable in self.result:
-                if u1_variable in df.index:
+            if new_variable in self.result['Variable Code'].values:
+                if u1_variable in df.index.get_level_values('Variable Code'):
                     result_series_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
-                            self.result['Variable Code'] == new_variable)]
-                    series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
-                                   'Frequency': self.frequency, 'Scale': self.scale}
-                    data_orig = pd.to_numeric(self.result.loc[result_series_index].filter(regex='\d{4}'),
+                            self.result['Variable Code'] == new_variable)].index.values[0]
+                    series_orig = self.result.loc[result_series_index]
+                    series_meta = {'Country Ameco': series_orig['Country Ameco'], 'Variable Code': new_variable,
+                                   'Frequency': series_orig['Country Ameco'], 'Scale': series_orig['Country Ameco']}
+                    data_orig = pd.to_numeric(self.result.iloc[result_series_index].filter(regex='\d{4}'),
                                               errors='coerce')
                     u1_series = get_series(df, self.country, u1_variable)
                     value_to_rebase = data_orig[BASE_PERIOD] / u1_series[BASE_PERIOD]
                     series_data = data_orig * value_to_rebase
-                    result.iloc[result_series_index] = new_series
                     series = pd.Series(series_meta)
                     series = series.append(series_data)
                     self.result.iloc[result_series_index] = series
