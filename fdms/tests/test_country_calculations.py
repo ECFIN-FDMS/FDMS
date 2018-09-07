@@ -1,9 +1,12 @@
 import unittest
 import pandas as pd
+import re
 
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
+from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
+from fdms.config.variable_groups import NA_VO
 from fdms.helpers.operators import read_country_forecast_excel, read_ameco_txt
 
 
@@ -33,7 +36,8 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_2.loc['BE'].index)]
         self.assertEqual(missing_vars, ['NLCN.1.0.0.0'])
 
-    def test_national_accounts_components(self):
+    def test_national_accounts(self):
+        # STEP 3
         step_3 = GDPComponents()
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
                        'UIGDW', 'UCPH', 'UCTG', 'UIGT', 'UIST']
@@ -42,7 +46,6 @@ class TestCountryCalculations(unittest.TestCase):
                                   'UIGG.1.0.0.0', 'UIGCO.1.0.0.0', 'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0',
                                   'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
         ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(step_3_additional_vars, level='Variable Code')].copy()
-        # step_3_df = result_1.append(ameco_series, sort=True)
         step_3_df = pd.concat([self.result_1, ameco_series], sort=True)
         result_3 = step_3.perform_computation(step_3_df)
         variables = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UITT',
@@ -50,4 +53,30 @@ class TestCountryCalculations(unittest.TestCase):
                      'UIGP.1.0.0.0', 'UIGNR.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UITT.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_3.loc['BE'].index)]
         self.assertFalse(missing_vars)
+
+        # STEP 4
+        step_4 = NationalAccountsVolume()
+
+        step_4_src_vars = list(NA_VO)
+        step_4_1000vars = [variable + '.1.0.0.0' for variable in step_4_src_vars]
+        step_4_uvars = [re.sub('^.', 'U', variable) for variable in step_4_src_vars]
+        step_4_1100vars = [variable + '.1.1.0.0' for variable in step_4_src_vars]
+        orig_series = self.df.loc[self.df.index.isin(step_4_src_vars, level='Variable')].copy().loc['BE']
+        orig_series = pd.concat([orig_series, result_3.loc[result_3.index.isin(
+            step_4_uvars, level='Variable Code')].copy().loc['BE']], sort=True)
+        orig_series['Variable Code'] = orig_series.index
+        orig_series.insert(0, 'Country Ameco', 'BE')
+        orig_series = orig_series.reset_index()
+        orig_series.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(step_4_1100vars, level='Variable Code')].copy().loc[
+            'BE']
+        ameco_df = pd.DataFrame(ameco_series)
+        ameco_df.insert(0, 'Country Ameco', 'BE')
+        ameco_df = ameco_df.reset_index()
+        ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        step_4_df = pd.concat([ameco_df, self.result_1], sort=True)
+        step_4_df = pd.concat([step_4_df, orig_series], sort=True)
+        result_4 = step_4.perform_computation(step_4_df)
+        # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
 

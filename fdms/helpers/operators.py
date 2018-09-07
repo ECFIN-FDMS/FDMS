@@ -55,7 +55,7 @@ def get_series(dataframe, country_ameco, variable_code):
     # TODO: Log these and make sure that this is correct, check values and get the best one
     if len(series.shape) > 1:
         series = series.iloc[0]
-    series = series.squeeze()
+    series = pd.to_numeric(series.squeeze(), errors='coerce')
     return series
 
 

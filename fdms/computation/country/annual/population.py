@@ -53,9 +53,7 @@ class Population:
         country = 'BE'
         NETD104140_meta = {'Country Ameco': country, 'Variable Code': variable,
                          'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
-        NETD104140_data = pd.to_numeric(
-            get_series(df, country, employed).astype(float), errors='coerce') - pd.to_numeric(
-            get_series(df, country, working_age), errors='coerce') * 100
+        NETD104140_data = get_series(df, country, employed).astype(float) - get_series(df, country, working_age) * 100
         NETD104140 = pd.Series(NETD104140_meta)
         NETD104140 = NETD104140.append(NETD104140_data)
         result = result.append(NETD104140, ignore_index=True)
@@ -75,8 +73,7 @@ class Population:
         variable = 'NLHT.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = pd.to_numeric(get_series(df, country, employed), errors='coerce') * pd.to_numeric(
-            get_series(df, country, average_hours), errors='coerce')
+        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
         NLHT1000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Millions'}
         NLHT1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
@@ -88,8 +85,7 @@ class Population:
         variable = 'NLHT9.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = pd.to_numeric(get_series(df, country, employed), errors='coerce') * pd.to_numeric(
-            get_series(df, country, average_hours), errors='coerce')
+        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
         NLHT91000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Millions'}
         NLHT91000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')

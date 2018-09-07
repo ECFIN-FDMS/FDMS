@@ -37,13 +37,13 @@ class TransferMatrix:
                         base_series = get_series(ameco_df, country, new_variable)
                         splice_series = get_series(df, country, variable)
                     except KeyError:
-                        logger.warning('Missing data for variable {}'.format(new_variable))
+                        logger.warning('Missing Ameco data for variable {} (transfer matrix)'.format(new_variable))
                         continue
-                    new_series = base_series.copy()
-                    new_series.name = None
+                    orig_series = splice_series.copy()
+                    orig_series.name = None
                     new_meta = pd.Series(meta)
-                    new_series = new_meta.append(new_series)
-                    result = result.append(new_series, ignore_index=True)
+                    orig_series = new_meta.append(orig_series)
+                    result = result.append(orig_series, ignore_index=True)
                     if variable in TM_TBBO:
                         new_series = splicer.butt_splice(base_series, splice_series, kind='forward')
                         new_series.name = None
@@ -57,12 +57,6 @@ class TransferMatrix:
                         new_meta = pd.Series(meta1000)
                         new_series = new_meta.append(new_series)
                         result = result.append(new_series, ignore_index=True)
-                        rsplice = splicer.ratio_splice(base_series, splice_series, kind='forward')
-                        new_series = splicer.butt_splice(rsplice, splice_series, kind='forward')
-                        new_series.name = None
-                        new_meta = pd.Series(meta1000)
-                        new_data = new_meta.append(new_series)
-                        result = result.append(new_data, ignore_index=True)
                     else:
                         new_series = splicer.butt_splice(splicer.ratio_splice(
                             base_series, splice_series, kind='forward'), splice_series, kind='forward')
@@ -72,7 +66,7 @@ class TransferMatrix:
                         result = result.append(new_series, ignore_index=True)
 
                     # result = result.append(base_series, ignore_index=True)
-                    # TODO: store data needed for other calculations in self.source_df
+                    # TODO: find out about parameter "Source" in series?
                     # src_data = operators.iin(splice_series, '', 'Country desk forecast')
                     # src_data = operators.iin(base_series, src_data)
                     # self.source_df = source_df.append()
