@@ -37,7 +37,7 @@ class TransferMatrix:
                         base_series = get_series(ameco_df, country, new_variable)
                         splice_series = get_series(df, country, variable)
                     except KeyError:
-                        logger.warning('Missing data for variable {}'.format(new_variable))
+                        logger.warning('Missing Ameco data for variable {} (transfer matrix)'.format(new_variable))
                         continue
                     orig_series = splice_series.copy()
                     orig_series.name = None
@@ -57,12 +57,6 @@ class TransferMatrix:
                         new_meta = pd.Series(meta1000)
                         new_series = new_meta.append(new_series)
                         result = result.append(new_series, ignore_index=True)
-                        rsplice = splicer.ratio_splice(base_series, splice_series, kind='forward')
-                        new_series = splicer.butt_splice(rsplice, splice_series, kind='forward')
-                        new_series.name = None
-                        new_meta = pd.Series(meta1000)
-                        new_data = new_meta.append(new_series)
-                        result = result.append(new_data, ignore_index=True)
                     else:
                         new_series = splicer.butt_splice(splicer.ratio_splice(
                             base_series, splice_series, kind='forward'), splice_series, kind='forward')

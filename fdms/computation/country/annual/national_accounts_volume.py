@@ -202,20 +202,21 @@ class NationalAccountsVolume:
                 else:
                     self._update_result(var, base_series, splice_series_1, None)
 
-        # Volume, rebase to baseperiod
+        # Volume, rebase to baseperiod, percent change, contribution to percent change in GDP
         for var in NA_VO:
             new_variable = var + '.1.0.0.0'
             u1_variable = re.sub('^.', 'U', var) + '.1.0.0.0'
 
             if new_variable in self.result['Variable Code'].values:
+                result_series_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
+                        self.result['Variable Code'] == new_variable)].index.values[0]
+                series_orig = self.result.loc[result_series_index]
+                data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
+
+                # Rebase to baseperiod
                 if u1_variable in df.index.get_level_values('Variable Code'):
-                    result_series_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
-                            self.result['Variable Code'] == new_variable)].index.values[0]
-                    series_orig = self.result.loc[result_series_index]
                     series_meta = {'Country Ameco': series_orig['Country Ameco'], 'Variable Code': new_variable,
-                                   'Frequency': series_orig['Country Ameco'], 'Scale': series_orig['Country Ameco']}
-                    data_orig = pd.to_numeric(self.result.iloc[result_series_index].filter(regex='\d{4}'),
-                                              errors='coerce')
+                                   'Frequency': series_orig['Frequency'], 'Scale': series_orig['Scale']}
                     u1_series = get_series(df, self.country, u1_variable)
                     value_to_rebase = data_orig[BASE_PERIOD] / u1_series[BASE_PERIOD]
                     series_data = data_orig * value_to_rebase
@@ -224,39 +225,56 @@ class NationalAccountsVolume:
                     self.result.iloc[result_series_index] = series
                 else:
                     logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
+
+                # Percent change
+                variable_6 = var + '.6.0.0.0'
+                series_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
+                               'Frequency': series_orig['Frequency'], 'Scale': 'units'}
+                series_data = data_orig.pct_change()
+                series = pd.Series(series_meta)
+                series = series.append(series_data)
+                self.result = self.result.append(series, ignore_index=True, sort=True)
+
+                # Contribution to percent change in GDP
+                variable_c1 = re.sub('^.', 'C', var) + '.1.0.0.0'
+                variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
+                series_6_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
+                        self.result['Variable Code'] == variable_6)].index.values[0]
+                series_6 = self.result.loc[result_series_index]
+                data_6 = pd.to_numeric(series_6.filter(regex='\d{4}'), errors='coerce')
+                xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
+                series_meta = {'Country Ameco': self.country, 'Variable Code': variable_c1,
+                               'Frequency': series_6['Frequency'], 'Scale': 'units'}
+                series_data = data_6 * get_series(df, self.country, variable_x).shift(1) / get_series(
+                    df, self.country, xvgd).shift(1)
+                series = pd.Series(series_meta)
+                series = series.append(series_data)
+                self.result = self.result.append(series, ignore_index=True, sort=True)
+
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
 
-        # Volume, percent change
+            # Contribution to percent change in GDP (calculation for additional variables)
+            # Variables needed for the rest of calculations:
+            # TODO: Data for the rest is missing, let's merge this as it is and work on the interfaces
+            # That way it'll be easier to track
 
-        # for index, row in df.iterrows():
-        #     country = index[0]
-        #     variable = index[1]
-        #     new_variable = variable + '.1.0.0.0'
-        #     u_variable = re.sub('^.', 'U', variable)
-        #     variable16 = variable + '.6.0.0.0'
-        #     if variable in NA_VO:
+            # Per-capita GDP
 
-        # Contribution to percent change in GDP
+            # Terms of trade
 
-        # Contribution to percent change in GDP (calculation for additional variables)
+            # Set up OVGD.6.1.212.0 for World GDP volume table
 
-        # Per-capita GDP
+            # Convert percent change of trade variables (volume) from national currency to USD
 
-        # Terms of trade
-
-        # Set up OVGD.6.1.212.0 for World GDP volume table
-
-        # Convert percent change of trade variables (volume) from national currency to USD
-
-        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
-                        1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
-                        2014, 2015, 2016, 2017, 2018, 2019]
-        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        export_data = self.result.copy()
-        export_data = export_data.reset_index()
-        writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
-        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
-                                           sheet_name='Sheet1', index=False)
-        return self.result
+            column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
+                            1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                            2014, 2015, 2016, 2017, 2018, 2019]
+            self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+            export_data = self.result.copy()
+            export_data = export_data.reset_index()
+            writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
+            export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
+                                               sheet_name='Sheet1', index=False)
+            return self.result
 
