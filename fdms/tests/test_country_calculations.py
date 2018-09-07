@@ -7,7 +7,7 @@ from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
 from fdms.config.variable_groups import NA_VO
-from fdms.helpers.operators import read_country_forecast_excel, read_ameco_txt
+from fdms.utils.operators import read_country_forecast_excel, read_ameco_txt
 
 
 class TestCountryCalculations(unittest.TestCase):

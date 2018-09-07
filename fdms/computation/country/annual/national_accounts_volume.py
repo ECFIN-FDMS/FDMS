@@ -9,9 +9,9 @@ import re
 
 from fdms.config.variable_groups import NA_VO
 from fdms.config.country_groups import FCWVACP
-from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import Operators
-from fdms.helpers.operators import get_series, get_scale, get_frequency
+from fdms.utils.splicer import Splicer
+from fdms.utils.operators import Operators
+from fdms.utils.operators import get_series, get_scale, get_frequency
 
 
 # TODO: Create config file

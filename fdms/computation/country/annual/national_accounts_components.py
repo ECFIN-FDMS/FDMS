@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
-from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import get_series
+from fdms.utils.splicer import Splicer
+from fdms.utils.operators import get_series
 
 
 # National Accounts - Calculate additional GDP components

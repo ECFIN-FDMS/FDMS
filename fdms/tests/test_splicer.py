@@ -5,8 +5,8 @@ import unittest
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import get_series
+from fdms.utils.splicer import Splicer
+from fdms.utils.operators import get_series
 from fdms.config.country_groups import *
 from fdms.config.variable_groups import *
 
@@ -83,7 +83,7 @@ class TestSplice(unittest.TestCase):
         short_splice_series1 = splice_series.iloc[short_splice_start:short_splice_end]
         short_splice_series2 = splice_series.iloc[short_splice_start + 2:short_splice_end - 10]
         splicer = Splicer()
-        msg = ('WARNING:fdms.helpers.splicer:Failed to splice UTVTBP forward, country BE, splice series ends before '
+        msg = ('WARNING:fdms.utils.splicer:Failed to splice UTVTBP forward, country BE, splice series ends before '
                'base series. Returning original series')
         with self.assertLogs() as logs:
             result_both1 = splicer.butt_splice(base_series, short_splice_series1, kind='both')

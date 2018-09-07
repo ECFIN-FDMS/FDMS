@@ -5,7 +5,7 @@ from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
-from fdms.helpers.operators import read_raw_data
+from fdms.utils.operators import read_raw_data
 
 
 FORECAST = 'fdms/sample_data/BE.Forecast.0908.xlsm'

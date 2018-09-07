@@ -5,7 +5,7 @@ import unittest
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from fdms.helpers.operators import Operators, get_series
+from fdms.utils.operators import Operators, get_series
 
 
 class TestOperators(unittest.TestCase):
