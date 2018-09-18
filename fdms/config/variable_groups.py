@@ -1,3 +1,6 @@
+import re
+
+
 variable_group_names = {
     'TM': 'Transfer Matrix Variables',
     'TM_TBBO': 'Transfer Matrix variables, to be buttspliced only',
@@ -6,6 +9,7 @@ variable_group_names = {
     'PD': 'Price Deflator variables',
     'PD_Q': 'Price Deflator variables, in quarterly frequency',
     'NA_VO': 'National Account variables (Volume)',
+    'NA_VA': 'National Account variables (Value)',
     'NA_Q_VO': 'National Account variables, in quarterly frequency (Volume)',
     'NA_IS_VA': 'National Account variables, income side (Value)',
     'FL': 'Full List of Variables',
@@ -26,6 +30,9 @@ NA_Q_VO = ['OCPH', 'OCTG', 'OIGT', 'OIST', 'OUNF', 'OUNT', 'OUTT', 'OVGD',
            'OXGS', 'OMGS']
 
 NA_IS_VA = ['UVGD', 'UVGE', 'UTVNBP', 'UWCD', 'UWWD', 'UOGD', 'UWSC']
+
+NA_VA = ['UCPH', 'UCTG', 'UIGT', 'UIGG', 'UIGP', 'UIGCO', 'UIGDW', 'UIGNR', 'UIGEQ', 'UIGOT', 'UIST', 'UITT', 'UUNF',
+         'UUNT', 'UUTT', 'UVGD', 'UVGE', 'UXGS', 'UMGS', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UBGS', 'UBGN', 'UBSN']
 
 FL_FSMR = ['OVGD', 'UXGN', 'OXGN', 'UXSN', 'OXSN', 'UMGN', 'OMGN', 'UMSN',
            'OMSN', 'UBCA']
@@ -93,3 +100,21 @@ S_VA = ['USGN.1.0.0.0', 'USGP.1.0.0.0', 'USGC.1.0.0.0', 'USGH.1.0.0.0', 'UBLA.1.
         'UTNKATR.1.0.0.0', 'UTNM.1.0.0.0', 'UTNNBYG.1.0.0.0', 'UTNOIGU.1.0.0.0', 'UTNOIMU.1.0.0.0', 'UTNOIRT.1.0.0.0',
         'UTNOIYU.1.0.0.0', 'UTNP.1.0.0.0', 'UTNXTMR.1.0.0.0', 'UTNXTMRB.1.0.0.0', 'UTTG.1.0.0.0', 'UWCD.1.0.0.0',
         'UWCDA.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0']
+
+
+groups_for_country_calculation = {}
+
+# len(group_vars) = 555
+group_vars = I_VO + PD_Q + TM_TBM + NA_Q_VO + NA_IS_VA + NA_VA + FL_FSMR + T_VO + NA_VO + PD + RI_TBEBT1960
+group_vars = group_vars + TM_TBBO + TM + S_VA
+
+# len(group_vars) = 399
+vars_in_groups = list(set(group_vars))
+
+calculated = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UITT']
+
+# len(country_vars) = 194 (without indexes)
+country_vars = list(set([var for var in group_vars if not re.match('.*[.]', var) and var not in calculated]))
+
+
+TM_input = [var for var in TM if var not in calculated]

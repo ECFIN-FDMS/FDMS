@@ -6,7 +6,7 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 
 from fdms.utils.splicer import Splicer
-from fdms.utils.operators import get_series
+from fdms.utils.series import get_series
 from fdms.config.country_groups import *
 from fdms.config.variable_groups import *
 
