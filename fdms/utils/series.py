@@ -8,21 +8,6 @@ AMECO = 'fdms/sample_data/AMECO_H.TXT'
 FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
 
 
-def _get_iso(ameco_code):
-    return COUNTRIES['ameco_code']
-
-
-def _get_ameco(iso_code):
-    return COUNTRIES[COUNTRIES == iso_code].index[0]
-
-
-def _get_from_series_code(series_code, param='variable'):
-    parts = series_code.split('.')
-    if param == 'country':
-        return parts[0]
-    return '.'.join([parts[-1], *parts[1:-1]])
-
-
 # TODO: create get_series_noindex to get series from intermediate results (rangeindex instead of country and variable)
 def get_series(dataframe, country_ameco, variable_code):
     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
@@ -40,7 +25,7 @@ def get_series(dataframe, country_ameco, variable_code):
 
 
 def get_series_noindex(dataframe, country_ameco, variable_code, metadata=False):
-    '''Get quarterly or yearly data from dataframe with default RangeIndexgggf "Country AMECO" and "Variable Code"'''
+    '''Get quarterly or yearly data from dataframe with default RangeIndex from "Country AMECO" and "Variable Code"'''
     result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country_ameco) & (
             dataframe['Variable Code'] == variable_code)].index.values[0]
     series = dataframe.loc[result_series_index]

@@ -15,6 +15,21 @@ AMECO = 'fdms/sample_data/AMECO_H.TXT'
 FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
 
 
+def _get_iso(ameco_code):
+    return COUNTRIES['ameco_code']
+
+
+def _get_ameco(iso_code):
+    return COUNTRIES[COUNTRIES == iso_code].index[0]
+
+
+def _get_from_series_code(series_code, param='variable'):
+    parts = series_code.split('.')
+    if param == 'country':
+        return parts[0]
+    return '.'.join([parts[-1], *parts[1:-1]])
+
+
 def read_country_forecast_excel(country_forecast_filename=FORECAST, frequency='annual'):
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
