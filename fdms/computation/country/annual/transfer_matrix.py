@@ -33,12 +33,11 @@ class TransferMatrix:
                     meta1000 = dict(meta)
                     meta['Variable Code'] = variable
                     meta1000['Variable Code'] = new_variable
+                    splice_series = get_series(df, country, variable)
                     try:
                         base_series = get_series(ameco_df, country, new_variable)
-                        splice_series = get_series(df, country, variable)
                     except KeyError:
                         logger.warning('Missing Ameco data for variable {} (transfer matrix)'.format(new_variable))
-                        continue
                     orig_series = splice_series.copy()
                     orig_series.name = None
                     new_meta = pd.Series(meta)
