@@ -7,11 +7,11 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 import re
 
-from fdms.config.variable_groups import NA_VO
+from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.config.country_groups import FCWVACP
-from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import Operators
-from fdms.helpers.operators import get_series, get_scale, get_frequency
+from fdms.utils.splicer import Splicer
+from fdms.utils.operators import Operators
+from fdms.utils.series import get_series, get_series_noindex, get_index, get_scale, get_frequency
 
 
 # TODO: Create config file
@@ -39,27 +39,28 @@ class NationalAccountsVolume:
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
-    def _get_data(self, group_number, variables, df=None):
+    def _get_data(self, group_number, variables, df=None, ameco_df=None):
         splice_series_2 = None
         for counter, variable in enumerate(variables['variables']):
             if group_number == 1:
-                base_series = get_series(df, self.country, variables['ameco'][counter])
+                base_series = get_series(ameco_df, self.country, variables['ameco'][counter])
                 splice_series_1 = get_series(df, self.country, variables['goods'][counter]) + get_series(
                     df, self.country, variables['services'][counter])
-                if self.country in FCWVACP:
+                if self.country not in FCWVACP:
                     u_series = get_series(df, self.country, variables['u_goods'][counter]) + get_series(
                         df, self.country, variables['u_services'][counter])
                     splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
                 # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
             elif group_number == 2:
-                base_series = get_series(df, self.country, variables['exports'][counter]) - get_series(
-                    df, self.country, variables['imports'][counter])
+                base_series = get_series(ameco_df, self.country, variables['exports'][counter]) - get_series(
+                    ameco_df, self.country, variables['imports'][counter])
                 splice_series_1 = get_series(df, self.country, variables['new_exports'][counter]) - get_series(
                     df, self.country, variables['new_imports'][counter])
-                if self.country in FCWVACP:
-                    u_series = get_series(df, self.country, variables['u_exports']) - get_series(df, self.country, variables['u_services'])
+                if self.country not in FCWVACP:
+                    u_series = get_series(df, self.country, variables['u_exports'][counter]) - get_series(
+                        df, self.country, variables['u_imports'][counter])
                     splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
-                return base_series, splice_series_1, splice_series_2
+            return base_series, splice_series_1, splice_series_2
 
     def perform_computation(self, df, ameco_df=None):
         ameco_df = ameco_df if ameco_df is not None else df
@@ -83,7 +84,7 @@ class NationalAccountsVolume:
                     try:
                         series = get_series(df, country, variable)
                         u_series = get_series(df, country, u_variable)
-                        series11 = get_series(df, country, variable11)
+                        series11 = get_series(ameco_df, country, variable11)
                     except KeyError:
                         logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
                         continue
@@ -98,8 +99,8 @@ class NationalAccountsVolume:
 
         # Imports / exports of goods and services
         group_1 = {'variables': ['OMGS.1.0.0.0', 'OXGS.1.0.0.0'], 'ameco': ['OMGS.1.1.0.0', 'OXGS.1.1.0.0'],
-                   'goods': ['OMGN', 'OXGN'], 'services': ['OMSN', 'OXSN'], 'u_goods': ['UMGN,', 'UXGN'],
-                   'u_services': ['UMSN,', 'UXSN']}
+                   'goods': ['OMGN', 'OXGN'], 'services': ['OMSN', 'OXSN'], 'u_goods': ['UMGN', 'UXGN'],
+                   'u_services': ['UMSN', 'UXSN']}
 
         # Net imports / exports of goods, services and investments
         group_2 = {
@@ -116,11 +117,10 @@ class NationalAccountsVolume:
                 series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
                                'Scale': 'billions'}
                 try:
-                    base_series, splice_series_1, splice_series_2 = self._get_data(number + 1, group, df)
+                    base_series, splice_series_1, splice_series_2 = self._get_data(number + 1, group, df, ameco_df)
                 except TypeError:
                     logger.error('Missing data for variable {} in national accounts volume'.format(variable))
-                if base_series is not None:
-                    self._update_result(variable, base_series, splice_series_1, None)
+                self._update_result(variable, base_series, splice_series_1, splice_series_2)
 
         # Net exports goods and services
         var = 'OBGS.1.0.0.0'
@@ -138,7 +138,7 @@ class NationalAccountsVolume:
         import_series = get_series(df, self.country, goods_imports) + get_series(df, self.country, services_imports)
         u_exports = get_series(df, self.country, u_goods_exports) + get_series(df, self.country, u_services_exports)
         u_imports = get_series(df, self.country, u_goods_imports) + get_series(df, self.country, u_services_imports)
-        base_series = get_series(df, self.country, ameco_exports) - get_series(df, self.country, ameco_imports)
+        base_series = get_series(ameco_df, self.country, ameco_exports) - get_series(ameco_df, self.country, ameco_imports)
         splice_series_1 = export_series - import_series
         splice_series_2 = (export_series - import_series) / (u_exports - u_imports).shift(1) - 1 * 100
         self._update_result(var, base_series, splice_series_1, splice_series_2)
@@ -153,7 +153,7 @@ class NationalAccountsVolume:
         u_investments_2 = 'UIGDW'
         net_series = get_series(df, self.country, investments_1) - get_series(df, self.country, investments_2)
         u_net_series = get_series(df, self.country, u_investments_1) - get_series(df, self.country, u_investments_2)
-        base_series = get_series(df, self.country, ameco_1) - get_series(df, self.country, ameco_2)
+        base_series = get_series(ameco_df, self.country, ameco_1) - get_series(ameco_df, self.country, ameco_2)
         splice_series_1 = net_series.copy()
         splice_series_2 = net_series / u_net_series.shift(1) - 1 * 100
         self._update_result(var, base_series, splice_series_1, splice_series_2)
@@ -171,8 +171,8 @@ class NationalAccountsVolume:
         u_new_use = 'UIGT'
         u_series = get_series(df, self.country, u_new_private_consumption) + get_series(
             df, self.country, u_new_government_consumption) + get_series(df, self.country, u_new_use)
-        base_series = get_series(df, self.country, private_consumption) + get_series(
-            df, self.country, government_consumption) + get_series(df, self.country, use_ameco)
+        base_series = get_series(ameco_df, self.country, private_consumption) + get_series(
+            ameco_df, self.country, government_consumption) + get_series(ameco_df, self.country, use_ameco)
         splice_series_1 = get_series(df, self.country, new_private_consumption) + get_series(
             df, self.country, new_government_consumption) + get_series(df, self.country, new_use)
         splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
@@ -208,8 +208,7 @@ class NationalAccountsVolume:
             u1_variable = re.sub('^.', 'U', var) + '.1.0.0.0'
 
             if new_variable in self.result['Variable Code'].values:
-                result_series_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
-                        self.result['Variable Code'] == new_variable)].index.values[0]
+                result_series_index = get_index(self.result, self.country, new_variable)
                 series_orig = self.result.loc[result_series_index]
                 data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
 
@@ -238,15 +237,18 @@ class NationalAccountsVolume:
                 # Contribution to percent change in GDP
                 variable_c1 = re.sub('^.', 'C', var) + '.1.0.0.0'
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
-                series_6_index = self.result.loc[(self.result['Country Ameco'] == self.country) & (
-                        self.result['Variable Code'] == variable_6)].index.values[0]
+                series_6_index = get_index(self.result, self.country, variable_6)
                 series_6 = self.result.loc[result_series_index]
                 data_6 = pd.to_numeric(series_6.filter(regex='\d{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
                 series_meta = {'Country Ameco': self.country, 'Variable Code': variable_c1,
                                'Frequency': series_6['Frequency'], 'Scale': 'units'}
-                series_data = data_6 * get_series(df, self.country, variable_x).shift(1) / get_series(
-                    df, self.country, xvgd).shift(1)
+                try:
+                    series_data = data_6 * get_series(df, self.country, variable_x).shift(1) / get_series(
+                        df, self.country, xvgd).shift(1)
+                except KeyError:
+                    logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
+                    continue
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -254,27 +256,108 @@ class NationalAccountsVolume:
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
 
-            # Contribution to percent change in GDP (calculation for additional variables)
-            # Variables needed for the rest of calculations:
-            # TODO: Data for the rest is missing, let's merge this as it is and work on the interfaces
-            # That way it'll be easier to track
+        # Contribution to percent change in GDP (calculation for additional variables)
+        var = 'CMGS.1.0.0.0'
+        series_meta = get_series_noindex(self.result, self.country, var, metadata=True)
+        series_data = -get_series_noindex(self.result, self.country, var)
+        index = get_index(self.result, self.country, var)
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result.iloc[index] = series
+        var = 'CBGS.1.0.0.0'
+        exports = 'CXGS.1.0.0.0'
+        imports = 'CMGS.1.0.0.0'
+        series_meta = get_series_noindex(self.result, self.country, imports, metadata=True)
+        series_meta['Variable Code'] = var
+        series_data = get_series_noindex(self.result, self.country, exports) + get_series_noindex(
+            self.result, self.country, imports)
+        index = get_index(self.result, self.country, var)
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+        # TODO: If Country in group 'Forecast: Countries with volumes at constant prices' line 202 country calc
 
-            # Per-capita GDP
+        # Per-capita GDP
+        # TODO: fix scale, frequency and country everywhere
+        new_variable = 'RVGDP.1.0.0.0'
+        ameco_variable = 'RVGDP.1.1.0.0'
+        variable_6 = re.sub('.1.0.0.0', '.6.0.0.0', new_variable)
+        total_population = 'NPTD.1.0.0.0'
+        potential_gdp = 'OVGD.1.0.0.0'
+        series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
+                       'Frequency': series_orig['Frequency'], 'Scale': 'thousands'}
+        series_6_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
+                       'Frequency': series_orig['Frequency'], 'Scale': 'units'}
+        ameco_series = get_series(ameco_df, self.country, ameco_variable)
+        splice_series = get_series_noindex(self.result, self.country, potential_gdp) / get_series(
+            df, self.country, total_population)
+        splicer = Splicer()
+        series_data = splicer.ratio_splice(ameco_series, splice_series)
+        series_6_data = series_data.pct_change()
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+        series_6 = pd.Series(series_6_meta)
+        series_6 = series_6.append(series_6_data)
+        self.result = self.result.append(series_6, ignore_index=True, sort=True)
+        # TODO: Do not add series if they're alreade there, i.e. df.loc['BE','UMGS'] is repeated
 
-            # Terms of trade
+        # Terms of trade
+        variables = ['APGN.3.0.0.0', 'APSN.3.0.0.0', 'APGS.3.0.0.0']
+        exports_1 = ['UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UXGS.1.0.0.0']
+        exports_2 = ['OXGN.1.0.0.0', 'OXSN.1.0.0.0', 'OXGS.1.0.0.0']
+        imports_1 = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UMGS.1.0.0.0']
+        imports_2 = ['OMGN.1.0.0.0', 'OMSN.1.0.0.0', 'OMGS.1.0.0.0']
+        for index, variable in enumerate(variables):
+            series_meta = {'Country Ameco': self.country, 'Variable Code': variable,
+                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_data = (get_series(
+                df, self.country, exports_1[index]) / get_series_noindex(
+                self.result, self.country, exports_2[index]) / (
+                    get_series(df, self.country, imports_1[index]) / get_series_noindex(
+                self.result, self.country, imports_2[index]))) * 100
+            series = pd.Series(series_meta)
+            series = series.append(series_data)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
+            variable_6 = re.sub('3', '6', variable)
+            series_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
+                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_data = series_data.pct_change()
+            series = pd.Series(series_meta)
+            series = series.append(series_data)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
-            # Set up OVGD.6.1.212.0 for World GDP volume table
+        # Set up OVGD.6.1.212.0 for World GDP volume table
+        variable = 'OVGD.6.1.212.0'
+        series_meta = {'Country Ameco': self.country, 'Variable Code': 'OVGD.6.1.212.0',
+                       'Frequency': 'Annual', 'Scale': 'units'}
+        series_data = get_series_noindex(self.result, self.country, 'OVGD.6.0.0.0')
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
 
-            # Convert percent change of trade variables (volume) from national currency to USD
+        # Convert percent change of trade variables (volume) from national currency to USD
+        for variable in T_VO:
+            new_variable = variable + '.6.0.30.0'
+            variable_6 = variable + '.6.0.0.0'
+            series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
+                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_data = get_series_noindex(self.result, self.country, variable_6)
+            series = pd.Series(series_meta)
+            series = series.append(series_data)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
-            column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
-                            1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
-                            2014, 2015, 2016, 2017, 2018, 2019]
-            self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-            export_data = self.result.copy()
-            export_data = export_data.reset_index()
-            writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
-            export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
-                                               sheet_name='Sheet1', index=False)
-            return self.result
+        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
+                        1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                        2014, 2015, 2016, 2017, 2018, 2019]
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        export_data = self.result.copy()
+        export_data = export_data.reset_index()
+        writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
+        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
+                                           sheet_name='Sheet1', index=False)
+        result_vars = self.result.index.get_level_values('Variable Code').tolist()
+        with open('outputvars4.txt', 'w') as f:
+            f.write('\n'.join(result_vars))
+        return self.result
 

@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
-from fdms.helpers.splicer import Splicer
-from fdms.helpers.operators import get_series, get_scale, get_frequency
+from fdms.utils.splicer import Splicer
+from fdms.utils.series import get_series, get_scale, get_frequency
 
 
 
@@ -115,4 +115,7 @@ class Population:
         writer = pd.ExcelWriter('output2.xlsx', engine='xlsxwriter')
         export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
                                            sheet_name='Sheet1', index=False)
+        result_vars = result.index.get_level_values('Variable Code').tolist()
+        with open('outputvars2.txt', 'w') as f:
+            f.write('\n'.join(result_vars))
         return result

@@ -5,7 +5,7 @@ from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
-from fdms.helpers.operators import read_raw_data
+from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 
 
 FORECAST = 'fdms/sample_data/BE.Forecast.0908.xlsm'
@@ -20,7 +20,7 @@ class Compute:
         self.ameco_sheet_name = ameco_sheet_name
 
     def perform_computation(self):
-        df, ameco_df = read_raw_data(self.excel_raw, self.ameco_filename, self.ameco_sheet_name)
+        df, ameco_df = read_country_forecast_excel(), read_ameco_txt()
 
         ##################################################################
         # If Country in group 'Forecast: Countries from transfer matrix' #

@@ -1,0 +1,852 @@
+Country calculation
+
+Group: Country = Self, 1950A1-2020A1
+	If Country in group 'Forecast: Countries from transfer matrix'
+		Then
+			Convert all transfer matrix variables to 1.0.0.0 (except National Account (volume)) and splice in country desk forecast
+				Group: Variable in Transfer Matrix Variables
+					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+					{Country}|{VariableParameter1}.Scale[t] = {Country}|{Variable}.Scale[t]
+					If Variable not in group 'National Account variables (Volume)'
+						Then
+							If Variable in group 'Transfer Matrix variables, to be buttspliced only'
+								Then
+									{Country}|{VariableParameter1}[t] = buttsplice(AMECO Historical!{Country}|{VariableParameter1}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward)
+								Else
+									If Variable in group 'Transfer Matrix variables, to be merged'
+										Then
+											{Country}|{VariableParameter1}[t] = merge({Country}|{Variable}[t], AMECO Historical!{Country}|{VariableParameter1}[t])
+										Else
+											{Country}|{VariableParameter1}[t] = buttsplice(ratiosplice(AMECO Historical!{Country}|{VariableParameter1}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward), {Country}|{Variable}[t], MsSpliceDirection.Forward)
+							{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter1}[t], iin({Country}|{Variable}[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+						Else
+			Population and related variables - splice AMECO Historical data with forecast data
+				{Country}|NLTN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLTN.1.0.0.0[t], {Country}|NUTN.1.0.0.0[t] + {Country}|NETN.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|NLTN.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLTN.1.0.0.0[t], iin({Country}|NUTN.1.0.0.0[t] + {Country}|NETN.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+				{Country}|NSTD.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NSTD.1.0.0.0[t], {Country}|NETN.1.0.0.0[t] - {Country}|NWTD.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|NSTD.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NSTD.1.0.0.0[t], iin({Country}|NETN.1.0.0.0[t] + {Country}|NWTD.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+				{Country}|NETD.1.0.414.0[t] = {Country}|NETD.1.0.0.0[t] / {Country}|NPAN1.1.0.0.0[t] * 100
+				{Country}|NETD.1.0.414.0.Source[t] = merge({Country}|NETD.1.0.0.0.Source[t], {Country}|NPAN1.1.0.0.0[t]), (Now-5)-(Now+5)
+				{Country}|NECN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NECN.1.0.0.0[t], {Country}|NETN[t], MsSpliceDirection.Forward)
+				{Country}|NECN.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NECN.1.0.0.0[t], iin({Country}|NETN.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+				{Country}|NLHT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLHT.1.0.0.0[t], {Country}|NETD.1.0.0.0[t] * {Country}|NLHA.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|NLHT.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLHT.1.0.0.0[t], iin({Country}|NETD.1.0.0.0[t] * {Country}|NLHA.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+				{Country}|NLHT9.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLHT9.1.0.0.0[t], {Country}|NETD.1.0.0.0[t] * {Country}|NLHA.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|NLHT.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLHT9.1.0.0.0[t], iin({Country}|NETD.1.0.0.0[t] * {Country}|NLHA.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+				{Country}|NLCN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLCN.1.0.0.0[t], {Country}|NECN.1.0.0.0[t] + {Country}|NUTN.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|NLCN.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLCN.1.0.0.0[t], iin({Country}|NECN.1.0.0.0[t] + {Country}|NUTN.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
+			National Accounts - Calculate additional GDP components
+				{Country}|UMGS[t] = sum({Country}|UMGN[t], {Country}|UMSN[t])
+				{Country}|UXGS[t] = sum({Country}|UXGN[t], {Country}|UXSN[t])
+				{Country}|UBGN[t] = {Country}|UXGN[t] - {Country}|UMGN[t]
+				{Country}|UBSN[t] = {Country}|UXSN[t] - {Country}|UMSN[t]
+				{Country}|UBGS[t] = {Country}|UXGS[t] - {Country}|UMGS[t]
+				{Country}|UIGG[t] = {Country}|UIGG0[t]
+				{Country}|UIGP[t] = {Country}|UIGT[t] - {Country}|UIGG[t]
+				{Country}|UIGNR[t] = {Country}|UIGCO[t] - {Country}|UIGDW[t]
+				{Country}|UUNF[t] = sum({Country}|UCPH[t], {Country}|UCTG[t], {Country}|UIGT[t])
+				{Country}|UUNT[t] = sum({Country}|UCPH[t], {Country}|UCTG[t], {Country}|UIGT[t], {Country}|UIST[t])
+				{Country}|UUTT[t] = sum({Country}|UCPH[t], {Country}|UCTG[t], {Country}|UIGT[t], {Country}|UIST[t], {Country}|UXGN[t], {Country}|UXSN[t])
+				{Country}|UITT[t] = sum({Country}|UIGT[t], {Country}|UIST[t])
+			National Accounts (Value) - calculate additional components
+				{Country}|UMGS.1.0.0.0[t] = sum({Country}|UMGN.1.0.0.0[t], {Country}|UMSN.1.0.0.0[t])
+				{Country}|UMGS.1.0.0.0.Source[t] = merge({Country}|UMGN.1.0.0.0.Source[t], {Country}|UMSN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UXGS.1.0.0.0[t] = sum({Country}|UXGN.1.0.0.0[t], {Country}|UXSN.1.0.0.0[t])
+				{Country}|UXGS.1.0.0.0.Source[t] = merge({Country}|UXGN.1.0.0.0.Source[t], {Country}|UXSN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBGN.1.0.0.0[t] = {Country}|UXGN[t] - {Country}|UMGN[t]
+				{Country}|UBGN.1.0.0.0.Source[t] = merge({Country}|UXGN.1.0.0.0.Source[t], {Country}|UMGN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBSN.1.0.0.0[t] = {Country}|UXSN.1.0.0.0[t] - {Country}|UMSN.1.0.0.0[t]
+				{Country}|UBSN.1.0.0.0.Source[t] = merge({Country}|UXSN.1.0.0.0.Source[t], {Country}|UMSN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBGS.1.0.0.0[t] = {Country}|UXGS.1.0.0.0[t] - {Country}|UMGS.1.0.0.0[t]
+				{Country}|UBGS.1.0.0.0.Source[t] = merge({Country}|UXGS.1.0.0.0.Source[t], {Country}|UMGS.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UIGG.1.0.0.0[t] = {Country}|UIGG0.1.0.0.0[t]
+				{Country}|UIGG.1.0.0.0.Source[t] = {Country}|UIGG0.1.0.0.0.Source[t], (Now-5)-(Now+5)
+				{Country}|UIGP.1.0.0.0[t] = {Country}|UIGT.1.0.0.0[t] - {Country}|UIGG.1.0.0.0[t]
+				{Country}|UIGP.1.0.0.0.Source[t] = merge({Country}|UIGT.1.0.0.0.Source[t], {Country}|UIGG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UIGNR.1.0.0.0[t] = {Country}|UIGCO.1.0.0.0[t] - {Country}|UIGDW.1.0.0.0[t]
+				{Country}|UIGNR.1.0.0.0.Source[t] = merge({Country}|UIGCO.1.0.0.0.Source[t], {Country}|UIGDW.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UUNF.1.0.0.0[t] = sum({Country}|UCPH.1.0.0.0[t], {Country}|UCTG.1.0.0.0[t], {Country}|UIGT.1.0.0.0[t])
+				{Country}|UUNF.1.0.0.0.Source[t] = merge({Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t], {Country}|UIGT.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UUNT.1.0.0.0[t] = sum({Country}|UCPH.1.0.0.0[t], {Country}|UCTG.1.0.0.0[t], {Country}|UIGT.1.0.0.0[t], {Country}|UIST.1.0.0.0[t])
+				{Country}|UUNT.1.0.0.0.Source[t] = merge({Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t], {Country}|UIGT.1.0.0.0.Source[t], {Country}|UIST.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UUTT.1.0.0.0[t] = sum({Country}|UCPH.1.0.0.0[t], {Country}|UCTG.1.0.0.0[t], {Country}|UIGT.1.0.0.0[t], {Country}|UIST.1.0.0.0[t], {Country}|UXGN.1.0.0.0[t], {Country}|UXSN.1.0.0.0[t])
+				{Country}|UUTT.1.0.0.0.Source[t] = merge({Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t], {Country}|UIGT.1.0.0.0.Source[t], {Country}|UIST.1.0.0.0.Source[t], {Country}|UXGN.1.0.0.0.Source[t], {Country}|UXSN.1.0.0.0.Source[t]), (Now-5)-(
+				{Country}|UITT.1.0.0.0[t] = sum({Country}|UIGT.1.0.0.0[t], {Country}|UIST.1.0.0.0[t])
+				{Country}|UITT.1.0.0.0.Source[t] = merge({Country}|UIGT.1.0.0.0.Source[t], {Country}|UIST.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+			National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent change, per-capita GDP, and contribution to %change in GDP
+				Group: Variable in National Account variables (Volume)
+					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+					{VariableParameter2} = texttoelement(concatenate("U", removeleft({Variable}, 1)), {VariableParameter2})
+					{VariableParameter3} = addtail({Variable}, ".1.1.0.0")
+					If Country in group 'Forecast: Countries with volumes at constant prices'
+						Then
+							{Country}|{VariableParameter1}[t] = ratiosplice(AMECO Historical!{Country}|{VariableParameter3}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward)
+							{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter3}[t], iin({Country}|{Variable}[t], "", "Country desk forecast"), ""), (Now-5)-(Now+5)
+						Else
+							{Country}|{VariableParameter1}[t] = ratiosplice(AMECO Historical!{Country}|{VariableParameter3}[t], level(({Country}|{Variable}[t] / {Country}|{VariableParameter2}[t-1] - 1) * 100), MsSpliceDirection.Forward)
+							{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter3}[t], iin({Country}|{Variable}[t], "", "Country desk forecast"), ""), (Now-5)-(Now+5)
+					// exception for ME: when the base year was 2005, there was not enough historical data for ME therefore exceptional calculations were put in place for that country replacing the group above with the following branch
+					If Country <> 'ME'
+						Then
+							If Country in group 'Forecast: Countries with volumes at constant prices'
+								Then
+									{Country}|{VariableParameter1}[t] = ratiosplice(AMECO Historical!{Country}|{VariableParameter3}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward)
+									{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter3}[t], iin({Country}|{Variable}[t], "", "Country desk forecast"), ""), (Now-5)-(Now+5)
+								Else
+									{Country}|{VariableParameter1}[t] = ratiosplice(AMECO Historical!{Country}|{VariableParameter3}[t], level(({Country}|{Variable}[t] / {Country}|{VariableParameter2}[t-1] - 1) * 100), MsSpliceDirection.Forward)
+									{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter3}[t], iin({Country}|{Variable}[t], "", "Country desk forecast"), ""), (Now-5)-(Now+5)
+						Else
+							{Country}|{VariableParameter1}[t] = merge({Country}|{Variable}[t], AMECO!{Country}|{VariableParameter1}[t])
+				If Country in group 'Forecast: Countries with volumes at constant prices'
+					Then
+						{Country}|OMGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OMGS.1.1.0.0[t], {Country}|OMGN[t] + {Country}|OMSN[t], MsSpliceDirection.Forward)
+						{Country}|OXGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t], {Country}|OXGN[t] + {Country}|OXSN[t], MsSpliceDirection.Forward)
+						{Country}|OBGN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGN.1.1.0.0[t] - AMECO Historical!{Country}|OMGN.1.1.0.0[t], {Country}|OXGN[t] - {Country}|OMGN[t], MsSpliceDirection.Forward)
+						{Country}|OBSN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXSN.1.1.0.0[t] - AMECO Historical!{Country}|OMSN.1.1.0.0[t], {Country}|OXSN[t] - {Country}|OMSN[t], MsSpliceDirection.Forward)
+						{Country}|OBGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t] - AMECO Historical!{Country}|OMGS.1.1.0.0[t], {Country}|OXGN[t] + {Country}|OXSN[t] - {Country}|OMGN[t] - {Country}|OMSN[t], MsSpliceDirection.Forward)
+						{Country}|OIGP.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGT.1.1.0.0[t] - AMECO Historical!{Country}|OIGG.1.1.0.0[t], {Country}|OIGT[t] - {Country}|OIGG[t], MsSpliceDirection.Forward)
+						{Country}|OIGNR.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGCO.1.1.0.0[t] - AMECO Historical!{Country}|OIGDW.1.1.0.0[t], {Country}|OIGCO[t] - {Country}|OIGDW[t], MsSpliceDirection.Forward)
+						{Country}|OUNF.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OCPH.1.1.0.0[t] + AMECO Historical!{Country}|OCTG.1.1.0.0[t] + AMECO Historical!{Country}|OIGT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t], MsSpliceDirection.Forw
+						{Country}|OUNT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUNT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t], MsSpliceDirection.Forward)
+						{Country}|OUTT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUTT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t] + {Country}|OXGN[t] + {Country}|OXSN[t], MsSpliceDirection.Forward)
+						{Country}|OITT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OITT.1.0.0.0[t], {Country}|OIGT[t] + {Country}|OIST[t], MsSpliceDirection.Forward)
+					Else
+						{Country}|OMGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OMGS.1.1.0.0[t], level((({Country}|OMGN[t] + {Country}|OMSN[t]) / ({Country}|UMGN[t-1] + {Country}|UMSN[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+						{Country}|OXGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t], level((({Country}|OXGN[t] + {Country}|OXSN[t]) / ({Country}|UXGN[t-1] + {Country}|UXSN[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+						{Country}|OBGN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGN.1.1.0.0[t] - AMECO Historical!{Country}|OMGN.1.1.0.0[t], level((({Country}|OXGN[t] - {Country}|OMGN[t]) / ({Country}|UXGN[t-1] - {Country}|UMGN[t-1]) - 1) * 100), MsSpliceDirection.Fo
+						{Country}|OBSN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXSN.1.1.0.0[t] - AMECO Historical!{Country}|OMSN.1.1.0.0[t], level((({Country}|OXSN[t] - {Country}|OMSN[t]) / ({Country}|UXSN[t-1] - {Country}|UMSN[t-1]) - 1) * 100), MsSpliceDirection.Fo
+						{Country}|OBGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t] - AMECO Historical!{Country}|OMGS.1.1.0.0[t], level((({Country}|OXGN[t] + {Country}|OXSN[t] - {Country}|OMGN[t] - {Country}|OMSN[t]) / ({Country}|UXGN[t-1] + {Country}|UXSN
+						{Country}|OIGP.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGT.1.1.0.0[t] - AMECO Historical!{Country}|OIGG.1.1.0.0[t], level((({Country}|OIGT[t] - {Country}|OIGG[t]) / ({Country}|UIGT[t-1] - {Country}|UIGG[t-1]) - 1) * 100), MsSpliceDirection.Fo
+						{Country}|OIGNR.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGCO.1.1.0.0[t] - AMECO Historical!{Country}|OIGDW.1.1.0.0[t], level((({Country}|OIGCO[t] - {Country}|OIGDW[t]) / ({Country}|UIGCO[t-1] - {Country}|UIGDW[t-1]) - 1) * 100), MsSpliceDirec
+						{Country}|OUNF.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OCPH.1.1.0.0[t] + AMECO Historical!{Country}|OCTG.1.1.0.0[t] + AMECO Historical!{Country}|OIGT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t]) / ({Country}|U
+						{Country}|OUNT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUNT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t]) / ({Country}|UCPH[t-1] + {Country}|UCTG[t-1] + {Country}|UIGT[t-1] + {Country}|UIST[
+						{Country}|OUTT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUTT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t] + {Country}|OXGN[t] + {Country}|OXSN[t]) / ({Country}|UCPH[t-1] + {Country}|UCTG[t-1]
+						{Country}|OITT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OITT.1.0.0.0[t], level((({Country}|OIGT[t] + {Country}|OIST[t]) / ({Country}|UIGT[t-1] + {Country}|UIST[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+				// exception for ME: when the base year was 2005, there was not enough historical data for ME therefore exceptional calculations were put in place for that country replacing the group above with the following branch
+				If Country <> 'ME'
+					Then
+						If Country in group 'Forecast: Countries with volumes at constant prices'
+							Then
+								{Country}|OMGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OMGS.1.1.0.0[t], {Country}|OMGN[t] + {Country}|OMSN[t], MsSpliceDirection.Forward)
+								{Country}|OXGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t], {Country}|OXGN[t] + {Country}|OXSN[t], MsSpliceDirection.Forward)
+								{Country}|OBGN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGN.1.1.0.0[t] - AMECO Historical!{Country}|OMGN.1.1.0.0[t], {Country}|OXGN[t] - {Country}|OMGN[t], MsSpliceDirection.Forward)
+								{Country}|OBSN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXSN.1.1.0.0[t] - AMECO Historical!{Country}|OMSN.1.1.0.0[t], {Country}|OXSN[t] - {Country}|OMSN[t], MsSpliceDirection.Forward)
+								{Country}|OBGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t] - AMECO Historical!{Country}|OMGS.1.1.0.0[t], {Country}|OXGN[t] + {Country}|OXSN[t] - {Country}|OMGN[t] - {Country}|OMSN[t], MsSpliceDirection.Forward)
+								{Country}|OIGP.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGT.1.1.0.0[t] - AMECO Historical!{Country}|OIGG.1.1.0.0[t], {Country}|OIGT[t] - {Country}|OIGG[t], MsSpliceDirection.Forward)
+								{Country}|OIGNR.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGCO.1.1.0.0[t] - AMECO Historical!{Country}|OIGDW.1.1.0.0[t], {Country}|OIGCO[t] - {Country}|OIGDW[t], MsSpliceDirection.Forward)
+								{Country}|OUNF.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OCPH.1.1.0.0[t] + AMECO Historical!{Country}|OCTG.1.1.0.0[t] + AMECO Historical!{Country}|OIGT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t], MsSpliceDirection.Forw
+								{Country}|OUNT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUNT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t], MsSpliceDirection.Forward)
+								{Country}|OUTT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUTT.1.1.0.0[t], {Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t] + {Country}|OXGN[t] + {Country}|OXSN[t], MsSpliceDirection.Forward)
+								{Country}|OITT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OITT.1.0.0.0[t], {Country}|OIGT[t] + {Country}|OIST[t], MsSpliceDirection.Forward)
+							Else
+								{Country}|OMGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OMGS.1.1.0.0[t], level((({Country}|OMGN[t] + {Country}|OMSN[t]) / ({Country}|UMGN[t-1] + {Country}|UMSN[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+								{Country}|OXGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t], level((({Country}|OXGN[t] + {Country}|OXSN[t]) / ({Country}|UXGN[t-1] + {Country}|UXSN[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+								{Country}|OBGN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGN.1.1.0.0[t] - AMECO Historical!{Country}|OMGN.1.1.0.0[t], level((({Country}|OXGN[t] - {Country}|OMGN[t]) / ({Country}|UXGN[t-1] - {Country}|UMGN[t-1]) - 1) * 100), MsSpliceDirection.Fo
+								{Country}|OBSN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXSN.1.1.0.0[t] - AMECO Historical!{Country}|OMSN.1.1.0.0[t], level((({Country}|OXSN[t] - {Country}|OMSN[t]) / ({Country}|UXSN[t-1] - {Country}|UMSN[t-1]) - 1) * 100), MsSpliceDirection.Fo
+								{Country}|OBGS.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OXGS.1.1.0.0[t] - AMECO Historical!{Country}|OMGS.1.1.0.0[t], level((({Country}|OXGN[t] + {Country}|OXSN[t] - {Country}|OMGN[t] - {Country}|OMSN[t]) / ({Country}|UXGN[t-1] + {Country}|UXSN
+								{Country}|OIGP.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGT.1.1.0.0[t] - AMECO Historical!{Country}|OIGG.1.1.0.0[t], level((({Country}|OIGT[t] - {Country}|OIGG[t]) / ({Country}|UIGT[t-1] - {Country}|UIGG[t-1]) - 1) * 100), MsSpliceDirection.Fo
+								{Country}|OIGNR.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OIGCO.1.1.0.0[t] - AMECO Historical!{Country}|OIGDW.1.1.0.0[t], level((({Country}|OIGCO[t] - {Country}|OIGDW[t]) / ({Country}|UIGCO[t-1] - {Country}|UIGDW[t-1]) - 1) * 100), MsSpliceDirec
+								{Country}|OUNF.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OCPH.1.1.0.0[t] + AMECO Historical!{Country}|OCTG.1.1.0.0[t] + AMECO Historical!{Country}|OIGT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t]) / ({Country}|U
+								{Country}|OUNT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUNT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t]) / ({Country}|UCPH[t-1] + {Country}|UCTG[t-1] + {Country}|UIGT[t-1] + {Country}|UIST[
+								{Country}|OUTT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OUTT.1.1.0.0[t], level((({Country}|OCPH[t] + {Country}|OCTG[t] + {Country}|OIGT[t] + {Country}|OIST[t] + {Country}|OXGN[t] + {Country}|OXSN[t]) / ({Country}|UCPH[t-1] + {Country}|UCTG[t-1]
+								{Country}|OITT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|OITT.1.0.0.0[t], level((({Country}|OIGT[t] + {Country}|OIST[t]) / ({Country}|UIGT[t-1] + {Country}|UIST[t-1]) - 1) * 100), MsSpliceDirection.Forward)
+					Else
+						{Country}|OMGS.1.0.0.0[t] = {Country}|OMGN.1.0.0.0[t] + {Country}|OMSN.1.0.0.0[t]
+						{Country}|OXGS.1.0.0.0[t] = {Country}|OXGN.1.0.0.0[t] + {Country}|OXSN.1.0.0.0[t]
+						{Country}|OBGN.1.0.0.0[t] = {Country}|OXGN.1.0.0.0[t] - {Country}|OMGN.1.0.0.0[t]
+						{Country}|OBSN.1.0.0.0[t] = {Country}|OXSN.1.0.0.0[t] - {Country}|OMSN.1.0.0.0[t]
+						{Country}|OBGS.1.0.0.0[t] = {Country}|OXGN.1.0.0.0[t] + {Country}|OXSN.1.0.0.0[t] - {Country}|OMGN.1.0.0.0[t] - {Country}|OMSN.1.0.0.0[t]
+						{Country}|OIGP.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OIGG.1.0.0.0[t]
+						{Country}|OIGNR.1.0.0.0[t] = {Country}|OIGCO.1.0.0.0[t] - {Country}|OIGDW.1.0.0.0[t]
+						{Country}|OUNF.1.0.0.0[t] = {Country}|OCPH.1.0.0.0[t] + {Country}|OCTG.1.0.0.0[t] + {Country}|OIGT.1.0.0.0[t]
+						{Country}|OUNT.1.0.0.0[t] = {Country}|OCPH.1.0.0.0[t] + {Country}|OCTG.1.0.0.0[t] + {Country}|OIGT.1.0.0.0[t] + {Country}|OIST.1.0.0.0[t]
+						{Country}|OUTT.1.0.0.0[t] = {Country}|OCPH.1.0.0.0[t] + {Country}|OCTG.1.0.0.0[t] + {Country}|OIGT.1.0.0.0[t] + {Country}|OIST.1.0.0.0[t] + {Country}|OXGN.1.0.0.0[t] + {Country}|OXSN.1.0.0.0[t]
+						{Country}|OITT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] + {Country}|OIST.1.0.0.0[t]
+				Group: Variable in National Account variables (Volume)
+					Volume, rebase to baseperiod
+						{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+						{VariableParameter2} = texttoelement(concatenate("U", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter2})
+						{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter1}[t] / {Country}|{VariableParameter1}[{BasePeriod}] * {Country}|{VariableParameter2}[{BasePeriod}]
+						// exception for ME: when the base year was 2005, there was not enough historical data for ME therefore exceptional calculations were put in place for that country replacing the equation above with the following branch
+						If Country <> 'ME'
+							Then
+								{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter1}[t] / {Country}|{VariableParameter1}[{BasePeriod}] * {Country}|{VariableParameter2}[{BasePeriod}]
+							Else
+				Group: Variable in National Account variables (Volume)
+					Volume, percent change
+						{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+						{VariableParameter2} = texttoelement(concatenate("U", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter2})
+						{VariableParameter3} = addtail({Variable}, ".6.0.0.0")
+						{Country}|{VariableParameter3}[t] = pch({Country}|{VariableParameter1}[t])
+						// exception for ME: when the base year was 2005, there was not enough historical data for ME therefore exceptional calculations were put in place for that country replacing the equation above with the following branch
+						If Country <> 'ME'
+							Then
+								{Country}|{VariableParameter3}[t] = pch({Country}|{VariableParameter1}[t])
+							Else
+								{Country}|{VariableParameter3}[t] = 100 * {Country}|{VariableParameter1}[t] / {Country}|{VariableParameter2}[t-1] - 100
+						{Country}|{VariableParameter3}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+				Group: Variable in National Account variables (Volume)
+					Contribution to percent change in GDP
+						{VariableParameter1} = texttoelement(concatenate("C", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter2})
+						{VariableParameter2} = addtail({Variable}, ".6.0.0.0")
+						If Country = 'MT', 'TR'
+							Then
+								{VariableParameter3} = texttoelement(concatenate({Variable}, ".1.0.0.0"), {VariableParameter3})
+								{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter2}[t] * {Country}|{VariableParameter3}[t-1] / {Country}|OVGD.1.0.0.0[t-1]
+							Else
+								{VariableParameter3} = texttoelement(concatenate("U", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter3})
+								{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter2}[t] * {Country}|{VariableParameter3}[t-1] / {Country}|UVGD.1.0.0.0[t-1]
+				Contribution to percent change in GDP (calculation for additional variables)
+					{Country}|CMGS.1.0.0.0[t] =  - CMGS.1.0.0.0[t]
+					{Country}|CBGS.1.0.0.0[t] = CXGS.1.0.0.0[t] + CMGS.1.0.0.0[t]
+					If Country in group 'Forecast: Countries with volumes at constant prices'
+						Then
+							If Country = 'RS'
+								Then
+									{Country}|CUNF.1.0.0.0[t] = {Country}|CIGT.1.0.0.0[t] + {Country}|CCTG.1.0.0.0[t] + {Country}|CCPH.1.0.0.0[t]
+									{Country}|CIST.1.0.0.0[t] = {Country}|OVGD.6.0.0.0[t] - {Country}|CUNF.1.0.0.0[t] - {Country}|CBGS.1.0.0.0[t]
+								Else
+									{Country}|CIST.1.0.0.0[t] = {Country}|OVGD.6.0.0.0[t] - {Country}|CUNF.1.0.0.0[t] - {Country}|CBGS.1.0.0.0[t]
+						Else
+							{Country}|CIST.1.0.0.0[t] = {Country}|CITT.1.0.0.0[t] - {Country}|CIGT.1.0.0.0[t]
+							{Country}|CUNF.1.0.0.0[t] = {Country}|CUNT.1.0.0.0[t] - {Country}|CIST.1.0.0.0[t]
+				Per-capita GDP
+					Group: Variable = 'RVGDP.1.0.0.0'
+						{Country}|{Variable}[t] = ratiosplice(AMECO Historical!{Country}|RVGDP.1.1.0.0[t], {Country}|OVGD.1.0.0.0[t] / {Country}|NPTD.1.0.0.0[t], MsSpliceDirection.Forward)
+						{Country}|{Variable}.Source[t] = merge({Country}|OVGD.1.0.0.0[t], {Country}|NPTD.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
+						{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+						{Country}|{VariableParameter1}.Source[t] = {Country}|{Variable}.Source[t], (Now-5)-(Now+5)
+				Terms of trade
+					Group: Variable = 'APGN.3.0.0.0'
+						{Country}|{Variable}[t] = {Country}|UXGN.1.0.0.0[t] / {Country}|OXGN.1.0.0.0[t] / ({Country}|UMGN.1.0.0.0[t] / {Country}|OMGN.1.0.0.0[t]) * 100
+						{Country}|{Variable}.Source[t] = merge({Country}|UXGN.1.0.0.0.Source[t], {Country}|OXGN.1.0.0.0.Source[t], {Country}|UMGN.1.0.0.0.Source[t], {Country}|OMGN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+					Group: Variable = 'APSN.3.0.0.0'
+						{Country}|{Variable}[t] = {Country}|UXSN.1.0.0.0[t] / {Country}|OXSN.1.0.0.0[t] / ({Country}|UMSN.1.0.0.0[t] / {Country}|OMSN.1.0.0.0[t]) * 100
+						{Country}|{Variable}.Source[t] = merge({Country}|UXSN.1.0.0.0.Source[t], {Country}|OXSN.1.0.0.0.Country[t], {Country}|UMSN.1.0.0.0.Source[t], {Country}|OMSN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+					Group: Variable = 'APGS.3.0.0.0'
+						{Country}|{Variable}[t] = {Country}|UXGS.1.0.0.0[t] / {Country}|OXGS.1.0.0.0[t] / ({Country}|UMGS.1.0.0.0[t] / {Country}|OMGS.1.0.0.0[t]) * 100
+						{Country}|{Variable}.Source[t] = merge({Country}|UXGS.1.0.0.0.Source[t], {Country}|OXGS.1.0.0.0.Source[t], {Country}|UMGS.1.0.0.0.Source[t], {Country}|OMGS.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+					Group: Variable = 'APGS.3.0.0.0', 'APGN.3.0.0.0', 'APSN.3.0.0.0'
+						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
+						{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+						{Country}|{VariableParameter1}.Source[t] = {Country}|{Variable}.Source[t], (Now-5)-(Now+5)
+				Set up OVGD.6.1.212.0 for World GDP volume table
+					{Country}|OVGD.6.1.212.0[t] = {Country}|OVGD.6.0.0.0[t]
+				Convert percent change of trade variables (volume) from national currency to USD
+					Group: Variable in Trade variables (volume)
+						{VariableParameter1} = texttoelement(concatenate({Variable}, ".6.0.30.0"), {VariableParameter1})
+						{VariableParameter2} = texttoelement(concatenate({Variable}, ".6.0.0.0"), {VariableParameter2})
+						{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter2}[t]
+			National Accounts (Value) - additional variables, and contribution to %change in cost
+				{Country}|UVGN.1.0.0.0[t] = sum({Country}|UVGD.1.0.0.0[t], {Country}|UBRA.1.0.0.0[t])
+				{Country}|UVGN.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UBRA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UOGD.1.0.0.0[t] = ignoremissingsum({Country}|UVGD.1.0.0.0[t], {Country}|UYVG.1.0.0.0[t], {Country}|UYEU.1.0.0.0[t], -{Country}|UWCD.1.0.0.0[t], -{Country}|UTVG.1.0.0.0[t], -{Country}|UTEU.1.0.0.0[t])
+				{Country}|UOGD.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UYVG.1.0.0.0.Source[t], {Country}|UYEU.1.0.0.0.Source[t], {Country}|UWCD.1.0.0.0.Source[t], {Country}|UTVG.1.0.0.0.Source[t], {Country}|UTEU.1.0.0.0.Source[t]), (Now-5)-(
+				{Country}|UTVNBP.1.0.0.0[t] = ignoremissingsubtract({Country}|UTVTBP.1.0.0.0[t], {Country}|UYVTBP.1.0.0.0[t])
+				{Country}|UTVNBP.1.0.0.0.Source[t] = merge({Country}|UTVTBP.1.0.0.0.Source[t], {Country}|UYVTBP.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UVGE.1.0.0.0[t] = ignoremissingsubtract({Country}|UVGD.1.0.0.0[t], {Country}|UTVNBP.1.0.0.0[t])
+				{Country}|UVGE.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UTVNBP.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UWCDA.1.0.0.0[t] = {Country}|NETD.1.0.0.0[t] * {Country}|UWCD.1.0.0.0[t] / {Country}|NWTD.1.0.0.0[t]
+				{Country}|UWCDA.1.0.0.0.Source[t] = merge({Country}|NETD.1.0.0.0.Source[t], {Country}|UWCD.1.0.0.0.Source[t], {Country}|NWTD.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UWSC.1.0.0.0[t] = ignoremissingsubtract({Country}|UWCD.1.0.0.0[t], {Country}|UWWD[t])
+				{Country}|UWSC.1.0.0.0.Source[t] = merge({Country}|UWCD.1.0.0.0.Source[t], {Country}|UWWD.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				Group: Variable in National Account variables, income side (Value)
+					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+					{VariableParameter2} = texttoelement(concatenate("CC", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter2})
+					{Country}|{VariableParameter2}[t] = {Country}|{VariableParameter1}[t] / {Country}|UVGD.1.0.0.0[t] * pch({Country}|{VariableParameter1}[t] / {Country}|OVGD.1.0.0.0[t])
+			Recalculate UVGDH.1.0.0.0 and pull KNP.1.0.212.0 from AMECO
+				{Country}|UVGDH.1.0.0.0[t] = iif(NOT isempty(AMECO!{Country}|UVGDH.1.0.0.0[t]), AMECO!{Country}|UVGDH.1.0.0.0[t], {Country}|UVGD.1.0.0.0[t])
+				// Historical UVGDH from AMECO_H and Forecast UVGDH from desk transfer UVGD (26.11.2014)
+				{Country}|UVGDH.1.0.0.0[t] = iif(NOT isempty(AMECO Historical!{Country}|UVGDH.1.0.0.0[t]), ratiosplice(AMECO Historical!{Country}|UVGDH.1.0.0.0[t], {Country}|UVGD.1.0.0.0[t], MsSpliceDirection.Forward), {Country}|UVGD.1.0.0.0[t])
+				{Country}|KNP.1.0.212.0[t] = AMECO!{Country}|KNP.1.0.212.0[t]
+			Prices - splice AMECO Historical data with forecast data and calculate percent change, and GNI (GDP deflator)
+				{Country}|ZCPIH.6.0.0.0[t] = iif(isempty({Country}|ZCPIH[t]), {Country}|ZCPIN.6.0.0.0[t], {Country}|ZCPIH.6.0.0.0[t])
+				Group: Variable in Price Deflator variables
+					{VariableParameter1} = texttoelement(concatenate("U", removeleft(removeright({Variable}, 7), 1), "1.0.0.0"), {VariableParameter1})
+					{VariableParameter2} = texttoelement(concatenate("O", removeleft(removeright({Variable}, 7), 1), "1.0.0.0"), {VariableParameter2})
+					{Country}|{Variable}[t] = rebase({Country}|{VariableParameter1}[t] / {Country}|{VariableParameter2}[t], {BasePeriod})
+					{Country}|{Variable}.Source[t] = merge({Country}|{VariableParameter1}.Source[t], {Country}|{VariableParameter2}.Source[t]), (Now-5)-(Now+5)
+					{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.1.0.0"), {VariableParameter1})
+					{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+					{Country}|{VariableParameter1}.Source[t] = {Country}|{Variable}.Source[t], (Now-5)-(Now+5)
+				GNI (GDP deflator)
+					{Country}|OVGN.1.0.0.0[t] = {Country}|UVGN.1.0.0.0[t] / {Country}|PVGD.3.1.0.0[t] * 100
+					{Country}|OVGN.1.0.0.0.Source[t] = merge({Country}|UVGN.1.0.0.0.Source[t], {Country}|PVGD.3.1.0.0.Source[t]), (Now-5)-(Now+5)
+					{Country}|OVGN.6.0.0.0[t] = pch({Country}|OVGN.1.0.0.0[t])
+					{Country}|OVGN.6.0.0.0.Source[t] = {Country}|OVGN.1.0.0.0.Source[t], (Now-5)-(Now+5)
+			Capital Stock and Total Factor Productivity
+				Group: Variable = 'OIGT.1.0.0.0', 'OVGD.1.0.0.0', 'UIGT.1.0.0.0'
+					If NOT IsEmpty({Country}|{Variable}[t])
+						Then
+							{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], AMECO!{Country}|{Variable}[t], MsSpliceDirection.Backward)
+						Else
+				If NOT isempty(AMECO Historical!{Country}|UKCT.1.0.0.0[t])
+					Then
+						{Country}|UKCT.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|UKCT.1.0.0.0[t], AMECO!{Country}|UKCT.1.0.0.0[t], MsSpliceDirection.Backward)
+					Else
+				{Country}|OKCT.1.0.0.0[t] = {Country}|UKCT.1.0.0.0[t] / ({Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t])
+				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t]
+				{Country}|OKND.1.0.0.0[t] = Null
+				If ModifyDate(StartPeriod({Country}|OVGD.1.0.0.0[t]),1,MsFrequency.Annual)<StartPeriod({Country}|OIGT.1.0.0.0[t])
+					Then
+						{LastObservation} = modifydate(startperiod({Country}|OIGT.1.0.0.0[t]), -1, MsFrequency.Annual)
+					Else
+						{LastObservation} = startperiod({Country}|OVGD.1.0.0.0[t])
+				{Country}|OKND.1.0.0.0[t] = {Country}|OVGD.1.0.0.0[t] * 3, {LastObservation}-{LastObservation}
+				{Country}|OKND.1.0.0.0[t] = iin({Country}|OKND.1.0.0.0[t], {Country}|OKND.1.0.0.0[t-1] + {Country}|OINT.1.0.0.0[t])
+				{LastObservation} = modifydate(endperiod({Country}|OKCT.1.0.0.0[t]), 1, MsFrequency.Annual)
+				{Country}|OKCT.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] * {Country}|OKCT.1.0.0.0[t-1] / {Country}|OKND.1.0.0.0[t-2], {LastObservation}-2020A1
+				{Country}|OKND.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] + {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|UKCT.1.0.0.0[t] = {Country}|OKCT.1.0.0.0[t] * {Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t], {LastObservation}-2020A1
+				{LastObservation} = modifydate(endperiod({Country}|OKCT.1.0.0.0[t]), 1, MsFrequency.Annual)
+				{Country}|OKCT.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] * {Country}|OKCT.1.0.0.0[t-1] / {Country}|OKND.1.0.0.0[t-2], {LastObservation}-2020A1
+				{Country}|OKND.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] + {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|UKCT.1.0.0.0[t] = {Country}|OKCT.1.0.0.0[t] * {Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t], {LastObservation}-2020A1
+				{LastObservation} = modifydate(endperiod({Country}|OKCT.1.0.0.0[t]), 1, MsFrequency.Annual)
+				{Country}|OKCT.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] * {Country}|OKCT.1.0.0.0[t-1] / {Country}|OKND.1.0.0.0[t-2], {LastObservation}-2020A1
+				{Country}|OKND.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] + {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|UKCT.1.0.0.0[t] = {Country}|OKCT.1.0.0.0[t] * {Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t], {LastObservation}-2020A1
+				{LastObservation} = modifydate(endperiod({Country}|OKCT.1.0.0.0[t]), 1, MsFrequency.Annual)
+				{Country}|OKCT.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] * {Country}|OKCT.1.0.0.0[t-1] / {Country}|OKND.1.0.0.0[t-2], {LastObservation}-2020A1
+				{Country}|OKND.1.0.0.0[t] = {Country}|OKND.1.0.0.0[t-1] + {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|UKCT.1.0.0.0[t] = {Country}|OKCT.1.0.0.0[t] * {Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t], {LastObservation}-2020A1
+				{Country}|ZVGDFA3.3.0.0.0[t] = ln({Country}|OVGD.1.0.0.0[t] / (power({Country}|NLHT9.1.0.0.0[t] * 1000, 0.65) * power({Country}|OKND.1.0.0.0[t], 0.35)))
+			Output Gap and Potential GDP
+				Group: Variable = 'ZNAWRU.1.0.0.0', 'AVGDGP.1.0.0.0', 'AVGDGT.1.0.0.0'
+					{Country}|{Variable}[t] = Output Gap!{Country}|{Variable}[t]
+				Group: Variable = 'OVGDP.1.0.0.0', 'OVGDT.1.0.0.0'
+					{Country}|{Variable}[t] = Output Gap!{Country}|{Variable}[t]
+				Group: Variable = 'OVGDP.1.0.0.0'
+					{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
+					{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+			Exchange rates and Interest rates
+				Group: Variable = 'XNE.1.0.99.0'
+					If NOT isempty(XR-IR!{Country}|XNE.1.0.99.0[t])
+						Then
+							{LastObservation} = startperiod(XR-IR!{Country}|XNE.1.0.99.0[t])
+							{Country}|{Variable}[t] = AMECO!{Country}|{Variable}[t], 1950A1-{LastObservation}
+							{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], XR-IR!{Country}|{Variable}[t], MsSpliceDirection.Forward, True)
+						Else
+							{Country}|{Variable}[t] = AMECO!{Country}|{Variable}[t]
+				Group: Variable = 'ILN.1.0.0.0', 'ISN.1.0.0.0'
+					{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "1.1.0.0"), {VariableParameter1})
+					{Country}|{Variable}[t] = AMECO!{Country}|{VariableParameter1}[t], 1950A1-(Now-1)
+					{Country}|{Variable}[t] = buttsplice({Country}|{Variable}[t], XR-IR!{Country}|{VariableParameter1}[t], MsSpliceDirection.Forward)
+				If Country in group 'EA'
+					Then
+						If Country in group 'Forecast: Countries with EA membership since 1999'
+							Then
+								{MembershipDate} = texttodate("1999A1")
+							Else
+								If Country = 'EL'
+									Then
+										{MembershipDate} = texttodate("2001A1")
+									Else
+								If Country = 'SI'
+									Then
+										{MembershipDate} = texttodate("2007A1")
+									Else
+								If Country = 'CY', 'MT'
+									Then
+										{MembershipDate} = texttodate("2008A1")
+									Else
+								If Country = 'SK'
+									Then
+										{MembershipDate} = texttodate("2009A1")
+									Else
+								If Country = 'EE'
+									Then
+										{MembershipDate} = texttodate("2011A1")
+									Else
+								If Country = 'LV'
+									Then
+										{MembershipDate} = texttodate("2014A1")
+									Else
+								If Country = 'LT'
+									Then
+										{MembershipDate} = texttodate("2015A1")
+									Else
+						{Country}|XNE.1.0.99.0[t] = 1, {MembershipDate}-(Now+5)
+						{Country}|XNEF.1.0.99.0[t] = extend(AMECO!{Country}|XNEF.1.0.99.0[t], DirectionExtend.Forward, ExtendMethod.PreviousValue, Null, 1), 1950A1-(Now+5)
+						{Country}|XNEB.1.0.99.0[t] = Null, {MembershipDate}-(Now+5)
+						{MembershipDate} = modifydate({MembershipDate}, -1)
+						{Country}|XNEB.1.0.99.0[t] = XNE.1.0.99.0[t] * XNEF.1.0.99.0[t], 1950A1-(MembershipDate)
+					Else
+						{Country}|XNEB.1.0.99.0[t] = {Country}|XNE.1.0.99.0[t]
+				{LastObservation} = startperiod(XR-IR!US|XNE.1.0.99.0[t])
+				{Country}|XNU.1.0.30.0[t] = XNE.1.0.99.0[t] / ratiosplice(truncate(AMECO!US|XNE.1.0.99.0[t], setperiod(startperiod(AMECO!US|XNE.1.0.99.0[t]), {LastObservation}),MsTruncateMode.Keep), XR-IR!US|XNE.1.0.99.0[t], MsSpliceDirection.Forward)
+				Effective exchange rates and relative unit labour costs, currently not calculated in FDMS+
+					Group: Variable = 'PLCDQ.3.0.0.437', 'PLCDQ.3.0.30.437', 'XUNNQ.3.0.30.437', 'XUNRQ.3.0.30.437', 'PLCDQ.3.0.0.414', 'PLCDQ.3.0.0.415', 'PLCDQ.3.0.0.417', 'PLCDQ.3.0.0.424', 'PLCDQ.3.0.0.427', 'PLCDQ.3.0.0.435', 'PLCDQ.3.0.0.436', 'PLCDQ.3.0.30.414', 'PLCDQ.3.0.30.415', 'PLCDQ.3.0.30.417', 'PLCDQ.3.0.30.424', 'PLCDQ.3.0.30.427', 'PLCDQ.3.0.30.435', 'PLCDQ.3.0.30.436', 'XUNNQ.3.0.30.414', 'XUNNQ.3.0.30.415', 'XUNNQ.3.0.30.417', 'XUNNQ.3.0.30.423', 'XUNNQ.3.0.30.424', 'XUNNQ.3.0.30.427', 'XUNNQ.3.0.30.435', 'XUNNQ.3.0.30.436', 'XUNNQ.3.0.30.441', 'XUNRQ.3.0.30.414', 'XUNRQ.3.0.30.415', 'XUNRQ.3.0.30.417', 'XUNRQ.3.0.30.424', 'XUNRQ.3.0.30.427', 'XUNRQ.3.0.30.435', 'XUNRQ.3.0.30.436'
+						{Country}|{Variable}[t] = AMECO!{Country}|{Variable}[t]
+					Group: Variable = 'PLCDQ.6.0.0.437', 'PLCDQ.6.0.0.435', 'PLCDQ.6.0.0.436'
+						{VariableParameter1} = texttoelement(concatenate("PLCDQ.3", removeleft({Variable}, 7)), {VariableParameter1})
+						{Country}|{Variable}[t] = pch({Country}|{VariableParameter1}[t])
+					Group: Variable = 'XUNNQ.6.0.30.437', 'XUNRQ.6.0.30.437', 'XUNNQ.6.0.30.435', 'XUNNQ.6.0.30.436', 'XUNRQ.6.0.30.435', 'XUNRQ.6.0.30.436'
+						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 10), "3.0.30.", right({Variable}, 3)), {VariableParameter1})
+						{Country}|{Variable}[t] = pch({Country}|{VariableParameter1}[t])
+			Labour Market
+				If Country in group 'Forecast: Countries reporting in FTEs'
+					Then
+						If not IsEmpty({Country}|FETD[t])
+							Then
+								{Country}|FETD9.1.0.0.0[t] = {Country}|FETD.1.0.0.0[t]
+								{Country}|FWTD9.1.0.0.0[t] = {Country}|FWTD.1.0.0.0[t]
+							Else
+								{Country}|FETD9.1.0.0.0[t] = {Country}|NETD.1.0.0.0[t]
+								{Country}|FWTD9.1.0.0.0[t] = {Country}|NWTD.1.0.0.0[t]
+					Else
+						If Country <> 'US'
+							Then
+								{Country}|FETD9.1.0.0.0[t] = {Country}|NETD.1.0.0.0[t]
+								{Country}|FWTD9.1.0.0.0[t] = {Country}|NWTD.1.0.0.0[t]
+							Else
+								{Country}|FETD9.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|FETD9.1.0.0.0[t], {Country}|NETD[t], MsSpliceDirection.Forward)
+								{Country}|FWTD9.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|FWTD.1.0.0.0[t], {Country}|NWTD[t], MsSpliceDirection.Forward)
+				Group: Variable = 'UWCD', 'UWWD', 'UWSC'
+					{VariableParameter1} = texttoelement(concatenate({Variable}, ".1.0.0.0"), {VariableParameter1})
+					{VariableParameter2} = texttoelement(concatenate("H", removeleft({Variable}, 1), "W.1.0.0.0"), {VariableParameter2})
+					{Country}|{VariableParameter2}[t] = {Country}|{VariableParameter1}[t] / {Country}|FWTD9.1.0.0.0[t]
+					{Country}|{VariableParameter2}.Source[t] = merge({Country}|{VariableParameter1}.Source[t], {Country}|FWTD9.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+					{VariableParameter2} = texttoelement(concatenate("R", removeleft({Variable}, 1), "C.3.1.0.0"), {VariableParameter2})
+					{Country}|{VariableParameter2}[t] = rebase({Country}|{VariableParameter1}[t] / {Country}|FWTD9.1.0.0.0[t] / ({Country}|UCPH.1.0.0.0[t] / {Country}|OCPH.1.0.0.0[t]), {BasePeriod})
+					{Country}|{VariableParameter2}.Source[t] = merge({Country}|{VariableParameter1}.Source[t], {Country}|FWTD9.1.0.0.0.Source[t], {Country}|UCPH.1.0.0.0.Source[t], {Country}|OCPH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|RVGDE.1.0.0.0[t] = {Country}|OVGD.1.0.0.0[t] / {Country}|FETD9.1.0.0.0[t]
+				{Country}|RVGDE.1.0.0.0.Source[t] = merge({Country}|OVGD.1.0.0.0.Source[t], {Country}|FETD9.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|RVGEW.1.0.0.0[t] = {Country}|OVGE.1.0.0.0[t] / {Country}|FETD9.1.0.0.0[t]
+				{Country}|RVGEW.1.0.0.0.Source[t] = merge({Country}|OVGE.1.0.0.0.Source[t], {Country}|FETD9.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|RVGDAE.3.1.0.0[t] = {Country}|OVGD.1.0.0.0[t] / {Country}|NETD.1.0.0.0[t]
+				{Country}|RVGDE.1.0.0.0.Source[t] = merge({Country}|OVGD.1.0.0.0.Source[t], {Country}|NETD.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|FETD9.6.0.0.0[t] = pch({Country}|FETD9.1.0.0.0[t])
+				{Country}|FETD9.6.0.0.0.Source[t] = {Country}|FETD9.1.0.0.0.Source[t], (Now-5)-(Now+5)
+				If Country in group 'EU'
+					Then
+						// ZUTN based on NUTN.1.0.0.0 and NETN.1.0.0.0 (18/01/2017)
+						{LastObservation} = endperiod(AMECO Historical!{Country}|ZUTN.1.0.0.0[t])
+						{Country}|ZUTN.1.0.0.0[t] = round({Country}|NUTN[t] / ({Country}|NUTN[t] + {Country}|NETN[t]) * 100, 1) + round(AMECO Historical!{Country}|ZUTN.1.0.0.0[{LastObservation}] - {Country}|NUTN[{LastObservation}] / ({Country}|NUTN[{LastObservation}] + {Country}
+						{Country}|ZUTN.1.0.0.0[t] = round(NUTN.1.0.0.0[t] / (NUTN.1.0.0.0[t] + NETN.1.0.0.0[t]) * 100, 1) + round(AMECO Historical!{Country}|ZUTN.1.0.0.0[{LastObservation}] - NUTN[{LastObservation}] / (NUTN[{LastObservation}] + NETN[{LastObservation}]) * 100, 1)
+						{Country}|ZUTN.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|ZUTN.1.0.0.0[t], {Country}|ZUTN.1.0.0.0[t], MsSpliceDirection.Forward)
+					Else
+						{Country}|ZUTN.1.0.0.0[t] = levelsplice(AMECO Historical!{Country}|ZUTN.1.0.0.0[t], {Country}|NUTN.1.0.0.0[t] / ({Country}|NUTN.1.0.0.0[t] + iin({Country}|NETN.1.0.0.0[t], {Country}|NETN[t], {Country}|NETN.1.0.0.0[t])) * 100, MsSpliceDirection.Forward)
+				{Country}|ZUTN.1.0.0.0.Source[t] = merge({Country}|NUTN.1.0.0.0.Source[t], {Country}|NETN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				// NUTN ratiospliced (18/01/2017)
+				{Country}|NUTN.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|NUTN.1.0.0.0[t], round({Country}|NUTN.1.0.0.0[t-1] * {Country}|ZUTN.1.0.0.0[t] * {Country}|NECN.1.0.0.0[t] / (100 - {Country}|ZUTN.1.0.0.0[t]) / ({Country}|ZUTN.1.0.0.0[t-1] * {Country}|NEC
+				{Country}|PLCD.3.1.0.0[t] = rebase({Country}|HWCDW.1.0.0.0[t] / {Country}|RVGDE.1.0.0.0[t], {BasePeriod})
+				{Country}|PLCD.3.1.0.0.Source[t] = merge({Country}|HWCDW.1.0.0.0.Source[t], {Country}|RVGDE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|QLCD.3.1.0.0[t] = rebase({Country}|PLCD.3.1.0.0[t] / {Country}|PVGD.3.1.0.0[t], {BasePeriod})
+				{Country}|QLCD.3.1.0.0.Source[t] = merge({Country}|PLCD.3.1.0.0.Source[t], {Country}|PVGD.3.1.0.0.Source[t]), (Now-5)-(Now+5)
+				Group: Variable = 'RWCDC.3.1.0.0', 'PLCD.3.1.0.0', 'QLCD.3.1.0.0', 'HWCDW.1.0.0.0', 'HWSCW.1.0.0.0', 'HWWDW.1.0.0.0', 'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0'
+					{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
+					{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+					{Country}|{VariableParameter1}.Source[t] = {Country}|{Variable}.Source[t], (Now-5)-(Now+5)
+				{Country}|ZATN9.1.0.0.0[t] = {Country}|NLTN.1.0.0.0[t] / {Country}|NPAN1.1.0.0.0[t] * 100
+				{Country}|ZETN9.1.0.0.0[t] = {Country}|NETN.1.0.0.0[t] / {Country}|NPAN1.1.0.0.0[t] * 100
+				{Country}|ZUTN9.1.0.0.0[t] = {Country}|NUTN.1.0.0.0[t] / {Country}|NLTN.1.0.0.0[t] * 100
+			Fiscal Sector
+				// Removed US 21.10.2016 from the following branch
+				If Country <> 'JP'
+					Then
+						{Country}|UTOG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UTOG.1.0.0.0[t], ignoremissingsum({Country}|UROG.1.0.0.0[t], {Country}|UPOMN.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|UTOG.1.0.0.0.Source[t] = merge({Country}|UROG.1.0.0.0.Source[t], {Country}|UPOMN.1.0.0.0.Source[t])
+					Else
+						{Country}|UTOG.1.0.0.0[t] = {Country}|UROG.1.0.0.0[t]
+						{Country}|UTOG.1.0.0.0.Source[t] = {Country}|UROG.1.0.0.0.Source[t]
+				// Removed US 21.10.2016 from the following branch
+				If Country <> 'JP'
+					Then
+						{Country}|UUCG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUCG.1.0.0.0[t], ignoremissingsum({Country}|UWCG.1.0.0.0[t], {Country}|UYTGH.1.0.0.0[t], {Country}|UYIG.1.0.0.0[t], {Country}|UYVG.1.0.0.0[t], {Country}|UUOG.1.0.0.0[t], {Country}|UCTGI.1.0
+						{Country}|UUCG.1.0.0.0.Source[t] = merge({Country}|UWCG.1.0.0.0.Source[t], {Country}|UYTGH.1.0.0.0.Source[t], {Country}|UYIG.1.0.0.0.Source[t], {Country}|UYVG.1.0.0.0.Source[t], {Country}|UUOG.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country
+						{Country}|URCG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|URCG.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTYG.1.0.0.0[t], {Country}|UTSG.1.0.0.0[t], {Country}|UTOG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|URCG.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTYG.1.0.0.0.Source[t], {Country}|UTSG.1.0.0.0.Source[t], {Country}|UTOG.1.0.0.0.Source[t])
+						{Country}|UUTG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUTG.1.0.0.0[t], ignoremissingsum({Country}|UUCG.1.0.0.0[t], {Country}|UIGG0.1.0.0.0[t], {Country}|UKOG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|UUTG.1.0.0.0.Source[t] = merge({Country}|UUCG.1.0.0.0.Source[t], {Country}|UIGG0.1.0.0.0.Source[t], {Country}|UKOG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|URTG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|URTG.1.0.0.0[t], ignoremissingsum({Country}|URCG.1.0.0.0[t], {Country}|UKTTG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|URTG.1.0.0.0.Source[t] = merge({Country}|URCG.1.0.0.0.Source[t], {Country}|UKTTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|UBLG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLG.1.0.0.0[t], ignoremissingsubtract({Country}|URTG.1.0.0.0[t], {Country}|UUTG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|UBLG.1.0.0.0.Source[t] = merge({Country}|URTG.1.0.0.0.Source[t], {Country}|UUTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+					Else
+						{Country}|UUCG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUCG.1.0.0.0[t], ignoremissingsum({Country}|UCTG.1.0.0.0[t], {Country}|UYTGH.1.0.0.0[t], {Country}|UYIG.1.0.0.0[t], {Country}|UYVG.1.0.0.0[t], {Country}|UUOG.1.0.0.0[t]), MsSpliceDirection.
+						{Country}|UUCG.1.0.0.0.Source[t] = merge({Country}|UWCG.1.0.0.0.Source[t], {Country}|UYTGH.1.0.0.0.Source[t], {Country}|UYIG.1.0.0.0.Source[t], {Country}|UYVG.1.0.0.0.Source[t], {Country}|UUOG.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country
+						{Country}|URCG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|URCG.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTYG.1.0.0.0[t], {Country}|UTSG.1.0.0.0[t], {Country}|UTOG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|URCG.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTYG.1.0.0.0.Source[t], {Country}|UTSG.1.0.0.0.Source[t], {Country}|UTOG.1.0.0.0.Source[t])
+						{Country}|UUTG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUTG.1.0.0.0[t], ignoremissingsum({Country}|UUCG.1.0.0.0[t], {Country}|UIGG0.1.0.0.0[t], {Country}|UKOG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|UUTG.1.0.0.0.Source[t] = merge({Country}|UUCG.1.0.0.0.Source[t], {Country}|UIGG0.1.0.0.0.Source[t], {Country}|UKOG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|URTG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|URTG.1.0.0.0[t], ignoremissingsum({Country}|URCG.1.0.0.0[t], {Country}|UKTTG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|URTG.1.0.0.0.Source[t] = merge({Country}|URCG.1.0.0.0.Source[t], {Country}|UKTTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|UBLG.1.0.0.0[t] = ignoremissingsubtract({Country}|URTG.1.0.0.0[t], {Country}|UUTG.1.0.0.0[t])
+						{Country}|UBLG.1.0.0.0.Source[t] = merge({Country}|URTG.1.0.0.0.Source[t], {Country}|UUTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|UUTG.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|UUTG.1.0.0.0[t], ignoremissingsum({Country}|UUCG.1.0.0.0[t], {Country}|UIGG0.1.0.0.0[t], {Country}|UKOG.1.0.0.0[t]), MsSpliceDirection.Forward)
+						{Country}|UUTG.1.0.0.0.Source[t] = merge({Country}|UUCG.1.0.0.0.Source[t], {Country}|UIGG0.1.0.0.0.Source[t], {Country}|UKOG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+						{Country}|URTG.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|URTG.1.0.0.0[t], {Country}|UUTG.1.0.0.0[t] + {Country}|UBLG.1.0.0.0[t], MsSpliceDirection.Forward)
+						{Country}|URTG.1.0.0.0.Source[t] = merge({Country}|URCG.1.0.0.0.Source[t], {Country}|UKTTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				If Country not in group 'EU'
+					Then
+						If Country <> 'MK'
+							Then
+								{Country}|UBLGE.1.0.0.0[t] = {Country}|UBLG.1.0.0.0[t]
+								{Country}|UYIGE.1.0.0.0[t] = {Country}|UYIG.1.0.0.0[t]
+							Else
+					Else
+				{Country}|UBLGI.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLGI.1.0.0.0[t], ignoremissingsum({Country}|UBLG.1.0.0.0[t], {Country}|UYIG.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLGI.1.0.0.0.Source[t] = merge({Country}|UBLG.1.0.0.0.Source[t], {Country}|UYIG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBLGIE.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLGIE.1.0.0.0[t], ignoremissingsum({Country}|UBLGE.1.0.0.0[t], {Country}|UYIGE.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLGIE.1.0.0.0.Source[t] = merge({Country}|UBLGE.1.0.0.0.Source[t], {Country}|UYIGE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UTAT.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UTAT.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTYG.1.0.0.0[t], {Country}|UTAG.1.0.0.0[t], {Country}|UTKG.1.0.0.0[t], {Country}|UTEU.1.0.0.0[t]), MsSpliceDirection.F
+				{Country}|UTAT.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTYG.1.0.0.0.Source[t], {Country}|UTAG.1.0.0.0.Source[t], {Country}|UTKG.1.0.0.0.Source[t], {Country}|UTEU.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UOOMS.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UOOMS.1.0.0.0[t], ignoremissingsum({Country}|UOOMSR.1.0.0.0[t], {Country}|UOOMSE.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UOOMS.1.0.0.0.Source[t] = merge({Country}|UOOMSR.1.0.0.0.Source[t], {Country}|UOOMSE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UTTG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UTTG.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTEU.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UTTG.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTEU.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UDGGL.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UDGGL.1.0.0.0[t], {Country}|UDGG.1.0.0.0[t], MsSpliceDirection.Forward)
+				{Country}|UDGG.1.0.0.0[t] = {Country}|UDGGL.1.0.0.0[t]
+				{Country}|UDGGL.1.0.0.0.Source[t] = {Country}|UDGG.1.0.0.0.Source[t], (Now-5)-(Now+5)
+				{Country}|EATTG.1.0.0.0[t] = Cyclical adjustment!{Country}|Indirect taxes[t]
+				{Country}|EATYG.1.0.0.0[t] = Cyclical adjustment!{Country}|Direct taxes[t]
+				{Country}|EATSG.1.0.0.0[t] = Cyclical adjustment!{Country}|Social contributions[t]
+				{Country}|ETTG.1.0.0.0[t] = pch({Country}|UTTG.1.0.0.0[t]) / pch({Country}|UCPH.1.0.0.0[t])
+				{Country}|RTTG.1.0.0.0[t] = {Country}|UTTG.1.0.0.0[t] / {Country}|UCPH.1.0.0.0[t] * 100
+				{Country}|FTTG.1.0.0.0[t] = (pch({Country}|UTTG.1.0.0.0[t]) - {Country}|EATTG.1.0.0.0[2000-01-01] * pch({Country}|UCPH.1.0.0.0[t])) * {Country}|UTTG.1.0.0.0[t-1] / {Country}|UVGD.1.0.0.0[t]
+				{Country}|ETYG.1.0.0.0[t] = pch({Country}|UTYG.1.0.0.0[t]) / pch({Country}|UVGD.1.0.0.0[t])
+				{Country}|RTYG.1.0.0.0[t] = {Country}|UTYG.1.0.0.0[t] / {Country}|UVGD.1.0.0.0[t] * 100
+				{Country}|FTYG.1.0.0.0[t] = (pch({Country}|UTYG.1.0.0.0[t]) - {Country}|EATYG.1.0.0.0[2000-01-01] * pch({Country}|UVGD.1.0.0.0[t])) * {Country}|UTYG.1.0.0.0[t-1] / {Country}|UVGD.1.0.0.0[t]
+				{Country}|ETSG.1.0.0.0[t] = pch({Country}|UTSG.1.0.0.0[t]) / pch({Country}|UWCD.1.0.0.0[t])
+				{Country}|RTSG.1.0.0.0[t] = {Country}|UTSG.1.0.0.0[t] / {Country}|UWCD.1.0.0.0[t] * 100
+				{Country}|FTSG.1.0.0.0[t] = (pch({Country}|UTSG.1.0.0.0[t]) - {Country}|EATSG.1.0.0.0[2000-01-01] * pch({Country}|UWCD.1.0.0.0[t])) * {Country}|UTSG.1.0.0.0[t-1] / {Country}|UVGD.1.0.0.0[t]
+				// Removed US 21.10.2016 from the following branch
+				If Country <> 'JP'
+					Then
+						{Country}|UCRG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UCRG.1.0.0.0[t], ignoremissingsum({Country}|UCTG.1.0.0.0[t], -{Country}|UWCG.1.0.0.0[t], -{Country}|UKCG0.1.0.0.0[t], -{Country}|UCTGI.1.0.0.0[t], -{Country}|UYTGM.1.0.0.0[t], {Country}|UPO
+						{Country}|UCRG.1.0.0.0.Source[t] = merge({Country}|UCTG.1.0.0.0.Source[t], {Country}|UWCG.1.0.0.0.Source[t], {Country}|UKCG0.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country}|UYTGM.1.0.0.0.Source[t], {Country}|UPOMN.1.0.0.0.Source[t]), (Now-
+					Else
+						{Country}|UCRG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UCRG.1.0.0.0[t], ignoremissingsum({Country}|UCTG.1.0.0.0[t], -{Country}|UWCG.1.0.0.0[t], -{Country}|UKCG0.1.0.0.0[t], -{Country}|UCTGI.1.0.0.0[t], -{Country}|UYTGM.1.0.0.0[t]), MsSpliceDire
+						{Country}|UCRG.1.0.0.0.Source[t] = merge({Country}|UCTG.1.0.0.0.Source[t], {Country}|UWCG.1.0.0.0.Source[t], {Country}|UKCG0.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country}|UYTGM.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|USGG.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGG.1.0.0.0[t], ignoremissingsubtract({Country}|URCG.1.0.0.0[t], {Country}|UUCG.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|USGG.1.0.0.0.Source[t] = merge({Country}|URCG.1.0.0.0.Source[t], {Country}|UUCG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UUTGE.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUTGE.1.0.0.0[t], ignoremissingsum({Country}|UUTG.1.0.0.0[t], {Country}|UBLG.1.0.0.0[t], -{Country}|UBLGE.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UUTGE.1.0.0.0.Source[t] = merge({Country}|UUTG.1.0.0.0.Source[t], {Country}|UBLG.1.0.0.0.Source[t], {Country}|UBLGE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UUCGI.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UUCGI.1.0.0.0[t], ignoremissingsum({Country}|UWCG.1.0.0.0[t], {Country}|UYTGH.1.0.0.0[t], {Country}|UYVG.1.0.0.0[t], {Country}|UUOG.1.0.0.0[t], {Country}|UCTGI.1.0.0.0[t], {Country}|UYTGM.
+				{Country}|UUCGI.1.0.0.0.Source[t] = merge({Country}|UWCG.1.0.0.0.Source[t], {Country}|UYTGH.1.0.0.0.Source[t], {Country}|UYVG.1.0.0.0.Source[t], {Country}|UUOG.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country}|UYTGM.1.0.0.0.Source[t])
+				{Country}|UTCT.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UTCT.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTEU.1.0.0.0[t], {Country}|UTYG.1.0.0.0[t], {Country}|UTSG.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UTCT.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTEU.1.0.0.0.Source[t], {Country}|UTYG.1.0.0.0.Source[t], {Country}|UTSG.1.0.0.0.Source[t])
+			Corporate Sector
+				If Country <> 'JP'
+					Then
+						{Country}|USGC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGC.1.0.0.0[t], ignoremissingsum({Country}|UGVAC.1.0.0.0[t], {Country}|UYVC.1.0.0.0[t], -{Country}|UTVC.1.0.0.0[t], -{Country}|UWCC.1.0.0.0[t], {Country}|UYNC.1.0.0.0[t], {Country}|UCTRC.1
+						{Country}|USGC.1.0.0.0.Source[t] = merge({Country}|UGVAC.1.0.0.0.Source[t], {Country}|UYVC.1.0.0.0.Source[t], {Country}|UTVC.1.0.0.0.Source[t], {Country}|UWCC.1.0.0.0.Source[t], {Country}|UYNC.1.0.0.0.Source[t], {Country}|UCTRC.1.0.0.0.Source[t], {Country
+						{Country}|UOGC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UOGC.1.0.0.0[t], iin({Country}|UGVAC.1.0.0.0[t] + {Country}|UYVC.1.0.0.0[t] - {Country}|UTVC.1.0.0.0[t] - {Country}|UWCC.1.0.0.0[t], {Country}|UOGC.1.0.0.0[t], {Country}|UGVAC.1.0.0.0[t] + 
+						{Country}|UOGC.1.0.0.0.Source[t] = iin({Country}|UGVAC.1.0.0.0[t] + {Country}|UYVC.1.0.0.0[t] + {Country}|UTVC.1.0.0.0[t] + {Country}|UWCC.1.0.0.0[t], {Country}|UOGC.1.0.0.0.Source[t], merge({Country}|UGVAC.1.0.0.0.Source[t], {Country}|UYVC.1.0.0.0.Source
+					Else
+						{Country}|USGC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGC.1.0.0.0[t], ignoremissingsum({Country}|UOGC.1.0.0.0[t], {Country}|UYNC.1.0.0.0[t], {Country}|UCTRC.1.0.0.0[t], -{Country}|UTYC.1.0.0.0[t], -{Country}|UEHC.1.0.0.0[t]), MsSpliceDirectio
+						{Country}|USGC.1.0.0.0.Source[t] = merge({Country}|UGVAC.1.0.0.0.Source[t], {Country}|UYVC.1.0.0.0.Source[t], {Country}|UTVC.1.0.0.0.Source[t], {Country}|UWCC.1.0.0.0.Source[t], {Country}|UYNC.1.0.0.0.Source[t], {Country}|UCTRC.1.0.0.0.Source[t], {Country
+				{Country}|UBLC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLC.1.0.0.0[t], ignoremissingsum({Country}|USGC.1.0.0.0[t], -{Country}|UITC.1.0.0.0[t], -{Country}|UKOC.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLC.1.0.0.0.Source[t] = merge({Country}|USGC.1.0.0.0.Source[t], {Country}|UITC.1.0.0.0.Source[t], {Country}|UKOC.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+			Household Sector
+				{Country}|UYOH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UYOH.1.0.0.0[t], ignoremissingsum({Country}|UOGH.1.0.0.0[t], {Country}|UYNH.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UYOH.1.0.0.0.Source[t] = merge({Country}|UOGH.1.0.0.0.Source[t], {Country}|UYNH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UVGH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UVGH.1.0.0.0[t], ignoremissingsum({Country}|UWCH.1.0.0.0[t], {Country}|UYOH.1.0.0.0[t], {Country}|UCTRH.1.0.0.0[t], -{Country}|UTYH.1.0.0.0[t], -{Country}|UCTPH.1.0.0.0[t]), MsSpliceDirecti
+				{Country}|UVGH.1.0.0.0.Source[t] = merge({Country}|UWCH.1.0.0.0.Source[t], {Country}|UYOH.1.0.0.0.Source[t], {Country}|UCTRH.1.0.0.0.Source[t], {Country}|UTYH.1.0.0.0.Source[t], {Country}|UCTPH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UVGHA.1.0.0.0[t] = buttsplice({Country}|UVGHA.1.0.0.0[t], ignoremissingsum({Country}|UVGH.1.0.0.0[t], {Country}|UEHH.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UVGHA.1.0.0.0.Source[t] = merge({Country}|UVGH.1.0.0.0.Source[t], {Country}|UEHH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|OVGHA.3.0.0.0[t] = rebase({Country}|UVGHA.1.0.0.0[t] / {Country}|PCPH.3.1.0.0[t], {BasePeriod}) / 100 * {Country}|UVGHA.1.0.0.0[{BasePeriod}]
+				{Country}|OVGHA.3.0.0.0.Source[t] = {Country}|UVGHA.1.0.0.0.Source[t], (Now-5)-(Now+5)
+				{Country}|USGH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGH.1.0.0.0[t], ignoremissingsum({Country}|UWCH.1.0.0.0[t], {Country}|UOGH.1.0.0.0[t], {Country}|UYNH.1.0.0.0[t], {Country}|UCTRH.1.0.0.0[t], -{Country}|UTYH.1.0.0.0[t], -{Country}|UCTPH.1
+				{Country}|USGH.1.0.0.0.Source[t] = merge({Country}|UWCH.1.0.0.0.Source[t], {Country}|UOGH.1.0.0.0.Source[t], {Country}|UYNH.1.0.0.0.Source[t], {Country}|UCTRH.1.0.0.0.Source[t], {Country}|UTYH.1.0.0.0.Source[t], {Country}|UCTPH.1.0.0.0.Source[t], {Country
+				{Country}|ASGH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|ASGH.1.0.0.0[t], {Country}|USGH.1.0.0.0[t] / {Country}|UVGHA.1.0.0.0[t] * 100, MsSpliceDirection.Forward)
+				{Country}|ASGH.1.0.0.0.Source[t] = merge({Country}|USGH.1.0.0.0.Source[t], {Country}|UVGHA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBLH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLH.1.0.0.0[t], ignoremissingsubtract({Country}|USGH.1.0.0.0[t], {Country}|UITH.1.0.0.0[t], {Country}|UKOH.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLH.1.0.0.0.Source[t] = merge({Country}|USGH.1.0.0.0.Source[t], {Country}|UITH.1.0.0.0.Source[t], {Country}|UKOH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+			Private Sector
+				{Country}|UBLP.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLP.1.0.0.0[t], ignoremissingsum({Country}|UBLC.1.0.0.0[t], {Country}|UBLH.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLP.1.0.0.0.Source[t] = merge({Country}|UBLC.1.0.0.0.Source[t], {Country}|UBLH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|USGN.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGN.1.0.0.0[t], ignoremissingsum({Country}|UVGD[t], {Country}|UBRA[t], {Country}|UBTA[t], -{Country}|UCPH[t], -{Country}|UCTG[t]), MsSpliceDirection.Forward)
+				{Country}|USGN.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UBRA.1.0.0.0.Source[t], {Country}|UBTA.1.0.0.0.Source[t], {Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|USGP.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGP.1.0.0.0[t], ignoremissingsubtract({Country}|USGN.1.0.0.0[t], {Country}|USGG.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|USGP.1.0.0.0.Source[t] = merge({Country}|USGN.1.0.0.0.Source[t], {Country}|USGG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+			External Sector
+				{Country}|UBYA.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBYA.1.0.0.0[t], sum({Country}|UBRA.1.0.0.0[t], {Country}|UBTA.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBYA.1.0.0.0.Source[t] = merge({Country}|UBRA.1.0.0.0.Source[t], {Country}|UBTA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBCA.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBCA.1.0.0.0[t], sum({Country}|UXGS[t], -{Country}|UMGS[t], {Country}|UBYA.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBCA.1.0.0.0.Source[t] = merge({Country}|UBGS.1.0.0.0.Source[t], {Country}|UBYA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|UBLA.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLA.1.0.0.0[t], sum({Country}|UBCA.1.0.0.0[t], {Country}|UBKA.1.0.0.0[t]), MsSpliceDirection.Forward)
+				{Country}|UBLA.1.0.0.0.Source[t] = merge({Country}|UBCA.1.0.0.0.Source[t], {Country}|UBKA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|DXGT.1.0.0.0[t] = sum({Country}|DXGE.1.0.0.0[t], {Country}|DXGI.1.0.0.0[t])
+				{Country}|DXGT.1.0.0.0.Source[t] = merge({Country}|DXGE.1.0.0.0.Source[t], {Country}|DXGI.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|DMGT.1.0.0.0[t] = sum({Country}|DMGE.1.0.0.0[t], {Country}|DMGI.1.0.0.0[t])
+				{Country}|DMGT.1.0.0.0.Source[t] = merge({Country}|DMGI.1.0.0.0.Source[t], {Country}|DMGE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|DBGT.1.0.0.0[t] = {Country}|DXGT.1.0.0.0[t] - {Country}|DMGT.1.0.0.0[t]
+				{Country}|DBGT.1.0.0.0.Source[t] = merge({Country}|DXGT.1.0.0.0.Source[t], {Country}|DMGT.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|DBGE.1.0.0.0[t] = {Country}|DXGE.1.0.0.0[t] - {Country}|DMGE.1.0.0.0[t]
+				{Country}|DBGE.1.0.0.0.Source[t] = merge({Country}|DMGE.1.0.0.0.Source[t], {Country}|DXGE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+				{Country}|DBGI.1.0.0.0[t] = {Country}|DXGI.1.0.0.0[t] - {Country}|DMGI.1.0.0.0[t]
+				{Country}|DBGI.1.0.0.0.Source[t] = merge({Country}|DXGI.1.0.0.0.Source[t], {Country}|DMGI.1.0.0.0.Source[t]), (Now-5)-(Now+5)
+			Extend input variables for RATS backward to 1960
+				Group: Variable in RATS Input variables, to be extended backward to 1960
+					If Variable <> 'OIGT.1.1.0.0', 'OVGD.1.1.0.0', 'OVGD.6.1.0.0'
+						Then
+							If NOT IsEmpty({Country}|{Variable}[t])
+								Then
+									{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], AMECO!{Country}|{Variable}[t], MsSpliceDirection.Backward)
+								Else
+						Else
+					{Country}|OVGD.6.0.0.0[t] = pch({Country}|OVGD.1.0.0.0[t])
+				Group: Variable = 'OIGT.1.0.0.0', 'OVGD.1.0.0.0'
+					If NOT IsEmpty({Country}|{Variable}[t])
+						Then
+							{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], AMECO!{Country}|{Variable}[t], MsSpliceDirection.Backward)
+						Else
+				// exception for ME: when the base year was 2005, there was not enough historical data for ME therefore exceptional calculations were put in place for that country replacing the two groups above with the following branch
+				If Country <> 'ME'
+					Then
+						Group: Variable in RATS Input variables, to be extended backward to 1960
+							If Variable <> 'OIGT.1.1.0.0', 'OVGD.1.1.0.0', 'OVGD.6.1.0.0'
+								Then
+									If NOT IsEmpty({Country}|{Variable}[t])
+										Then
+											{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], AMECO!{Country}|{Variable}[t], MsSpliceDirection.Backward)
+										Else
+								Else
+							{Country}|OVGD.6.0.0.0[t] = pch({Country}|OVGD.1.0.0.0[t])
+						Group: Variable = 'OIGT.1.0.0.0', 'OVGD.1.0.0.0'
+							If NOT IsEmpty({Country}|{Variable}[t])
+								Then
+									{Country}|{Variable}[t] = ratiosplice({Country}|{Variable}[t], AMECO!{Country}|{Variable}[t], MsSpliceDirection.Backward)
+								Else
+						{Country}|OVGD.6.0.0.0[t] = pch({Country}|OVGD.1.0.0.0[t])
+					Else
+			Convert value variables to EUR and USD, create variables in 1.1.0.0 and 6.1.0.0
+				Group: Variable in Full List of Variables
+					Convert value variables from national currency to euros (99)
+						If Variable <> 'XNE.1.0.99.0', 'XNEF.1.0.99.0', 'XNEB.1.0.99.0'
+							Then
+								If (left({Variable}, 1) = "U") And(right({Variable}, 8) = "1.0.99.0")
+									Then
+										{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 4), "0.0"), {VariableParameter1})
+										{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t] / {Country}|XNE.1.0.99.0[t]
+										{Country}|{Variable}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+									Else
+							Else
+					Convert value variables from national currency to USD (30)
+						If (left({Variable},1)="U") And (right({Variable}, 8) = "1.0.30.0")
+							Then
+								{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 4), "0.0"), {VariableParameter1})
+								{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t] / {Country}|XNU.1.0.30.0[t]
+								{Country}|{Variable}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+							Else
+					Set 6.1.0.0=6.0.0.0 for individual countries
+						If right({Variable}, 7) = "6.1.0.0"
+							Then
+								{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "6.0.0.0")
+								If timeseriesexist({{Country}|{TextParameterForVariable}})
+									Then
+										{VariableParameter1} = texttoelement({TextParameterForVariable}, {VariableParameter1})
+										{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t]
+										{Country}|{Variable}.Scale[t] = {Country}|{VariableParameter1}.Scale[t]
+									Else
+							Else
+					Set 1.1.0.0=1.0.0.0 for individual countries
+						If right({Variable}, 7) = "1.1.0.0"
+							Then
+								{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "1.0.0.0")
+								If timeseriesexist({{Country}|{TextParameterForVariable}})
+									Then
+										{VariableParameter1} = texttoelement({TextParameterForVariable}, {VariableParameter1})
+										{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t]
+										{Country}|{Variable}.Scale[t] = {Country}|{VariableParameter1}.Scale[t]
+									Else
+							Else
+					Calculate series as a percentage of GDP (310 and 319)
+						If (right({Variable}, 9) = "1.0.310.0") And (left({Variable}, 1) = "U")
+							Then
+								{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 5), "0.0"), {VariableParameter1})
+								If NOT isempty({{Country}|{VariableParameter1}})
+									Then
+										{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t] / {Country}|UVGD.1.0.0.0[t] * 100
+										{Country}|{Variable}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+									Else
+							Else
+						If (right({Variable}, 9) = "1.0.310.0") And (left({Variable}, 1) = "O")
+							Then
+								{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 5), "0.0"), {VariableParameter1})
+								If NOT isempty({{Country}|{VariableParameter1}})
+									Then
+										{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t] / {Country}|OVGD.1.0.0.0[t] * 100
+										{Country}|{Variable}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+									Else
+							Else
+						If (right({Variable}, 9) = "1.0.319.0") And (left({Variable}, 1) = "U")
+							Then
+								If Variable <> 'OIST.1.0.310.0'
+									Then
+										{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 5), "0.0"), {VariableParameter1})
+										If NOT isempty({{Country}|{VariableParameter1}})
+											Then
+												{Country}|{Variable}[t] = {Country}|{VariableParameter1}[t] / {Country}|UVGDH.1.0.0.0[t] * 100
+												{Country}|{Variable}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+											Else
+									Else
+							Else
+			Cyclically-adjusted variables, as a percentage of GDP (319)
+				{Country}|UTCGCP.1.0.319.0[t] = (Cyclical adjustment!{Country}|Elasticity of revenue[2000-01-01] - 1) * 0.01 * Cyclical adjustment!{Country}|Current tax burden as % of GDP[2000-01-01] * {Country}|AVGDGP.1.0.0.0[t]
+				{Country}|UUCGCP.1.0.319.0[t] = (Cyclical adjustment!{Country}|Elasticity of expenditure[2000-01-01] - 1) * 0.01 * Cyclical adjustment!{Country}|Current expenditure excl. Interest (EDP definition) as % of GDP[2000-01-01] * {Country}|AVGDGP.1.0.0.0[t]
+				{Country}|UBLGCP.1.0.319.0[t] = {Country}|UTCGCP.1.0.319.0[t] - {Country}|UUCGCP.1.0.319.0[t]
+				{Country}|UBLGAP.1.0.319.0[t] = {Country}|UBLGE.1.0.319.0[t] - {Country}|UBLGCP.1.0.319.0[t]
+				{Country}|UBLGBP.1.0.319.0[t] = {Country}|UBLGIE.1.0.319.0[t] - {Country}|UBLGCP.1.0.319.0[t]
+				{Country}|UBLGAPS.1.0.319.0[t] = ({Country}|UBLGE.1.0.0.0[t] - {Country}|UOOMSR.1.0.0.0[t] - {Country}|UOOMSE.1.0.0.0[t]) / {Country}|UVGDH.1.0.0.0[t] * 100 - {Country}|UBLGCP.1.0.319.0[t]
+				{Country}|UBLGBPS.1.0.319.0[t] = ({Country}|UBLGIE.1.0.0.0[t] - {Country}|UOOMSR.1.0.0.0[t] - {Country}|UOOMSE.1.0.0.0[t]) / {Country}|UVGDH.1.0.0.0[t] * 100 - {Country}|UBLGCP.1.0.319.0[t]
+			Calculate percent change for Population and National Account variables (value)
+				Group: Variable in Transfer Matrix Variables
+					Calculate percent change for population and CPI, and adjust scale for population variables
+						If (left({Variable}, 1) = "F") Or (left({Variable}, 1) = "N") or (left({Variable}, 4) = "ZCPI") 
+							Then
+								{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+								{VariableParameter2} = addtail({Variable}, ".6.0.0.0")
+								If NOT isempty({Country}|{VariableParameter1}[t])
+									Then
+										{Country}|{VariableParameter2}[t] = pch({Country}|{VariableParameter1}[t])
+										{Country}|{VariableParameter2}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+									Else
+							Else
+						If (left({Variable}, 1) = "F") Or (left({Variable}, 1) = "N")
+							Then
+								{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+								If NOT isempty({Country}|{VariableParameter1}[t])
+									Then
+										{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter1}[t]
+									Else
+							Else
+					Calculate percent change for National Account variables (value), and adjust scale
+						If Variable in group 'National Account variables (Value)'
+							Then
+								{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+								{VariableParameter2} = addtail({Variable}, ".6.0.0.0")
+								If NOT isempty({Country}|{VariableParameter1}[t])
+									Then
+										{Country}|{VariableParameter2}[t] = pch({Country}|{VariableParameter1}[t])
+										{Country}|{VariableParameter2}.Source[t] = {Country}|{VariableParameter1}.Source[t], (Now-5)-(Now+5)
+									Else
+								{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter1}[t]
+							Else
+				Calculate percent change for Population and National Account variables (value) - additional variables
+					Group: Variable = 'NLCN.1.0.0.0', 'NECN.1.0.0.0', 'NSTD.1.0.0.0'
+						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
+						{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+			Calculate percentage change for Index variables (Volume)
+				Group: Variable in Index variables (Volume)
+					If not IsEmpty({Country}|{Variable}[t])
+						Then
+							{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "6.0.0.0")
+							If timeseriesexist({{Country}|{TextParameterForVariable}})
+								Then
+									{VariableParameter1} = texttoelement({TextParameterForVariable}, {VariableParameter1})
+									{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+								Else
+						Else
+			Calculate percent change for Sector variables (value), and adjust scale
+				Group: Variable in Sector variables (Value)
+					If not IsEmpty({Country}|{Variable}[t])
+						Then
+							{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "6.0.0.0")
+							If timeseriesexist({{Country}|{TextParameterForVariable}})
+								Then
+									{VariableParameter1} = texttoelement({TextParameterForVariable}, {VariableParameter1})
+									{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+								Else
+						Else
+					{Country}|{Variable}[t] = {Country}|{Variable}[t]
+			Calculate percent change in price indices in USD (P*.6.1.30.0)
+				Group: Variable in Price Deflator variables
+					{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "6.1.30.0")
+					If timeseriesexist({TextParameterForVariable}[t])
+						Then
+							{VariableParameter1} = texttoelement({TextParameterForVariable}, {VariableParameter1})
+							{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t] / {Country}|XNU.1.0.30.0[t])
+						Else
+		Else
+	If Country in group 'Forecast: Countries from small files'
+		Then
+			Group: Variable in Full List of Variables, for small countries/regions
+				If Variable = 'OVGD'
+					Then
+						{VariableParameter1} = texttoelement(concatenate({Variable}, ".1.0.212.0"), {VariableParameter1})
+					Else
+						{VariableParameter1} = texttoelement(concatenate({Variable}, ".1.0.30.0"), {VariableParameter1})
+				{Country}|{VariableParameter1}[t] = {Country}|{Variable}[t]
+				{Country}|OVGD.6.1.212.0[t] = pch({Country}|OVGD.1.0.212.0[t])
+			{Country}|OXGS.1.0.30.0[t] = {Country}|OXGN.1.0.30.0[t] + {Country}|OXSN.1.0.30.0[t]
+			{Country}|OMGS.1.0.30.0[t] = {Country}|OMGN.1.0.30.0[t] + {Country}|OMSN.1.0.30.0[t]
+			{Country}|OBGN.1.0.30.0[t] = {Country}|OXGN.1.0.30.0[t] - {Country}|OMGN.1.0.30.0[t]
+			{Country}|OBSN.1.0.30.0[t] = {Country}|OXSN.1.0.30.0[t] - {Country}|OMSN.1.0.30.0[t]
+			{Country}|OBGS.1.0.30.0[t] = {Country}|OXGS.1.0.30.0[t] - {Country}|OMGS.1.0.30.0[t]
+			{Country}|UXGS.1.0.30.0[t] = {Country}|UXGN.1.0.30.0[t] + {Country}|UXSN.1.0.30.0[t]
+			{Country}|UMGS.1.0.30.0[t] = {Country}|UMGN.1.0.30.0[t] + {Country}|UMSN.1.0.30.0[t]
+			{Country}|UBGN.1.0.30.0[t] = {Country}|UXGN.1.0.30.0[t] - {Country}|UMGN.1.0.30.0[t]
+			{Country}|UBSN.1.0.30.0[t] = {Country}|UXSN.1.0.30.0[t] - {Country}|UMSN.1.0.30.0[t]
+			{Country}|UBGS.1.0.30.0[t] = {Country}|UXGS.1.0.30.0[t] - {Country}|UMGS.1.0.30.0[t]
+			Group: Variable in Trade variables (volume)
+				{VariableParameter1} = texttoelement(concatenate({Variable}, ".1.0.30.0"), {VariableParameter1})
+				{VariableParameter2} = texttoelement(concatenate({Variable}, ".6.0.30.0"), {VariableParameter2})
+				{Country}|{VariableParameter2}[t] = pch({Country}|{VariableParameter1}[t])
+			Group: Variable in Price Deflator variables (Trade sector)
+				{VariableParameter1} = texttoelement(concatenate("U", removeleft(removeright({Variable}, 7), 1), "1.0.30.0"), {VariableParameter1})
+				{VariableParameter2} = texttoelement(concatenate("O", removeleft(removeright({Variable}, 7), 1), "1.0.30.0"), {VariableParameter2})
+				{VariableParameter3} = texttoelement(concatenate(removeright({Variable}, 7), "6.1.30.0"), {VariableParameter3})
+				{Country}|{VariableParameter3}[t] = pch({Country}|{VariableParameter1}[t] / {Country}|{VariableParameter2}[t])
+			Group: Variable = 'ZCPIN.1.0.0.0', 'ZCPIN.6.0.0.0'
+				{Country}|{Variable}[t] = AMECO!{Country}|{Variable}[t]
+		Else
+Group: Country = Self, 1980Q1-2020Q4
+	If Country in group 'Forecast: Countries from transfer matrix'
+		Then
+			Calculate percent change, period/period and period year ago
+				Group: Variable in National Account variables, in quarterly frequency (Volume)
+					If Variable <> 'OIST'
+						Then
+							{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+							{VariableParameter2} = addtail({Variable}, ".12.1.0.0")
+							{VariableParameter3} = addtail({Variable}, ".6.1.0.0")
+							If NOT IsEmpty(Eurostat input!{Country}|{VariableParameter1}[t])
+								Then
+									{Country}|{VariableParameter1}[t] = ratiosplice(Eurostat input!{Country}|{VariableParameter1}[t], level({Country}|{Variable}[t]), MsSpliceDirection.Forward)
+									{Country}|{VariableParameter2}[t] = pch({Country}|{VariableParameter1}[t])
+									{Country}|{VariableParameter3}[t] = pchy({Country}|{VariableParameter1}[t])
+								Else
+									{Country}|{VariableParameter2}[t] = buttsplice(Eurostat input!{Country}|{VariableParameter2}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward)
+									{Country}|{VariableParameter3}[t] = pchy(level({Country}|{VariableParameter2}[t]))
+						Else
+							{VariableParameter1} = addtail({Variable}, ".1.0.310.0")
+							{Country}|{VariableParameter1}[t] = {Country}|{Variable}[t]
+				Group: Variable in Price Deflator variables, in quarterly frequency
+					{VariableParameter1} = addtail({Variable}, ".12.0.0.0")
+					{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
+					{VariableParameter2} = addtail({Variable}, ".6.0.0.0")
+					{Country}|{VariableParameter2}[t] = pchy({Country}|{Variable}[t])
+					{VariableParameter3} = addtail({Variable}, ".1.0.0.0")
+					{Country}|{VariableParameter3}[t] = {Country}|{Variable}[t]
+			Extend historical percent changes of CPI, quarterly, with Eurostat data and recalculate CPI index
+				If Country <> 'US', 'JP'
+					Then
+						{Country}|ZCPIH.12.0.0.0[t] = buttsplice(pch(collapse(Eurostat input!{Country}|ZCPIH.1.0.0.0|M[t], MsCollapseType.Average, MsFrequency.Quarterly)), {Country}|ZCPIH.12.0.0.0[t], MsSpliceDirection.Forward)
+						{Country}|ZCPIH.6.0.0.0[t] = buttsplice(pchy(collapse(Eurostat input!{Country}|ZCPIH.1.0.0.0|M[t], MsCollapseType.Average, MsFrequency.Quarterly)), {Country}|ZCPIH.6.0.0.0[t], MsSpliceDirection.Forward)
+						{Country}|ZCPIH.1.0.0.0[t] = rebase(level({Country}|ZCPIH.12.0.0.0[t]), {BasePeriod})
+					Else
+			Calculate contribution to percent change in GDP, period over period
+				Group: Variable in National Account variables, in quarterly frequency (Volume)
+					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+					{VariableParameter2} = addtail({Variable}, ".12.1.0.0")
+					{VariableParameter3} = texttoelement(concatenate("C", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter3})
+					{Country}|{VariableParameter3}[t] = {VariableParameter2}[t] * {VariableParameter1}[t-1] / OVGD.1.0.0.0[t-1]
+					{Country}|CMGS.1.0.0.0[t] = - CMGS.1.0.0.0[t]
+					{Country}|CBGS.1.0.0.0[t] =  CXGS.1.0.0.0[t]+CMGS.1.0.0.0[t]
+			Calculate contribution to percent change in GDP, year over year
+				Group: Variable in National Account variables, in quarterly frequency (Volume)
+					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
+					{VariableParameter2} = addtail({Variable}, ".6.1.0.0")
+					{VariableParameter3} = texttoelement(concatenate("C", removeleft({Variable}, 1), ".2.0.0.0"), {VariableParameter3})
+					{Country}|{VariableParameter3}[t] = {VariableParameter2}[t] * {VariableParameter1}[t-4] / OVGD.1.0.0.0[t-4]
+					{Country}|CMGS.2.0.0.0[t] = - CMGS.2.0.0.0[t]
+					{Country}|CBGS.2.0.0.0[t] = CXGS.2.0.0.0[t] + CMGS.2.0.0.0[t]
+		Else
