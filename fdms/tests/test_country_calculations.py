@@ -6,6 +6,7 @@ from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
+from fdms.computation.country.annual.national_accounts_value import NationalAccountsValue
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 
@@ -36,7 +37,7 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_2.loc['BE'].index)]
         self.assertEqual(missing_vars, ['NLCN.1.0.0.0'])
 
-    def test_national_accounts(self):
+    def test_national_accounts_volume(self):
         # STEP 3
         step_3 = GDPComponents()
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
@@ -91,4 +92,15 @@ class TestCountryCalculations(unittest.TestCase):
         result_4 = step_4.perform_computation(step_4_df, ameco_df)
         # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc['BE'].index)]
         # self.assertFalse(missing_vars)
+
+
+    def test_national_accounts_value(self):
+        # STEP 5
+        step_5 = NationalAccountsValue()
+        step_3_df = self.result_1.copy()
+        result_5 = step_5.perform_computation(step_3_df)
+        variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
+                     'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
+        self.assertFalse(missing_vars)
 

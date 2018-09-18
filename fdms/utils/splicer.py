@@ -66,8 +66,8 @@ class Splicer:
         '''
         # We assume both DataFrames have the same frequency for now
         if base_series is None:
-            logger.warning('No historical data for {} to butt_splice {}, country {}, using country forecast '
-                            'data.'.format(base_series.name[1], splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to butt_splice, country {}, using country forecast '
+                           'data.'.format(splice_series.name[1], splice_series.name[0]))
             return splice_series
         name = base_series.name
         result = None
@@ -105,8 +105,8 @@ class Splicer:
          series, and applying the ratio to the base series.
         '''
         if base_series is None:
-            logger.warning('No historical data for {} to ratio_splice {}, country {}, using country forecast '
-                           'data.'.format(base_series.name[1], splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to ratio_splice, country {}, using country forecast '
+                           'data.'.format(splice_series.name[1], splice_series.name[0]))
             return splice_series
         name = base_series.name
         result = None
@@ -153,8 +153,8 @@ class Splicer:
          applying the difference to the base series.
         '''
         if base_series is None:
-            logger.warning('No historical data for {} to level_splice {}, country {}, using country forecast '
-                           'data.'.format(base_series.name[1], splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to level_splice, country {}, using country forecast '
+                           'data.'.format(splice_series.name[1], splice_series.name[0]))
             return splice_series
         name = base_series.name
         result = None
@@ -202,8 +202,8 @@ class Splicer:
         # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         # TODO: check if we need to implement backwards
         if base_series is None:
-            logger.warning('No historical data for {} to splice_and_level {}, country {}, using country forecast '
-                           'data.'.format(base_series.name[1], splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to splice_and_level, country {}, using country forecast '
+                           'data.'.format(splice_series.name[1], splice_series.name[0]))
             return splice_series
         name = base_series.name
         result = None
