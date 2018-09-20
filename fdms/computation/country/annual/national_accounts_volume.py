@@ -353,11 +353,11 @@ class NationalAccountsVolume:
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_data = self.result.copy()
         export_data = export_data.reset_index()
-        writer = pd.ExcelWriter('output4.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter('output/output4.xlsx', engine='xlsxwriter')
         export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
                                            sheet_name='Sheet1', index=False)
         result_vars = self.result.index.get_level_values('Variable Code').tolist()
-        with open('outputvars4.txt', 'w') as f:
+        with open('output/outputvars4.txt', 'w') as f:
             f.write('\n'.join(result_vars))
         return self.result
 

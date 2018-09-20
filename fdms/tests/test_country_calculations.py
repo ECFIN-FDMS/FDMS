@@ -9,6 +9,7 @@ from fdms.computation.country.annual.national_accounts_volume import NationalAcc
 from fdms.computation.country.annual.national_accounts_value import NationalAccountsValue
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
+from fdms.utils.series import get_series
 
 
 class TestCountryCalculations(unittest.TestCase):
@@ -85,20 +86,17 @@ class TestCountryCalculations(unittest.TestCase):
         ameco_df.insert(0, 'Country Ameco', 'BE')
         ameco_df = ameco_df.reset_index()
         ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        # step_4_df = pd.concat([ameco_df, self.result_1], sort=True)
-        # step_4_df = pd.concat([step_4_df, orig_series], sort=True)
         step_4_df = self.result_1.copy()
         step_4_df = pd.concat([step_4_df, orig_series], sort=True)
         result_4 = step_4.perform_computation(step_4_df, ameco_df)
         # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc['BE'].index)]
         # self.assertFalse(missing_vars)
 
-
-    def test_national_accounts_value(self):
         # STEP 5
         step_5 = NationalAccountsValue()
-        step_3_df = self.result_1.copy()
-        result_5 = step_5.perform_computation(step_3_df)
+        step_5_df = self.result_1.copy()
+        ovgd1 = get_series(result_4, 'BE', 'OVGD.1.0.0.0')
+        result_5 = step_5.perform_computation(step_5_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
                      'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
