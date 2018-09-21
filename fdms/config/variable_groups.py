@@ -19,6 +19,9 @@ variable_group_names = {
     'RI_TBEBT1960': 'RATS Input variables, to be extended backwards to 1960',
 }
 
+HICP = ['ZCPIH', 'ZCPIXEF', 'ZCPIENG', 'ZCPIFOO', 'ZCPIUNF', 'ZCPINEG',
+        'ZCPISER']
+
 I_VO = ['OVGHA.3.0.0.0']
 
 PD_Q = ['ZCPIH', 'ZCPIXEF', 'ZCPIENG', 'ZCPIFOO', 'ZCPIUNF', 'ZCPINEG',

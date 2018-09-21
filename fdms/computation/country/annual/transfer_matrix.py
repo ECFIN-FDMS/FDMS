@@ -58,8 +58,7 @@ class TransferMatrix:
                         new_series = new_meta.append(new_series)
                         result = result.append(new_series, ignore_index=True)
                     else:
-                        new_series = splicer.butt_splice(splicer.ratio_splice(
-                            base_series, splice_series, kind='forward'), splice_series, kind='forward')
+                        new_series = splicer.butt_splice(splicer.ratio_splice(base_series, splice_series, kind='forward'), splice_series, kind='forward')
                         new_series.name = None
                         new_meta = pd.Series(meta1000)
                         new_series = new_meta.append(new_series)
