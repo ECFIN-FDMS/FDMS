@@ -1,15 +1,12 @@
-
 import unittest
-from fdms.computation.country.Eurostat import EurostatInput
-
-#import pdb; pdb.set_trace()
+from fdms.computation.country.eurostat import EurostatInput
 
 class TestEurostat(unittest.TestCase):
     '''Tests for "Eurostat" functions'''
 
     def test_eurostat(self):
 
-        filename = 'C:\Files\ALLEUSTATM.xlsx'
+        filename = 'fdms/sample_data/Eurostat.xlsx'
         sheet = 'Sheet2'
         calc = EurostatInput()
         result = calc.hicp_quarterly(filename,sheet)

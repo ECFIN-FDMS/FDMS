@@ -1,4 +1,3 @@
-
 import pandas as pd
 from fdms.config.variable_groups import HICP
 import logging

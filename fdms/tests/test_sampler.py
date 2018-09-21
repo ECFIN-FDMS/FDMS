@@ -1,15 +1,14 @@
 import pandas as pd
 import unittest
-from fdms.computation.country.Eurostat import EurostatInput
+from fdms.computation.country.eurostat import EurostatInput
 from fdms.config.variable_groups import HICP
-#import pdb; pdb.set_trace()
 
 class TestSampler(unittest.TestCase):
     '''Tests for "Sampler" functions'''
 
     def test_sampler(self):
 
-        filename = 'C:\Files\ALLEUSTATM.xlsx'
+        filename = 'fdms/sample_data/Eurostat.xlsx'
         sheet = 'Sheet2'
         tag = '1.0.0.0'
 
