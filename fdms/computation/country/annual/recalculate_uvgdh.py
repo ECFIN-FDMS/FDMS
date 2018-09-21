@@ -31,6 +31,5 @@ class RecalculateUvgdh:
         self.result = self.result.append(series, ignore_index=True, sort=True)
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_to_excel(self.result, 'output/outputvars6.txt', 'output/output6.xlsx')
-        import code;code.interact(local=locals())
 
         return self.result
