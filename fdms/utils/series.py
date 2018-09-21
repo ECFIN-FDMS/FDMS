@@ -6,12 +6,19 @@ from fdms.config.countries import COUNTRIES
 
 AMECO = 'fdms/sample_data/AMECO_H.TXT'
 FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
-
+VARS_FILENAME = 'output/outputvars.txt'
+EXCEL_FILENAME = 'output/output.xlsx'
 
 # TODO: create get_series_noindex to get series from intermediate results (rangeindex instead of country and variable)
-def get_series(dataframe, country_ameco, variable_code):
+def get_series(dataframe, country_ameco, variable_code, metadata=False):
     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
     dataframe.sort_index(level=[0, 1], inplace=True)
+    if metadata is True:
+        series = dataframe.loc[(country_ameco, variable_code)]
+        series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code,
+                       'Frequency': series.get('Frequency') or 'Annual',
+                       'Scale': series.get('Scale') or series.get('Unit of the series')}
+        return series_meta
     series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
     if series.empty:
         series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
@@ -65,4 +72,17 @@ def get_frequency(dataframe, country_ameco, variable_code):
         return frequency
     return frequency.squeeze()
 
+
+def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FILENAME, sheet_name='Sheet1'):
+    column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+                    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
+                    2016, 2017, 2018, 2019]
+    export_data = result.copy()
+    export_data = export_data.reset_index()
+    writer = pd.ExcelWriter(EXCEL_FILENAME, engine='xlsxwriter')
+    export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
+                                       sheet_name=sheet_name, index=False)
+    result_vars = result.index.get_level_values('Variable Code').tolist()
+    with open(VARS_FILENAME, 'w') as f:
+        f.write('\n'.join(result_vars))
 

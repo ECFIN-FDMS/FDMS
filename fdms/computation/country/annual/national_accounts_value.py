@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 from fdms.config.variable_groups import NA_IS_VA
-from fdms.utils.series import get_series, get_series_noindex
+from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 
 
 class NationalAccountsValue:
@@ -76,16 +76,6 @@ class NationalAccountsValue:
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
-        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
-                        1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
-                        2014, 2015, 2016, 2017, 2018, 2019]
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        export_data = self.result.copy()
-        export_data = export_data.reset_index()
-        writer = pd.ExcelWriter('output/output5.xlsx', engine='xlsxwriter')
-        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
-                                           sheet_name='Sheet1', index=False)
-        result_vars = self.result.index.get_level_values('Variable Code').tolist()
-        with open('output/outputvars5.txt', 'w') as f:
-            f.write('\n'.join(result_vars))
+        export_to_excel(self.result, 'output/outputvars5.txt', 'output/output5.xlsx')
         return self.result

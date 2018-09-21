@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series
+from fdms.utils.series import get_series, export_to_excel
 
 
 # National Accounts - Calculate additional GDP components
@@ -143,17 +143,7 @@ class GDPComponents:
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)
 
-        column_order = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997,
-                        1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
-                        2014, 2015, 2016, 2017, 2018, 2019]
         result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        export_data = result.copy()
-        export_data = export_data.reset_index()
-        writer = pd.ExcelWriter('output/output3.xlsx', engine='xlsxwriter')
-        export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
-                                           sheet_name='Sheet1', index=False)
-        result_vars = result.index.get_level_values('Variable Code').tolist()
-        with open('output/outputvars3.txt', 'w') as f:
-            f.write('\n'.join(result_vars))
+        export_to_excel(result, 'output/outputvars3.txt', 'output/output3.xlsx')
         return result
 

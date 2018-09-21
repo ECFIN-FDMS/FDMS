@@ -7,6 +7,7 @@ from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
 from fdms.computation.country.annual.national_accounts_value import NationalAccountsValue
+from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 from fdms.utils.series import get_series
@@ -23,8 +24,14 @@ class TestCountryCalculations(unittest.TestCase):
         step_1 = TransferMatrix()
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
 
-    def test_transfer_matrix(self):
-        pass
+    def _get_ameco_df(self, ameco_vars):
+        ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(ameco_vars, level='Variable Code')].copy().loc[
+            'BE']
+        ameco_df = pd.DataFrame(ameco_series)
+        ameco_df.insert(0, 'Country Ameco', 'BE')
+        ameco_df = ameco_df.reset_index()
+        ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        return ameco_df
 
     def test_population(self):
         step_2 = Population()
@@ -80,12 +87,7 @@ class TestCountryCalculations(unittest.TestCase):
         orig_series.insert(0, 'Country Ameco', 'BE')
         orig_series = orig_series.reset_index()
         orig_series.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(step_4_1100vars, level='Variable Code')].copy().loc[
-            'BE']
-        ameco_df = pd.DataFrame(ameco_series)
-        ameco_df.insert(0, 'Country Ameco', 'BE')
-        ameco_df = ameco_df.reset_index()
-        ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        ameco_df = self._get_ameco_df(step_4_1100vars)
         step_4_df = self.result_1.copy()
         step_4_df = pd.concat([step_4_df, orig_series], sort=True)
         result_4 = step_4.perform_computation(step_4_df, ameco_df)
@@ -102,3 +104,9 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
         self.assertFalse(missing_vars)
 
+    # STEP 6
+    def test_uvgdh(self):
+        ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
+        ameco_df = self._get_ameco_df(ameco_vars)
+        step_6 = RecalculateUvgdh()
+        step_6.perform_computation(self.df, ameco_df)
