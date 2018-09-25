@@ -1,6 +1,7 @@
 import logging
 
-logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 

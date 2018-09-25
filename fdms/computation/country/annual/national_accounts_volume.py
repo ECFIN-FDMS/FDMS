@@ -1,6 +1,7 @@
 import logging
 
-logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ class NationalAccountsVolume:
             series_data = self.splicer.ratio_splice(base_series, splice_series_1, kind='forward')
         else:
             if splice_series_2 is not None:
-                series_data = self.splicer.splice_and_level_forward(base_series, splice_series_2, kind='forward')
+                series_data = self.splicer.splice_and_level_forward(base_series, splice_series_2, kind='forward',
+                                                                    variable=variable)
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(variable))
                 return
@@ -81,13 +83,13 @@ class NationalAccountsVolume:
                     new_series = new_meta.append(new_data)
                     self.result = self.result.append(new_series, ignore_index=True)
                 else:
+                    series = get_series(df, country, variable)
+                    u_series = get_series(df, country, u_variable)
                     try:
-                        series = get_series(df, country, variable)
-                        u_series = get_series(df, country, u_variable)
                         series11 = get_series(ameco_df, country, variable11)
                     except KeyError:
-                        logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
-                        continue
+                        logger.warning('Missing Ameco data for variable {} (national accounts volume). Using data '
+                                       'from country desk forecast'.format(variable11))
                     splice_series = (series / u_series.shift(1) - 1) * 100
                     # RatioSplice(base, level(series)) = base * (1 + 0, 01 * series)
                     new_data = self.splicer.splice_and_level_forward(series11, splice_series)
@@ -183,24 +185,25 @@ class NationalAccountsVolume:
                      'OUTT.1.0.0.0': ['OUTT.1.1.0.0', 'OCPH', 'OCTG', 'OIGT', 'OIST', 'OXGN', 'OXSN'],
                      'OITT.1.0.0.0': ['OITT.1.0.0.0', 'OIGT', 'OIST']}
         for var, new_vars in variables.items():
+            base_series = None
+            splice_series_1 = sum([get_series(df, self.country, v) for v in new_vars[1:]])
             try:
                 base_series = get_series(df, self.country, new_vars[0])
-                splice_series_1 = sum([get_series(df, self.country, v) for v in new_vars[1:]])
             except KeyError:
-                logger.error('Missing data for variable {} in national accounts volume (172)'.format(var))
-            else:
-                splice_series_2 = None
-                if self.country not in FCWVACP:
-                    u_new_vars = [re.sub('^.', 'U', v) for v in new_vars[1:]]
-                    sum_u_series = sum(get_series(df, self.country, v) for v in new_vars)
+                logger.warning('No historical data for {} to level_splice, country {}, using country forecast '
+                               'data.'.format(new_vars[0], self.country))
+            splice_series_2 = None
+            if self.country not in FCWVACP:
+                u_new_vars = [re.sub('^.', 'U', v) for v in new_vars[1:]]
+                try:
+                    sum_u_series = sum(get_series(df, self.country, v) for v in new_vars[1:])
                     splice_series_2 = splice_series_1.copy() / sum_u_series.shift(1) - 1 * 100
-                    if splice_series_2 is not None:
-                        self._update_result(var, base_series, splice_series_1, splice_series_2)
-                    else:
-                        logger.error('Missing data for variable {} in national accounts volume (172)'.format(
-                            new_variable))
-                else:
-                    self._update_result(var, base_series, splice_series_1, None)
+                    self._update_result(var, base_series, splice_series_1, splice_series_2)
+                except KeyError:
+                    logger.error('Missing data for variable {} in national accounts volume (172)'.format(
+                        new_variable))
+            else:
+                self._update_result(var, base_series, splice_series_1, None)
 
         # Volume, rebase to baseperiod, percent change, contribution to percent change in GDP
         for var in NA_VO:

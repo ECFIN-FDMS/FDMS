@@ -18,7 +18,10 @@ class TestOperators(unittest.TestCase):
     def test_merge(self):
         dataframe = pd.read_excel('fdms/tests/sample_data.xlsx', sheet_name='merge', index_col=0)
         expected = dataframe.loc['expected'].filter(regex='\d{4}')
+        index = ['series1', 'series2', 'series3', 'series4', 'series5']
+        series_list = [series for series in dataframe.loc[[item for item in index]]]
         calc = Operators()
+        # result = calc.merge(series_list)
         result = calc.merge(dataframe)
         result.name = 'expected'
         assert_series_equal(result, expected)

@@ -2,7 +2,9 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(module)s %(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
+                    level=logging.INFO)
 
 
 import pandas as pd

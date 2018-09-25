@@ -1,6 +1,7 @@
 import logging
 
-logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -36,15 +37,19 @@ class Population:
         employed = 'NETN.1.0.0.0'
         salary_earners = 'NWTD.1.0.0.0'
         country = 'BE'
-        # TODO: find out why this one doesn't appear to be in the ameco_df
-        # base_series = get_series(ameco_df, country, variable)
-        # splice_series = get_series(df, country, employed) - get_series(df, country, salary_earners)
-        # NSTD1000_meta = {'Country Ameco': country, 'Variable Code': variable,
-        #                  'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
-        # NSTD1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
-        # NSTD1000 = pd.Series(NSTD1000_meta)
-        # NSTD1000 = NSTD1000.append(NSTD1000_data)
-        # result = result.append(NSTD1000, ignore_index=True)
+        base_series = None
+        try:
+            base_series = get_series(ameco_df, country, variable)
+        except KeyError:
+            logger.warning('Missing Ameco data for variable {} (population). Using data '
+                           'from country desk forecast'.format(variable))
+        splice_series = get_series(df, country, employed) - get_series(df, country, salary_earners)
+        NSTD1000_meta = {'Country Ameco': country, 'Variable Code': variable,
+                         'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
+        NSTD1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward', variable=variable)
+        NSTD1000 = pd.Series(NSTD1000_meta)
+        NSTD1000 = NSTD1000.append(NSTD1000_data)
+        result = result.append(NSTD1000, ignore_index=True)
 
         # Percentage employed (total employed / population of working age (15-64)
         variable = 'NETD.1.0.414.0'
@@ -64,7 +69,7 @@ class Population:
         NECN1000_meta = {'Country Ameco': country, 'Variable Code': variable,
                            'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
         NECN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), get_series(df, country, employed),
-                                             kind='forward')
+                                             kind='forward')#, bp=True)
         NECN1000 = pd.Series(NECN1000_meta)
         NECN1000 = NECN1000.append(NECN1000_data)
         result = result.append(NECN1000, ignore_index=True)
@@ -90,7 +95,7 @@ class Population:
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Millions'}
         NLHT91000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
         NLHT91000 = pd.Series(NLHT91000_meta)
-        NLTN91000 = NLHT91000.append(NLHT91000_data)
+        NLHT91000 = NLHT91000.append(NLHT91000_data)
         result = result.append(NLHT91000, ignore_index=True)
 
         # Civilian labour force
@@ -99,12 +104,16 @@ class Population:
         unemployed = 'NUTN.1.0.0.0'
         NLCN1000_meta = {
             'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual', 'Scale': 'Thousands'}
-        # TODO: find out why this one doesn't appear to be in the ameco_df
-        # NLCN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable),
-        #                                      NECN1000_data + get_series(df, country, unemployed), kind='forward')
-        # NLCN1000 = pd.Series(NLCN1000_meta)
-        # NLCN1000 = NLCN1000.append(NLCN1000_data)
-        # result = result.append(NLCN1000, ignore_index=True)
+        try:
+            base_series = get_series(ameco_df, country, variable)
+        except KeyError:
+            logger.warning('Missing Ameco data for variable {} (population). Using data '
+                           'from country desk forecast'.format(variable))
+        NLCN1000_data = splicer.ratio_splice(base_series, NECN1000_data + get_series(df, country, unemployed),
+                                             kind='forward', variable=variable)#, bp=True)
+        NLCN1000 = pd.Series(NLCN1000_meta)
+        NLCN1000 = NLCN1000.append(NLCN1000_data)
+        result = result.append(NLCN1000, ignore_index=True)
 
         result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_to_excel(result, 'output/outputvars2.txt', 'output/output2.xlsx',)
