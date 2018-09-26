@@ -1,6 +1,7 @@
 import logging
 
-logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,6 @@ class TransferMatrix:
                     orig_series.name = None
                     new_meta = pd.Series(meta)
                     orig_series = new_meta.append(orig_series)
-                    result = result.append(orig_series, ignore_index=True)
                     if variable in TM_TBBO:
                         new_series = splicer.butt_splice(base_series, splice_series, kind='forward')
                         new_series.name = None
@@ -63,12 +63,7 @@ class TransferMatrix:
                         new_meta = pd.Series(meta1000)
                         new_series = new_meta.append(new_series)
                         result = result.append(new_series, ignore_index=True)
-
-                    # result = result.append(base_series, ignore_index=True)
-                    # TODO: find out about parameter "Source" in series?
-                    # src_data = operators.iin(splice_series, '', 'Country desk forecast')
-                    # src_data = operators.iin(base_series, src_data)
-                    # self.source_df = source_df.append()
+                    result = result.append(orig_series, ignore_index=True)
 
         result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_to_excel(result, 'output/outputvars1.txt', 'output/output1.xlsx')

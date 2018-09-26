@@ -8,6 +8,7 @@ from fdms.computation.country.annual.national_accounts_components import GDPComp
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
 from fdms.computation.country.annual.national_accounts_value import NationalAccountsValue
 from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
+from fdms.computation.country.annual.prices import Prices
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 from fdms.utils.series import get_series
@@ -33,7 +34,8 @@ class TestCountryCalculations(unittest.TestCase):
         ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         return ameco_df
 
-    def test_population(self):
+    def test_national_accounts_volume(self):
+        # STEP 2
         step_2 = Population()
         step_2_vars = ['NUTN.1.0.0.0', 'NETN.1.0.0.0', 'NWTD.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NETN',
                        'NLHA.1.0.0.0']
@@ -41,11 +43,10 @@ class TestCountryCalculations(unittest.TestCase):
         step_2_df = self.result_1.loc[self.result_1.index.isin(step_2_vars, level='Variable Code')].copy()
         result_2 = step_2.perform_computation(step_2_df, self.ameco_df)
         variables = ['NLTN.1.0.0.0', 'NETD.1.0.414.0', 'NECN.1.0.0.0', 'NLHT.1.0.0.0', 'NLHT9.1.0.0.0',
-                     'NLCN.1.0.0.0']  # 'NSTD.1.0.0.0' is missing in ameco_df
+                     'NLCN.1.0.0.0', 'NSTD.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_2.loc['BE'].index)]
-        self.assertEqual(missing_vars, ['NLCN.1.0.0.0'])
+        self.assertFalse(missing_vars)
 
-    def test_national_accounts_volume(self):
         # STEP 3
         step_3 = GDPComponents()
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
@@ -104,9 +105,31 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
         self.assertFalse(missing_vars)
 
-    # STEP 6
-    def test_uvgdh(self):
+        PD = ['PCPH.3.1.0.0', 'PCTG.3.1.0.0', 'PIGT.3.1.0.0', 'PIGCO.3.1.0.0', 'PIGDW.3.1.0.0', 'PIGNR.3.1.0.0',
+              'PIGEQ.3.1.0.0', 'PIGOT.3.1.0.0', 'PUNF.3.1.0.0', 'PUNT.3.1.0.0', 'PUTT.3.1.0.0', 'PVGD.3.1.0.0', 'PXGS.3.1.0.0',
+              'PMGS.3.1.0.0', 'PXGN.3.1.0.0', 'PXSN.3.1.0.0', 'PMGN.3.1.0.0', 'PMSN.3.1.0.0', 'PIGP.3.1.0.0', 'PIST.3.1.0.0',
+              'PVGE.3.1.0.0']
+
+        PD_O = ['OCPH.1.0.0.0', 'OCTG.1.0.0.0', 'OIGT.1.0.0.0', 'OIGCO.1.0.0.0', 'OIGDW.1.0.0.0', 'OIGNR.1.0.0.0',
+                'OIGEQ.1.0.0.0', 'OIGOT.1.0.0.0', 'OUNF.1.0.0.0', 'OUNT.1.0.0.0', 'OUTT.1.0.0.0', 'OVGD.1.0.0.0', 'OXGS.1.0.0.0',
+                'OMGS.1.0.0.0', 'OXGN.1.0.0.0', 'OXSN.1.0.0.0', 'OMGN.1.0.0.0', 'OMSN.1.0.0.0', 'OIGP.1.0.0.0', 'OIST.1.0.0.0',
+                'OVGE.1.0.0.0']
+
+        PD_U = ['UCPH.1.0.0.0', 'UCTG.1.0.0.0', 'UIGT.1.0.0.0', 'UIGCO.1.0.0.0', 'UIGDW.1.0.0.0', 'UIGNR.1.0.0.0',
+                'UIGEQ.1.0.0.0', 'UIGOT.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UVGD.1.0.0.0', 'UXGS.1.0.0.0',
+                'UMGS.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UIGP.1.0.0.0', 'UIST.1.0.0.0',
+                'UVGE.1.0.0.0']
+
+        # STEP 6
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
         ameco_df = self._get_ameco_df(ameco_vars)
         step_6 = RecalculateUvgdh()
         step_6.perform_computation(self.df, ameco_df)
+
+        # STEP 7
+        step_7 = Prices()
+        step_7_df = pd.concat([self.result_1, result_3, result_4])
+        result_7 = step_7.perform_computation(step_7_df)
+        variables = list(PD)
+        missing_vars = [v for v in variables if v not in list(result_7.loc['BE'].index)]
+        self.assertFalse(missing_vars)

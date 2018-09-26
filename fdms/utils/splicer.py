@@ -1,7 +1,8 @@
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='error.log', format='%(asctime)s %(module)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='error.log',
+                    format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 
 import pandas as pd
@@ -99,14 +100,14 @@ class Splicer:
 
         return result
 
-    def ratio_splice(self, base_series, splice_series, kind='forward', period=None):
+    def ratio_splice(self, base_series, splice_series, kind='forward', variable=None, period=None, bp=False):
         '''
         RATIOSPLICE extends the base series by taking the period-over-period ratio (percent change) in the splice
          series, and applying the ratio to the base series.
         '''
         if base_series is None:
-            logger.warning('No historical data for {} to ratio_splice, country {}, using country forecast '
-                           'data.'.format(splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to ratio_splice, country, using country forecast '
+                           'data.'.format(variable or 'Unknown variable'))
             return splice_series
         name = base_series.name
         result = None
@@ -123,7 +124,7 @@ class Splicer:
                     stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                logger.warning('Failed to splice {} backward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
         if kind == 'backward' or kind == 'both':
@@ -195,15 +196,17 @@ class Splicer:
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
 
-    def splice_and_level_forward(self, base_series, splice_series, kind='forward', period=None):
+        return result
+
+    def splice_and_level_forward(self, base_series, splice_series, kind='forward', variable=None, period=None):
         '''
         SPLICE_AND_LEVEL performs the operation RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         '''
         # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         # TODO: check if we need to implement backwards
         if base_series is None:
-            logger.warning('No historical data for {} to splice_and_level, country {}, using country forecast '
-                           'data.'.format(splice_series.name[1], splice_series.name[0]))
+            logger.warning('No historical data for {} to splice_and_level, using country forecast '
+                           'data.'.format(variable or 'Unknown variable'))
             return splice_series
         name = base_series.name
         result = None

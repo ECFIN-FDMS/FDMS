@@ -9,15 +9,18 @@ FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
 VARS_FILENAME = 'output/outputvars.txt'
 EXCEL_FILENAME = 'output/output.xlsx'
 
-# TODO: create get_series_noindex to get series from intermediate results (rangeindex instead of country and variable)
+
 def get_series(dataframe, country_ameco, variable_code, metadata=False):
     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
     dataframe.sort_index(level=[0, 1], inplace=True)
     if metadata is True:
         series = dataframe.loc[(country_ameco, variable_code)]
-        series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code,
-                       'Frequency': series.get('Frequency') or 'Annual',
-                       'Scale': series.get('Scale') or series.get('Unit of the series')}
+        frequency = series.get('Frequency') if series.get('Frequency') is not None else 'Annual'
+        frequency = frequency if type(frequency) == str else frequency.name
+        scale = series.get('Scale') if series.get('Scale') is not None else series.get('Unit of the series')
+        scale = scale if type(scale) == str else scale.name
+        series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code, 'Frequency': frequency,
+                       'Scale': scale}
         return series_meta
     series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
     if series.empty:
@@ -79,10 +82,10 @@ def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FI
                     2016, 2017, 2018, 2019]
     export_data = result.copy()
     export_data = export_data.reset_index()
-    writer = pd.ExcelWriter(EXCEL_FILENAME, engine='xlsxwriter')
+    writer = pd.ExcelWriter(excel_filename, engine='xlsxwriter')
     export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
                                        sheet_name=sheet_name, index=False)
     result_vars = result.index.get_level_values('Variable Code').tolist()
-    with open(VARS_FILENAME, 'w') as f:
+    with open(vars_filename, 'w') as f:
         f.write('\n'.join(result_vars))
 
