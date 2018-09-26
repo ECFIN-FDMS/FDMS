@@ -50,7 +50,6 @@ class Prices:
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
-        import code;code.interact(local=locals())
         series_meta = {'Frequency': self.frequency, 'Scale': get_scale(df, self.country, gross_income),
                        'Country Ameco': self.country, 'Variable Code': variable_6}
         series_data = series_data.copy().pct_change()
