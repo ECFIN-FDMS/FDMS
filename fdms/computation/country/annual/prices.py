@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 from fdms.config.variable_groups import PD
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, get_series_noindex, export_to_excel, get_scale
 from fdms.utils.operators import Operators
 
 
@@ -37,6 +37,26 @@ class Prices:
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
+
+        # GNI (GDP deflator)
+        variable = 'OVGN.1.0.0.0'
+        variable_6 = 'OVGN.6.0.0.0'
+        gross_income = 'UVGN.1.0.0.0'
+        gross_domestic_product = 'PVGD.3.1.0.0'
+        series_meta = {'Frequency': self.frequency, 'Scale': get_scale(df, self.country, gross_income),
+                       'Country Ameco': self.country, 'Variable Code': variable}
+        series_data = get_series(df, self.country, gross_income) / get_series_noindex(
+            self.result, self.country, gross_domestic_product) * 100
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+        import code;code.interact(local=locals())
+        series_meta = {'Frequency': self.frequency, 'Scale': get_scale(df, self.country, gross_income),
+                       'Country Ameco': self.country, 'Variable Code': variable_6}
+        series_data = series_data.copy().pct_change()
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_to_excel(self.result, 'output/outputvars7.txt', 'output/output7.xlsx')

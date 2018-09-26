@@ -128,7 +128,7 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 7
         step_7 = Prices()
-        step_7_df = pd.concat([self.result_1, result_3, result_4])
+        step_7_df = pd.concat([self.result_1, result_3, result_4, result_5])
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
         missing_vars = [v for v in variables if v not in list(result_7.loc['BE'].index)]
