@@ -4,7 +4,6 @@ from fdms.utils.series import COLUMN_ORDER
 
 
 class StepMixin:
-    result = pd.DataFrame(columns=COLUMN_ORDER)
     country = 'BE'
     frequency = 'Annual'
     scale = 'units'
@@ -13,3 +12,4 @@ class StepMixin:
         self.country = country
         self.frequency = frequency
         self.scale = scale
+        self.result = pd.DataFrame(columns=COLUMN_ORDER)

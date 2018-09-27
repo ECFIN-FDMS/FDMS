@@ -1,16 +1,6 @@
 import pandas as pd
-import re
 
-from fdms.config.countries import COUNTRIES
-
-
-AMECO = 'fdms/sample_data/AMECO_H.TXT'
-FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
-VARS_FILENAME = 'output/outputvars.txt'
-EXCEL_FILENAME = 'output/output.xlsx'
-COLUMN_ORDER = ['Country Ameco', 'Variable Code', 'Frequency', 'Scale', 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017,
-                2018, 2019]
+from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER
 
 
 def get_series(dataframe, country_ameco, variable_code, metadata=False):

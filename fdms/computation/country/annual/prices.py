@@ -1,12 +1,10 @@
 import pandas as pd
 import re
 
+from fdms.config import BASE_PERIOD
 from fdms.config.variable_groups import PD
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel, get_scale
 from fdms.utils.operators import Operators
-
-
-BASE_PERIOD = 2010
 
 
 class Prices:

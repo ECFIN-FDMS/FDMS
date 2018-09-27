@@ -11,12 +11,8 @@ import re
 from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.config.country_groups import FCWVACP
 from fdms.utils.splicer import Splicer
-from fdms.utils.operators import Operators
+from fdms.config import BASE_PERIOD
 from fdms.utils.series import get_series, get_series_noindex, get_index, get_scale, get_frequency, export_to_excel
-
-
-# TODO: Create config file
-BASE_PERIOD = 2010
 
 
 class NationalAccountsVolume:

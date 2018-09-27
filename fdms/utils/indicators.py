@@ -1,12 +1,9 @@
 import datetime
 import re
 
-from fdms.config.variable_groups import TM
+from fdms.config import COUNTRY_CALCULATION_TXT
 from fdms.utils.custom_groups import EXPECTED_VARS_1
 from fdms.utils.interfaces import read_country_forecast_excel, FORECAST
-
-
-COUNTRY_CALCULATION_TXT = 'fdms/utils/country_calculation.txt'
 
 
 class Helpers:

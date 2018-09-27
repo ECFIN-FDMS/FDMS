@@ -2,6 +2,7 @@ import unittest
 import pandas as pd
 import re
 
+from fdms.computation.country.annual.labour_market import LabourMarket
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
@@ -142,4 +143,21 @@ class TestCountryCalculations(unittest.TestCase):
         # result_8 = step_8.perform_computation(step_8_df, self.ameco_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
+
+        # STEP 9
+        # step_9 = ExchangeRates()
+        # step_9_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # TODO: Step 9 calculation
+        # result_9 = step_9.perform_computation(step_9_df, self.ameco_df)
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
+
+        # STEP 10
+        step_10 = LabourMarket()
+        step_10_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # result_10 = step_10.perform_computation(step_10_df, self.ameco_df)
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
         # self.assertFalse(missing_vars)

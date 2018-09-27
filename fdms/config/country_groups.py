@@ -2,6 +2,8 @@ country_group_names = {
     'FCFTM': 'Forecast: Countries from transfer matrix',
     'FCWVACP': 'Forecast: Countries with volumes at constant prices',
     'EA': 'EA',
+    'EU': 'EU',  # Missing
+    'FCFSF': 'Forecast: Countries from small files',  # Missing
     'FCWEMS1999': 'Forecast: Countries with EA membership since 1999',
     'FCRIF': 'Forecast: Countries reporting in FTEs'
 }

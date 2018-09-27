@@ -10,11 +10,8 @@ logging.basicConfig(filename='error.log',
 import pandas as pd
 import re
 
+from fdms.config import AMECO, FORECAST
 from fdms.config.countries import COUNTRIES
-
-
-AMECO = 'fdms/sample_data/AMECO_H.TXT'
-FORECAST = 'fdms/sample_data/LT.Forecast.SF2018.xlsm'
 
 
 def _get_iso(ameco_code):
