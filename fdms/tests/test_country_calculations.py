@@ -146,7 +146,7 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 9
-        # step_9 = ExchangeRates()
+        # step_9 = output_gap()
         # step_9_df = pd.concat([self.result_1, result_3, result_4, result_5])
         # TODO: Step 9 calculation
         # result_9 = step_9.perform_computation(step_9_df, self.ameco_df)
@@ -155,9 +155,22 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 10
-        step_10 = LabourMarket()
-        step_10_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # step_10 = ExchangeRates()
+        # step_10_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # TODO: Step 10 calculation
         # result_10 = step_10.perform_computation(step_10_df, self.ameco_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
         # self.assertFalse(missing_vars)
+
+        # STEP 11
+        step_11 = LabourMarket()
+        step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7])  # , result_4, result_5])
+        result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
+        variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
+                     'RWWDC.3.1.0.0', 'HWSCW.1.0.0.0', 'RWSCC.3.1.0.0', 'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0',
+                     'RVGEW.1.0.0.0', 'ZATN9.1.0.0.0', 'ZETN9.1.0.0.0', 'ZUTN9.1.0.0.0', 'FETD9.6.0.0.0',
+                     'PLCD.3.1.0.0', 'QLCD.3.1.0.0', 'RWCDC.6.0.0.0', 'PLCD.6.0.0.0', 'QLCD.6.0.0.0', 'HWCDW.6.0.0.0',
+                     'HWSCW.6.0.0.0', 'HWWDW.6.0.0.0', 'RVGDE.6.0.0.0', 'RVGEW.6.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_11.loc['BE'].index)]
+        self.assertFalse(missing_vars)

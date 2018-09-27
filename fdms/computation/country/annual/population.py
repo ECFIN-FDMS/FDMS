@@ -58,7 +58,7 @@ class Population:
         country = 'BE'
         NETD104140_meta = {'Country Ameco': country, 'Variable Code': variable,
                          'Frequency': get_frequency(df, country, employed), 'Scale': get_scale(df, country, employed)}
-        NETD104140_data = get_series(df, country, employed).astype(float) - get_series(df, country, working_age) * 100
+        NETD104140_data = get_series(df, country, employed) - get_series(df, country, working_age) * 100
         NETD104140 = pd.Series(NETD104140_meta)
         NETD104140 = NETD104140.append(NETD104140_data)
         result = result.append(NETD104140, ignore_index=True)

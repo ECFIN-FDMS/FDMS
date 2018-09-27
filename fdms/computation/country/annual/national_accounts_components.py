@@ -27,8 +27,7 @@ class GDPComponents:
         for index, variable in enumerate(variables):
             series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
                            'Scale': 'billions'}
-            series_data = get_series(df, country, goods[index]).astype(float) + get_series(
-                df, country, services[index]).astype(float)
+            series_data = get_series(df, country, goods[index]) + get_series(df, country, services[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             result = result.append(series, ignore_index=True, sort=True)
@@ -74,7 +73,7 @@ class GDPComponents:
             if not isinstance(exports_data.name, type(imports_data.name)):
                 imports_data.name = None
             try:
-                series_data = exports_data.astype(float) - imports_data.astype(float)
+                series_data = exports_data - imports_data
             except ValueError:
                 series_data = exports_data - imports_data
             series = pd.Series(series_meta)
