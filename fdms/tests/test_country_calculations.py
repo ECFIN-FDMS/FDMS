@@ -9,6 +9,7 @@ from fdms.computation.country.annual.national_accounts_volume import NationalAcc
 from fdms.computation.country.annual.national_accounts_value import NationalAccountsValue
 from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
 from fdms.computation.country.annual.prices import Prices
+from fdms.computation.country.annual.capital_stock import CapitalStock
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 from fdms.utils.series import get_series
@@ -133,3 +134,12 @@ class TestCountryCalculations(unittest.TestCase):
         variables = list(PD)
         missing_vars = [v for v in variables if v not in list(result_7.loc['BE'].index)]
         self.assertFalse(missing_vars)
+
+        # STEP 8
+        step_8 = CapitalStock()
+        step_8_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # TODO: Step 8 calculation
+        # result_8 = step_8.perform_computation(step_8_df, self.ameco_df)
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
