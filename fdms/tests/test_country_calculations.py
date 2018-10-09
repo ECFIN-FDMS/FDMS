@@ -13,8 +13,10 @@ from fdms.computation.country.annual.national_accounts_value import NationalAcco
 from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
 from fdms.computation.country.annual.prices import Prices
 from fdms.computation.country.annual.capital_stock import CapitalStock
+from fdms.computation.country.annual.output_gap import OutputGap
 from fdms.config.variable_groups import NA_VO
-from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls
+from fdms.utils.interfaces import (read_country_forecast_excel, read_ameco_txt, read_expected_result_be,
+                                   read_ameco_db_xls, read_output_gap_xls, read_xr_ir_xls)
 from fdms.utils.series import get_series, report_diff, remove_duplicates
 
 
@@ -149,10 +151,9 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 9
-        # step_9 = output_gap()
-        # step_9_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        step_9 = OutputGap()
         # TODO: Step 9 calculation
-        # result_9 = step_9.perform_computation(step_9_df, self.ameco_df)
+        result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
         # self.assertFalse(missing_vars)

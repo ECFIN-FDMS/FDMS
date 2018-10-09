@@ -68,31 +68,32 @@ class CapitalStock(StepMixin):
                        'Scale': 'billions'}
         new_series = pd.Series({year: 0 for year in self.result.columns.tolist()})
 
-        series_1 = get_series(df, self.country, 'OVGD.1.0.0.0')  # .first_valid_index() + 1
-        series_2 = get_series(df, self.country, 'OIGT.1.0.0.0')  # .first_valid_index()
-        if series_1.first_valid_index() + 1 < series_2.first_valid_index():
-            last_observation = series_2.first_valid_index() - 1
-        else:
-            last_observation = series_1.first_valid_index()
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
-        try:
-            new_series.update(get_series(df, self.country, 'OKND.1.0.0.0').shift(1) + get_series_noindex(
-                self.result, self.country, 'OINT.1.0.0.0'))
-        except KeyError:
-            new_series.update(new_series.shift(1) + get_series_noindex(self.result, self.country, 'OINT.1.0.0.0'))
-        new_series.update(pd.Series(series_meta))
-        new_series[last_observation] = series_1[last_observation] * 3
-
-        last_observation = self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].iloc[-1].last_valid_index()
-        date_range = list(range(last_observation, LAST_YEAR))
-        series_3 = new_series.copy()
-        self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].update((series_3.filter(regex='\d{4}').shift(
-            1) * self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].filter(regex='\d{4}').shift(
-            1, axis=1) / series_3.filter(regex='\d{4}').shift(2))[date_range])
+        series_1 = get_series(df, self.country, 'OVGD.1.0.0.0')
+        series_2 = get_series(df, self.country, 'OIGT.1.0.0.0')
 
         # TODO: Check the math in FDMS+, these ones are really strange
-        # import code;code.interact(local=locals())
+        # if series_1.first_valid_index() + 1 < series_2.first_valid_index():
+        #     last_observation = series_2.first_valid_index() - 1
+        # else:
+        #     last_observation = series_1.first_valid_index()
+        # series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+        #                'Scale': 'billions'}
+        # try:
+        #     new_series.update(get_series(df, self.country, 'OKND.1.0.0.0').shift(1) + get_series_noindex(
+        #         self.result, self.country, 'OINT.1.0.0.0'))
+        # except KeyError:
+        #     new_series.update(new_series.shift(1) + get_series_noindex(self.result, self.country, 'OINT.1.0.0.0'))
+        # new_series.update(pd.Series(series_meta))
+        # new_series[last_observation] = series_1[last_observation] * 3
+        #
+        # last_observation = self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].iloc[-1].last_valid_index()
+        # date_range = list(range(last_observation, LAST_YEAR))
+        # series_3 = new_series.copy()
+
+        # self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].update((series_3.filter(regex='\d{4}').shift(
+        #     1) * self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].filter(regex='\d{4}').shift(
+        #     1, axis=1) / series_3.filter(regex='\d{4}').shift(2))[date_range])
+
         # new_series = new_series.copy().shift(1) + get_series(df, self.country, 'OIGT.1.0.0.0') - get_series_noindex(
         #     self.result, self.country, 'OKCT.1.0.0.0')
         # self.result = self.result.append(new_series, ignore_index=True, sort=True)
