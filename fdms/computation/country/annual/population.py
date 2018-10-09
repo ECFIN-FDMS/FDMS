@@ -11,7 +11,7 @@ from fdms.utils.splicer import Splicer
 from fdms.utils.series import get_series, get_scale, get_frequency, export_to_excel
 
 
-
+# STEP 2
 class Population:
     source_df = pd.DataFrame()
 

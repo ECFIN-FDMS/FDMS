@@ -15,6 +15,7 @@ from fdms.config import BASE_PERIOD
 from fdms.utils.series import get_series, get_series_noindex, get_index, get_scale, get_frequency, export_to_excel
 
 
+# STEP 4
 class NationalAccountsVolume:
     result = pd.DataFrame()
     country = 'BE'

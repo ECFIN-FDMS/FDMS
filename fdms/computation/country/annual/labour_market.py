@@ -9,6 +9,7 @@ from fdms.utils.operators import Operators
 from fdms.utils.splicer import Splicer
 
 
+# STEP 11
 class LabourMarket(StepMixin):
     def perform_computation(self, df, ameco_df):
         operators = Operators()
@@ -163,5 +164,5 @@ class LabourMarket(StepMixin):
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        export_to_excel(self.result, 'output/outputvars10.txt', 'output/output10.xlsx')
+        export_to_excel(self.result, 'output/outputvars11.txt', 'output/output11.xlsx')
         return self.result

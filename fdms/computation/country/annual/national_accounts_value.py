@@ -2,14 +2,12 @@ import pandas as pd
 import re
 
 from fdms.config.variable_groups import NA_IS_VA
+from fdms.utils.mixins import StepMixin
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 
 
-class NationalAccountsValue:
-    result = pd.DataFrame()
-    country = 'BE'
-    frequency = 'Annual'
-
+# STEP 5
+class NationalAccountsValue(StepMixin):
     def perform_computation(self, df, ovgd1):
         variables = ['UVGN.1.0.0.0', 'UTVNBP.1.0.0.0', 'UVGE.1.0.0.0', 'UWSC.1.0.0.0']
         component_1 = ['UVGD.1.0.0.0', 'UTVTBP.1.0.0.0', 'UVGD.1.0.0.0', 'UWCD.1.0.0.0']
@@ -25,13 +23,17 @@ class NationalAccountsValue:
                     df, self.country, component_2[index])
                 utvnbp = series_data.copy()
             elif index == 2:
-                series_data = get_series(df, self.country, component_1[index]) + utvnbp
+                series_data = get_series(df, self.country, component_1[index]).subtract(utvnbp, fill_value=0)
             else:
                 series_data = get_series(df, self.country, component_1[index]) - get_series(
                     df, self.country, component_2[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
+            # TODO: Check math
+            # self.update_result(series)
+            # if variable == 'UVGE.1.0.0.0':
+            #     import code;code.interact(local=locals())
 
         variable = 'UOGD.1.0.0.0'
         components = ['UVGD.1.0.0.0', 'UYVG.1.0.0.0', 'UYEU.1.0.0.0', 'UWCD.1.0.0.0', 'UTVG.1.0.0.0', 'UTEU.1.0.0.0']

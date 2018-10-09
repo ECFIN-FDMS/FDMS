@@ -7,6 +7,7 @@ from fdms.utils.series import get_series, get_series_noindex, export_to_excel, g
 from fdms.utils.operators import Operators
 
 
+# STEP 7
 class Prices:
     result = pd.DataFrame()
     country = 'BE'

@@ -6,6 +6,7 @@ from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 from fdms.utils.splicer import Splicer
 
 
+# STEP 6
 class RecalculateUvgdh:
     result = pd.DataFrame()
     country = 'BE'

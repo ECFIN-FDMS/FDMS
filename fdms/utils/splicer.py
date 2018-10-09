@@ -124,8 +124,10 @@ class Splicer:
                     stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
-                logger.warning('Failed to splice {} backward, country {}, splice series ends before base series'.format(
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
+                if kind == 'forward':
+                    return base_series
 
         if kind == 'backward' or kind == 'both':
             stripped_base, stripped_splice, greater_splice_loc = self._strip_and_get_backward_splice_boundaries(
@@ -143,8 +145,10 @@ class Splicer:
                     stripped_splice.index[0])], new_data, stripped_result], sort=True)
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                logger.warning('Failed to splice {} backward, country {}, splice series ends before base series'.format(
                     base_series.name[1], base_series.name[0]))
+                if kind == 'backward':
+                    return base_series
 
         return result
 

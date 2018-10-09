@@ -10,7 +10,7 @@ logging.basicConfig(filename='error.log',
 import pandas as pd
 import re
 
-from fdms.config import AMECO, FORECAST
+from fdms.config import AMECO, FORECAST, COLUMN_ORDER
 from fdms.config.countries import COUNTRIES
 
 
@@ -56,9 +56,57 @@ def read_expected_result(xls_export='fdms/sample_data/BE.exp.xlsx'):
     return df
 
 
+def read_expected_result_be(xls_export='fdms/sample_data/BE_expected_scale.xlsx'):
+    df = pd.read_excel(xls_export, sheet_name='BE', index_col=[0, 1])
+    df = df.reset_index()
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df['Frequency'] = 'Annual'
+    df = df.set_index(['Country Ameco', 'Variable Code'])
+    return df
+
+
 def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, frequency='annual'):
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
     ameco_df = pd.read_excel(ameco_filename, sheet_name=ameco_sheet_name, index_col=[0, 1])
     ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
     return df, ameco_df
+
+
+# TODO: check if we're using ameco historic instead of this one in some places by mistake
+def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency='annual'):
+    sheet_name = 'BE'
+    df = pd.read_excel(ameco_db_excel, sheet_name=sheet_name, index_col=[0, 1])
+    df = df.reset_index()
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df['Frequency'] = 'Annual'
+    # TODO: We need to update this db?
+    if 2019 not in df.columns:
+        df[2019] = pd.np.nan
+    df = df[COLUMN_ORDER]
+    df = df.set_index(['Country Ameco', 'Variable Code'])
+    return df
+
+
+def read_output_gap_xls(output_gap_excel='fdms/sample_data/BE_OUTPUT_GAP.xlsx', frequency='annual'):
+    sheet_name = 'BE'
+    df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
+    df = df.reset_index()
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df['Frequency'] = 'Annual'
+    df = df.set_index(['Country Ameco', 'Variable Code'])
+    return df
+
+
+def read_xr_ir_xls(output_gap_excel='fdms/sample_data/BE_XR_IR.xlsx', frequency='annual'):
+    sheet_name = 'BE'
+    df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
+    df = df.reset_index()
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df['Frequency'] = 'Annual'
+    df = df.set_index(['Country Ameco', 'Variable Code'])
+    return df

@@ -12,6 +12,7 @@ from fdms.utils.series import get_series, export_to_excel
 
 
 # National Accounts - Calculate additional GDP components
+# STEP 3
 class GDPComponents:
     source_df = pd.DataFrame()
 
