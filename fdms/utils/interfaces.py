@@ -90,8 +90,8 @@ def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency
     return df
 
 
-def read_output_gap_xls(output_gap_excel='fdms/sample_data/BE_OUTPUT_GAP.xlsx', frequency='annual'):
-    sheet_name = 'BE'
+def read_output_gap_xls(output_gap_excel='fdms/sample_data/OUTPUT_GAP.xlsx', frequency='annual'):
+    sheet_name = 'output_gap'
     df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
     df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
@@ -101,8 +101,8 @@ def read_output_gap_xls(output_gap_excel='fdms/sample_data/BE_OUTPUT_GAP.xlsx', 
     return df
 
 
-def read_xr_ir_xls(output_gap_excel='fdms/sample_data/BE_XR_IR.xlsx', frequency='annual'):
-    sheet_name = 'BE'
+def read_xr_ir_xls(output_gap_excel='fdms/sample_data/XR_IR.xlsx', frequency='annual'):
+    sheet_name = 'xr-ir'
     df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
     df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
