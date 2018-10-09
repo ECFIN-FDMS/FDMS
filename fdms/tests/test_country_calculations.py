@@ -2,6 +2,9 @@ import unittest
 import pandas as pd
 import re
 
+from pandas.testing import assert_series_equal
+
+from fdms.computation.country.annual.labour_market import LabourMarket
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
@@ -11,8 +14,8 @@ from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
 from fdms.computation.country.annual.prices import Prices
 from fdms.computation.country.annual.capital_stock import CapitalStock
 from fdms.config.variable_groups import NA_VO
-from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
-from fdms.utils.series import get_series
+from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls
+from fdms.utils.series import get_series, report_diff, remove_duplicates
 
 
 class TestCountryCalculations(unittest.TestCase):
@@ -22,7 +25,8 @@ class TestCountryCalculations(unittest.TestCase):
         self.country = 'BE'
         forecast_filename, ameco_filename = 'fdms/sample_data/LT.Forecast.SF2018.xlsm', 'fdms/sample_data/AMECO_H.TXT'
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
-        self.expected_df = pd.read_excel('fdms/sample_data/BE.exp.xlsx', sheet_name='Table', index_col=[1, 2])
+        self.ameco_db_df = read_ameco_db_xls()
+        self.dfexp = read_expected_result_be()
         step_1 = TransferMatrix()
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
 
@@ -35,7 +39,7 @@ class TestCountryCalculations(unittest.TestCase):
         ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         return ameco_df
 
-    def test_national_accounts_volume(self):
+    def test_country_calculation_BE(self):
         # STEP 2
         step_2 = Population()
         step_2_vars = ['NUTN.1.0.0.0', 'NETN.1.0.0.0', 'NWTD.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NETN',
@@ -125,11 +129,11 @@ class TestCountryCalculations(unittest.TestCase):
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
         ameco_df = self._get_ameco_df(ameco_vars)
         step_6 = RecalculateUvgdh()
-        step_6.perform_computation(self.df, ameco_df)
+        result_6 = step_6.perform_computation(self.df, ameco_df)
 
         # STEP 7
         step_7 = Prices()
-        step_7_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        step_7_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
         missing_vars = [v for v in variables if v not in list(result_7.loc['BE'].index)]
@@ -137,9 +141,61 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 8
         step_8 = CapitalStock()
-        step_8_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        step_8_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
         # TODO: Step 8 calculation
-        # result_8 = step_8.perform_computation(step_8_df, self.ameco_df)
+        result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
         # self.assertFalse(missing_vars)
+
+        # STEP 9
+        # step_9 = output_gap()
+        # step_9_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # TODO: Step 9 calculation
+        # result_9 = step_9.perform_computation(step_9_df, self.ameco_df)
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
+
+        # STEP 10
+        # step_10 = ExchangeRates()
+        # step_10_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        # TODO: Step 10 calculation
+        # result_10 = step_10.perform_computation(step_10_df, self.ameco_df)
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
+
+        # STEP 11
+        step_11 = LabourMarket()
+        step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)  # , result_4, result_5])
+        result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
+        variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
+                     'RWWDC.3.1.0.0', 'HWSCW.1.0.0.0', 'RWSCC.3.1.0.0', 'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0',
+                     'RVGEW.1.0.0.0', 'ZATN9.1.0.0.0', 'ZETN9.1.0.0.0', 'ZUTN9.1.0.0.0', 'FETD9.6.0.0.0',
+                     'PLCD.3.1.0.0', 'QLCD.3.1.0.0', 'RWCDC.6.0.0.0', 'PLCD.6.0.0.0', 'QLCD.6.0.0.0', 'HWCDW.6.0.0.0',
+                     'HWSCW.6.0.0.0', 'HWWDW.6.0.0.0', 'RVGDE.6.0.0.0', 'RVGEW.6.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_11.loc['BE'].index)]
+        self.assertFalse(missing_vars)
+        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_11],
+                           sort=True)
+        result = remove_duplicates(result)
+
+        # TODO: Fix all scales
+        res = result.drop(columns=['Scale'])
+        columns = res.columns
+        rows = result.index.tolist()
+        self.dfexp['Frequency'] = 'Annual'
+        exp = self.dfexp[columns].loc[rows]
+        diff = (exp == res) | (exp != exp) & (res != res)
+        diff_series = diff.all(axis=1)
+        wrong_series = []
+        for i in range(1, res.shape[0]):
+            try:
+                assert_series_equal(res.iloc[i], exp.iloc[i])
+            except AssertionError:
+                wrong_series.append(res.iloc[i])
+        # report_diff(res, exp, diff, diff_series)
+        wrong_names = [series.name for series in wrong_series]
+        res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
+        report_diff(res_wrong, exp_wrong)

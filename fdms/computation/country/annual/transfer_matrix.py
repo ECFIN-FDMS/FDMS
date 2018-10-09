@@ -10,10 +10,10 @@ import pandas as pd
 from fdms.config.variable_groups import TM, NA_VO, TM_TBBO, TM_TBM
 from fdms.utils.splicer import Splicer
 from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, get_scale, get_frequency, export_to_excel
+from fdms.utils.series import get_series, get_scale, get_frequency, export_to_excel, apply_scale
 
 
-
+# STEP 1
 class TransferMatrix:
     source_df = pd.DataFrame()
 
@@ -35,6 +35,7 @@ class TransferMatrix:
                     meta['Variable Code'] = variable
                     meta1000['Variable Code'] = new_variable
                     splice_series = get_series(df, country, variable)
+                    base_series = None
                     try:
                         base_series = get_series(ameco_df, country, new_variable)
                     except KeyError:

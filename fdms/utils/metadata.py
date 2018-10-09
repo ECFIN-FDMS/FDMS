@@ -1,13 +1,9 @@
 import pandas as pd
 
-
-FILENAME_VARS = 'fdms/sample_data/vargroups.xlsx'
-SHEET_NAME_VARS = 'vargroups'
-FILENAME_COUNTRIES = 'fdms/sample_data/countrygroups.xlsx'
-SHEET_NAME_COUNTRIES = 'countrygroups'
+from fdms.config import FILENAME_VARGROUPS, SHEET_NAME_VARGROUPS, FILENAME_COUNTRYGROUPS, SHEET_NAME_COUNTRYGROUPS
 
 
-def get_vargroups_from_xls(filename=FILENAME_VARS, sheet_name=SHEET_NAME_VARS):
+def get_vargroups_from_xls(filename=FILENAME_VARGROUPS, sheet_name=SHEET_NAME_VARGROUPS):
     df = pd.read_excel(filename, sheet_name=sheet_name)
     group_list = df['Group - Code'].unique().tolist()
     groups = {}
@@ -16,7 +12,7 @@ def get_vargroups_from_xls(filename=FILENAME_VARS, sheet_name=SHEET_NAME_VARS):
     return groups
 
 
-def get_countrygroups_from_xls(filename=FILENAME_COUNTRIES, sheet_name=SHEET_NAME_COUNTRIES):
+def get_countrygroups_from_xls(filename=FILENAME_COUNTRYGROUPS, sheet_name=SHEET_NAME_COUNTRYGROUPS):
     df = pd.read_excel(filename, sheet_name=sheet_name)
     group_list = df['Group - ISO'].unique().tolist()
     groups = {}

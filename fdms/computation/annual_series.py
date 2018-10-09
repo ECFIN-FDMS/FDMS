@@ -5,12 +5,8 @@ from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
+from fdms.config import FORECAST, AMECO, SHEET
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
-
-
-FORECAST = 'fdms/sample_data/BE.Forecast.0908.xlsm'
-AMECO = 'fdms/sample_data/BE_AMECO.xlsx'
-SHEET = 'BE'
 
 
 class Compute:
