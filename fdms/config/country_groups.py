@@ -35,3 +35,24 @@ ALL_COUNTRIES = ['BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE', 'EL', 'ES', 'FR', 'HR
                  'MT', 'NL', 'AT', 'PL', 'PT', 'RO', 'SI', 'SK', 'SE', 'FI', 'UK', 'TR', 'MK', 'ME', 'IS', 'RS', 'AL',
                  'US', 'JP', 'CA', 'CH', 'NO', 'MX', 'KO', 'AU', 'NZ', 'CN', 'HK', 'RU', 'DL', 'WD', 'ID', 'BL', 'BR',
                  'IN', 'AR', 'SA', 'ZA', 'TW', 'SG']
+
+
+def get_membership_date(country):
+    if country in EA:
+        if country in FCWEMS1999:
+            return 1999
+        elif country == 'EL':
+            return 2001
+        elif country == 'SI':
+            return 2007
+        elif country in ['CY', 'MT']:
+            return 2008
+        elif country == 'SK':
+            return 2009
+        elif country == 'EE':
+            return 2011
+        elif country == 'LV':
+            return 2014
+        elif country == 'LT':
+            return 2015
+

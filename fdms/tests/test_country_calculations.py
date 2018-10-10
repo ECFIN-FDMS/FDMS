@@ -14,9 +14,10 @@ from fdms.computation.country.annual.recalculate_uvgdh import RecalculateUvgdh
 from fdms.computation.country.annual.prices import Prices
 from fdms.computation.country.annual.capital_stock import CapitalStock
 from fdms.computation.country.annual.output_gap import OutputGap
+from fdms.computation.country.annual.exchange_rates import ExchangeRates
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (read_country_forecast_excel, read_ameco_txt, read_expected_result_be,
-                                   read_ameco_db_xls, read_output_gap_xls, read_xr_ir_xls)
+                                   read_ameco_db_xls, read_output_gap_xls, read_xr_ir_xls, read_ameco_xne_us_xls)
 from fdms.utils.series import get_series, report_diff, remove_duplicates
 
 
@@ -159,10 +160,9 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 10
-        # step_10 = ExchangeRates()
-        # step_10_df = pd.concat([self.result_1, result_3, result_4, result_5])
+        step_10 = ExchangeRates()
         # TODO: Step 10 calculation
-        # result_10 = step_10.perform_computation(step_10_df, self.ameco_df)
+        result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
         # self.assertFalse(missing_vars)
