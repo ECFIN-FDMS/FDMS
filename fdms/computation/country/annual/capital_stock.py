@@ -1,13 +1,9 @@
-import re
-
 import pandas as pd
 
 from fdms.utils.mixins import StepMixin
-from fdms.config.variable_groups import PD
-from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel, get_scale
+from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 from fdms.utils.splicer import Splicer
-from fdms.config import LAST_YEAR
+from fdms.config import FIRST_YEAR, LAST_YEAR
 
 
 # STEP 8
@@ -72,34 +68,43 @@ class CapitalStock(StepMixin):
         series_2 = get_series(df, self.country, 'OIGT.1.0.0.0')
 
         # TODO: Check the math in FDMS+, these ones are really strange
-        # if series_1.first_valid_index() + 1 < series_2.first_valid_index():
-        #     last_observation = series_2.first_valid_index() - 1
-        # else:
-        #     last_observation = series_1.first_valid_index()
-        # series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-        #                'Scale': 'billions'}
-        # try:
-        #     new_series.update(get_series(df, self.country, 'OKND.1.0.0.0').shift(1) + get_series_noindex(
-        #         self.result, self.country, 'OINT.1.0.0.0'))
-        # except KeyError:
-        #     new_series.update(new_series.shift(1) + get_series_noindex(self.result, self.country, 'OINT.1.0.0.0'))
-        # new_series.update(pd.Series(series_meta))
-        # new_series[last_observation] = series_1[last_observation] * 3
-        #
-        # last_observation = self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].iloc[-1].last_valid_index()
-        # date_range = list(range(last_observation, LAST_YEAR))
-        # series_3 = new_series.copy()
+        if series_1.first_valid_index() + 1 < series_2.first_valid_index():
+            last_observation = series_2.first_valid_index() - 1
+        else:
+            last_observation = series_1.first_valid_index()
+        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                       'Scale': 'billions'}
+        new_series = pd.Series(series_meta)
+        oint_1 = get_series_noindex(self.result, self.country, 'OINT.1.0.0.0').copy()
+        oigt_1 = get_series_noindex(self.result, self.country, 'OIGT.1.0.0.0').copy()
+        new_data = pd.Series({year: pd.np.nan for year in range(FIRST_YEAR, LAST_YEAR + 1)})
+        new_data[last_observation] = 3 * oint_1[last_observation]
+        for year in range(last_observation + 1, LAST_YEAR):
+            new_data[year] = new_data[year - 1] + oint_1[year]
+        last_observation = self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].iloc[-1].last_valid_index()
+        # TODO: Review the math, some results seem wrong
+        for year in range(last_observation + 1, LAST_YEAR + 1):
+            self.result.loc[
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] = (new_data[year - 1] * self.result.loc[
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year - 1]] / new_data[year - 2]).iloc[0, 0]
 
-        # self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].update((series_3.filter(regex='\d{4}').shift(
-        #     1) * self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].filter(regex='\d{4}').shift(
-        #     1, axis=1) / series_3.filter(regex='\d{4}').shift(2))[date_range])
+            new_data[year] = (new_data[year - 1] + oigt_1[year] - self.result.loc[
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]]).iloc[0, 0]
 
-        # new_series = new_series.copy().shift(1) + get_series(df, self.country, 'OIGT.1.0.0.0') - get_series_noindex(
-        #     self.result, self.country, 'OKCT.1.0.0.0')
-        # self.result = self.result.append(new_series, ignore_index=True, sort=True)
-        # variable = 'OKCT.1.0.0.0'
-        # variable = 'OKND.1.0.0.0'
-        # variable = 'OINR.1.0.0.0'
-        # variable = 'UKCT.1.0.0.0'
-        #
-        # variable = 'ZVGDFA3.3.0.0.0'
+            self.result.loc[
+                self.result['Variable Code'] == 'OINT.1.0.0.0', [year]] = (oigt_1[year] - self.result.loc[
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]]).iloc[0, 0]
+
+            self.result.loc[
+                self.result['Variable Code'] == 'UKCT.1.0.0.0', [year]] = (self.result.loc[
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] * get_series_noindex(
+                self.result, self.country, 'UIGT.1.0.0.0')[year] / oigt_1[year]).iloc[0, 0]
+
+        new_series = new_series.append(new_data)
+        self.result = self.result.append(new_series, ignore_index=True, sort=True)
+
+        # TODO: {Country}|ZVGDFA3.3.0.0.0[t] = ln({Country}|OVGD.1.0.0.0[t] / (power({Country}|NLHT9.1.0.0.0[t] * 1000, 0.65) * power({Country}|OKND.1.0.0.0[t], 0.35)))
+
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        export_to_excel(self.result, 'output/outputvars8.txt', 'output/output8.xlsx')
+        return self.result
