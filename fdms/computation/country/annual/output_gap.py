@@ -2,8 +2,6 @@ import pandas as pd
 
 from fdms.utils.mixins import StepMixin
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel
-from fdms.utils.operators import Operators
-from fdms.utils.splicer import Splicer
 
 
 # STEP 9

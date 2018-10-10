@@ -110,3 +110,14 @@ def read_xr_ir_xls(output_gap_excel='fdms/sample_data/XR_IR.xlsx', frequency='an
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
+
+
+def read_ameco_xne_us_xls(ameco_xne_us_excel='fdms/sample_data/AMECO_XNE_US.xlsx', frequency='annual'):
+    sheet_name = 'ameco_xne_us'
+    df = pd.read_excel(ameco_xne_us_excel, sheet_name=sheet_name, index_col=[0, 1])
+    df = df.reset_index()
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df['Frequency'] = 'Annual'
+    df = df.set_index(['Country Ameco', 'Variable Code'])
+    return df
