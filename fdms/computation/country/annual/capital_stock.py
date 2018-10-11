@@ -103,7 +103,14 @@ class CapitalStock(StepMixin):
         new_series = new_series.append(new_data)
         self.result = self.result.append(new_series, ignore_index=True, sort=True)
 
-        # TODO: {Country}|ZVGDFA3.3.0.0.0[t] = ln({Country}|OVGD.1.0.0.0[t] / (power({Country}|NLHT9.1.0.0.0[t] * 1000, 0.65) * power({Country}|OKND.1.0.0.0[t], 0.35)))
+        variable = 'ZVGDFA3.3.0.0.0'
+        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                       'Scale': 'billions'}
+        series_3 = get_series(df, self.country, 'NLHT9.1.0.0.0')
+        series_data = pd.np.log(series_1 / (pow(series_3 * 1000, 0.65) * pow(new_data, 0.35)))
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         export_to_excel(self.result, 'output/outputvars8.txt', 'output/output8.xlsx')

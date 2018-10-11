@@ -144,8 +144,7 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 8
         step_8 = CapitalStock()
-        step_8_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
-        # TODO: Step 8 calculation
+        step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
         result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
@@ -153,7 +152,6 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 9
         step_9 = OutputGap()
-        # TODO: Step 9 calculation
         result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
@@ -161,7 +159,6 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 10
         step_10 = ExchangeRates()
-        # TODO: Step 10 calculation
         result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
