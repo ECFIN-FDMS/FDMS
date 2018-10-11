@@ -29,6 +29,7 @@ class TestCountryCalculations(unittest.TestCase):
         forecast_filename, ameco_filename = 'fdms/sample_data/LT.Forecast.SF2018.xlsm', 'fdms/sample_data/AMECO_H.TXT'
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
         self.ameco_db_df = read_ameco_db_xls()
+        self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
         self.dfexp = read_expected_result_be()
         step_1 = TransferMatrix()
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
@@ -145,7 +146,7 @@ class TestCountryCalculations(unittest.TestCase):
         # STEP 8
         step_8 = CapitalStock()
         step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
-        result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df)
+        result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
         # self.assertFalse(missing_vars)
