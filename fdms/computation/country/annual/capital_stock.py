@@ -70,7 +70,6 @@ class CapitalStock(StepMixin):
         variable = 'OKND.1.0.0.0'
         series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
                        'Scale': 'billions'}
-        new_series = pd.Series({year: 0 for year in self.result.columns.tolist()})
 
         series_1 = get_series(ameco_db_df, self.country, 'OVGD.1.0.0.0')
         series_2 = get_series(ameco_db_df, self.country, 'OIGT.1.0.0.0')
@@ -79,8 +78,7 @@ class CapitalStock(StepMixin):
             last_observation = series_2.first_valid_index() - 1
         else:
             last_observation = series_1.first_valid_index()
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+
         new_series = pd.Series(series_meta)
         oint_1 = get_series(ameco_db_df, self.country, 'OINT.1.0.0.0').copy()
         oigt_1 = get_series_noindex(self.result, self.country, 'OIGT.1.0.0.0').copy()
