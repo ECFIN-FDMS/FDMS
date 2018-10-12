@@ -111,13 +111,15 @@ class CapitalStock(StepMixin):
         new_series = new_series.append(new_data[YEARS].copy())
         self.result = self.result.append(new_series, ignore_index=True, sort=True)
 
+        # TODO: Fix this one, we get -6.897824 instead of -2.41 but it's because NLHT9.1.0.0.0 scale is wrong
         variable = 'ZVGDFA3.3.0.0.0'
         series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
                        'Scale': 'billions'}
         series_3 = get_series(df, self.country, 'NLHT9.1.0.0.0')
-        series_data = pd.np.log(series_1 / (pow(series_3 * 1000, 0.65) * pow(new_data, 0.35)))
+        ovgd_1 = get_series_noindex(self.result, self.country, 'OVGD.1.0.0.0')
+        series_data = pd.np.log(ovgd_1 / (pow(series_3 * 1000, 0.65) * pow(new_data, 0.35)))
         series = pd.Series(series_meta)
-        series = series.append(series_data)
+        series = series.append(series_data[YEARS].copy())
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
