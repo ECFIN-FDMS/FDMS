@@ -176,8 +176,8 @@ class TestCountryCalculations(unittest.TestCase):
                      'HWSCW.6.0.0.0', 'HWWDW.6.0.0.0', 'RVGDE.6.0.0.0', 'RVGEW.6.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_11.loc['BE'].index)]
         self.assertFalse(missing_vars)
-        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_11],
-                           sort=True)
+        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
+                            result_9, result_10, result_11], sort=True)
         result = remove_duplicates(result)
 
         # TODO: Fix all scales

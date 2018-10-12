@@ -87,7 +87,7 @@ def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FI
         f.write('\n'.join(result_vars))
 
 
-def report_diff(result, expected, diff=None, diff_series=None, excel_filename='output/reportdiff.xlsx'):
+def report_diff(result, expected, diff=None, diff_series=None, excel_filename='output/outputdiff.xlsx'):
     column_order = COLUMN_ORDER
     # TODO: Fix all scales
     column_order.remove('Scale')
