@@ -15,6 +15,7 @@ from fdms.computation.country.annual.prices import Prices
 from fdms.computation.country.annual.capital_stock import CapitalStock
 from fdms.computation.country.annual.output_gap import OutputGap
 from fdms.computation.country.annual.exchange_rates import ExchangeRates
+from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (read_country_forecast_excel, read_ameco_txt, read_expected_result_be,
                                    read_ameco_db_xls, read_output_gap_xls, read_xr_ir_xls, read_ameco_xne_us_xls)
@@ -179,6 +180,13 @@ class TestCountryCalculations(unittest.TestCase):
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
                             result_9, result_10, result_11], sort=True)
         result = remove_duplicates(result)
+
+        # STEP 12
+        # step_12 = FiscalSector()
+        # result_12 = step_12.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
+        # variables = list(PD)
+        # missing_vars = [v for v in variables if v not in list(result_12.loc['BE'].index)]
+        # self.assertFalse(missing_vars)
 
         # TODO: Fix all scales
         res = result.drop(columns=['Scale'])

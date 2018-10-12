@@ -1,0 +1,111 @@
+import pandas as pd
+import re
+
+from fdms.config.country_groups import EU
+from fdms.utils.mixins import StepMixin
+from fdms.utils.splicer import Splicer
+from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+
+
+# STEP 12
+class FiscalSector(StepMixin):
+    def _sum_and_splice(self, addends, df, ameco_h_df):
+        splicer = Splicer()
+        for variable, sources in enumerate(addends):
+            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                           'Scale': 'units'}
+            base_series = get_series(ameco_h_df, self.country, variable)
+            splice_series = pd.Series()
+            for source in sources:
+                try:
+                    splice_series.add(get_series(df, self.country, source), fill_value=0)
+                except KeyError:
+                    splice_series.add(get_series_noindex(self.result, self.country, source), fill_value=0)
+            series_data = splicer.butt_splice(base_series, splice_series, kind='forward')
+            if self.country == 'JP' and variable in ['UUTG.1.0.0.0', 'URTG.1.0.0.0']:
+                if variable == 'URTG.1.0.0.0':
+                    new_sources = ['UUTG.1.0.0.0', 'UBLG.1.0.0.0']
+                    splice_series = get_series_noindex(
+                        self.result, self.country, new_sources[0]) + get_series_noindex(
+                        self.result, self.country, new_sources[1]
+                    )
+                series_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
+            series = pd.Series(series_meta)
+            series = series.append(series_data)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
+
+
+    def perform_computation(self, df, ameco_h_df):
+        splicer = Splicer()
+        addends = {
+            'UTOG.1.0.0.0': ['UROG.1.0.0.0', 'UPOMN.1.0.0.0'],
+            'UUCG.1.0.0.0': ['UWCG.1.0.0.0', 'UYTGH.1.0.0.0', 'UYIG.1.0.0.0', 'UYVG.1.0.0.0', 'UUOG.1.0.0.0',
+                             'UCTGI.1.0.0.0', 'UYTGM.1.0.0.0'],
+            'URCG.1.0.0.0': ['UTVG.1.0.0.0', 'UTYG.1.0.0.0', 'UTSG.1.0.0.0', 'UTOG.1.0.0.0'],
+            'UUTG.1.0.0.0': ['UUCG.1.0.0.0', 'UIGG0.1.0.0.0', 'UKOG.1.0.0.0'],
+            'URTG.1.0.0.0': ['URCG.1.0.0.0', 'UKTTG.1.0.0.0'],
+        }
+        # if country == JP: addends['UUCG.1.0.0.0'][0] = 'UCTG.1.0.0.0'; del(addends['UTOG.1.0.0.0'])
+
+        if self.country == 'JP':
+            addends['UUCG.1.0.0.0'][0] = 'UCTG.1.0.0.0'
+            del addends['UTOG.1.0.0.0']
+
+        self._sum_and_splice(addends, df, ameco_h_df)
+
+        variable = 'UBLG.1.0.0.0'
+        sources = {variable: ['URTG.1.0.0.0', 'UUTG.1.0.0.0']}
+        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                       'Scale': 'units'}
+        splice_series = get_series(df, self.country, sources[variable][0]).subtract(get_series(
+            df, self.country, sources[variable][1], fill_value=0))
+
+        if self.country == 'JP':
+            series_data = splice_series.copy()
+        else:
+            base_series = get_series(ameco_h_df, self.country, variable)
+            series_data = splicer.butt_splice(base_series, splice_series, kind='forward')
+
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+
+        if self.country not in EU:
+            if self.country != 'MK':
+                variable = 'UBLGE.1.0.0.0'
+                series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                               'Scale': 'units'}
+                series_data = get_series_noindex(self.result, self.country, 'UBLG.1.0.0.0')
+                series = pd.Series(series_meta)
+                series = series.append(series_data)
+                self.result = self.result.append(series, ignore_index=True, sort=True)
+
+                variable = 'UYIGE.1.0.0.0'
+                series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                               'Scale': 'units'}
+                series_data = get_series(df, self.country, 'UYIG.1.0.0.0')
+                series = pd.Series(series_meta)
+                series = series.append(series_data)
+                self.result = self.result.append(series, ignore_index=True, sort=True)
+
+        addends = {
+            'UBLGI.1.0.0.0': ['UBLG.1.0.0.0', 'UYIG.1.0.0.0'],
+            'UBLGIE.1.0.0.0': ['UBLGE.1.0.0.0', 'UYIGE.1.0.0.0'],
+            'UTAT.1.0.0.0': ['UTVG.1.0.0.0', 'UTYG.1.0.0.0', 'UTAG.1.0.0.0', 'UTKG.1.0.0.0', 'UTEU.1.0.0.0'],
+            'UOOMS.1.0.0.0': ['UOOMSR.1.0.0.0', 'UOOMSE.1.0.0.0'],
+            'UTTG.1.0.0.0': ['UTVG.1.0.0.0', 'UTEU.1.0.0.0'],
+            'UDGGL.1.0.0.0': ['UDGG.1.0.0.0', ]
+        }
+        self._sum_and_splice(addends, df, ameco_h_df)
+
+        variable = 'UDGG.1.0.0.0'
+        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
+                       'Scale': 'units'}
+        series_data = get_series_noindex(self.result, self.country, 'UDGGL.1.0.0.0')
+        series = pd.Series(series_meta)
+        series = series.append(series_data)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
+
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        export_to_excel(self.result, 'output/outputvars10.txt', 'output/output10.xlsx')
+        return self.result
