@@ -73,10 +73,10 @@ class NationalAccountsVolume:
             if variable in NA_VO:
                 if country in FCWVACP:
                     new_data = self.splicer.ratio_splice(get_series(ameco_df, country, u_variable),
-                                                    get_series(df, country, variable), kind='forward')
+                                                         get_series(df, country, variable), kind='forward')
                     new_meta = pd.Series({'Variable Code': new_variable, 'Country Ameco': country,
-                                'Frequency': get_frequency(df, country, variable),
-                                'Scale': get_scale(df, country, variable)})
+                                          'Frequency': get_frequency(df, country, variable),
+                                          'Scale': get_scale(df, country, variable)})
                     new_series = new_meta.append(new_data)
                     self.result = self.result.append(new_series, ignore_index=True)
                 else:

@@ -29,6 +29,7 @@ class TestCountryCalculations(unittest.TestCase):
         forecast_filename, ameco_filename = 'fdms/sample_data/LT.Forecast.SF2018.xlsm', 'fdms/sample_data/AMECO_H.TXT'
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
         self.ameco_db_df = read_ameco_db_xls()
+        self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
         self.dfexp = read_expected_result_be()
         step_1 = TransferMatrix()
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
@@ -144,16 +145,14 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 8
         step_8 = CapitalStock()
-        step_8_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
-        # TODO: Step 8 calculation
-        result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df)
+        step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
+        result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 9
         step_9 = OutputGap()
-        # TODO: Step 9 calculation
         result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
@@ -161,7 +160,6 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 10
         step_10 = ExchangeRates()
-        # TODO: Step 10 calculation
         result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
@@ -178,8 +176,8 @@ class TestCountryCalculations(unittest.TestCase):
                      'HWSCW.6.0.0.0', 'HWWDW.6.0.0.0', 'RVGDE.6.0.0.0', 'RVGEW.6.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_11.loc['BE'].index)]
         self.assertFalse(missing_vars)
-        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_11],
-                           sort=True)
+        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
+                            result_9, result_10, result_11], sort=True)
         result = remove_duplicates(result)
 
         # TODO: Fix all scales

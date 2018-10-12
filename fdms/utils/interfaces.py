@@ -75,7 +75,7 @@ def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, f
 
 
 # TODO: check if we're using ameco historic instead of this one in some places by mistake
-def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency='annual'):
+def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency='annual', all_data=False):
     sheet_name = 'BE'
     df = pd.read_excel(ameco_db_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
@@ -85,7 +85,8 @@ def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency
     # TODO: We need to update this db?
     if 2019 not in df.columns:
         df[2019] = pd.np.nan
-    df = df[COLUMN_ORDER]
+    if all_data is False:
+        df = df[COLUMN_ORDER]
     df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
 
