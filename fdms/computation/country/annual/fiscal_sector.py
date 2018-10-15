@@ -2,39 +2,13 @@ import pandas as pd
 import re
 
 from fdms.config.country_groups import EU
-from fdms.utils.mixins import StepMixin
+from fdms.utils.mixins import StepMixin, SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 
 
 # STEP 12
-class FiscalSector(StepMixin):
-    def _sum_and_splice(self, addends, df, ameco_h_df):
-        splicer = Splicer()
-        for variable, sources in enumerate(addends):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'units'}
-            base_series = get_series(ameco_h_df, self.country, variable)
-            splice_series = pd.Series()
-            for source in sources:
-                try:
-                    splice_series.add(get_series(df, self.country, source), fill_value=0)
-                except KeyError:
-                    splice_series.add(get_series_noindex(self.result, self.country, source), fill_value=0)
-            series_data = splicer.butt_splice(base_series, splice_series, kind='forward')
-            if self.country == 'JP' and variable in ['UUTG.1.0.0.0', 'URTG.1.0.0.0']:
-                if variable == 'URTG.1.0.0.0':
-                    new_sources = ['UUTG.1.0.0.0', 'UBLG.1.0.0.0']
-                    splice_series = get_series_noindex(
-                        self.result, self.country, new_sources[0]) + get_series_noindex(
-                        self.result, self.country, new_sources[1]
-                    )
-                series_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
-            series = pd.Series(series_meta)
-            series = series.append(series_data)
-            self.result = self.result.append(series, ignore_index=True, sort=True)
-
-
+class FiscalSector(StepMixin, SumAndSpliceMixin):
     def perform_computation(self, df, ameco_h_df):
         splicer = Splicer()
         addends = {
