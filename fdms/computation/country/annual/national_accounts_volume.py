@@ -1,5 +1,7 @@
 import logging
 
+from fdms.utils.mixins import StepMixin
+
 logging.basicConfig(filename='error.log',
                     format='{%(pathname)s:%(lineno)d} - %(asctime)s %(module)s %(levelname)s: %(message)s',
                     level=logging.INFO)
@@ -16,14 +18,11 @@ from fdms.utils.series import get_series, get_series_noindex, get_index, get_sca
 
 
 # STEP 4
-class NationalAccountsVolume:
-    result = pd.DataFrame()
-    country = 'BE'
-    frequency = 'Annual'
+class NationalAccountsVolume(StepMixin):
     splicer = Splicer()
 
     def _update_result(self, variable, base_series, splice_series_1, splice_series_2, frequency='Annual',
-                      scale='billions'):
+                       scale='Billions'):
         if self.country in FCWVACP:
             series_data = self.splicer.ratio_splice(base_series, splice_series_1, kind='forward')
         else:
@@ -33,7 +32,7 @@ class NationalAccountsVolume:
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(variable))
                 return
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': frequency, 'Scale': scale}
+        series_meta = self.get_meta(variable)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -74,9 +73,7 @@ class NationalAccountsVolume:
                 if country in FCWVACP:
                     new_data = self.splicer.ratio_splice(get_series(ameco_df, country, u_variable),
                                                          get_series(df, country, variable), kind='forward')
-                    new_meta = pd.Series({'Variable Code': new_variable, 'Country Ameco': country,
-                                          'Frequency': get_frequency(df, country, variable),
-                                          'Scale': get_scale(df, country, variable)})
+                    new_meta = pd.Series(self.get_meta(new_variable))
                     new_series = new_meta.append(new_data)
                     self.result = self.result.append(new_series, ignore_index=True)
                 else:
@@ -90,9 +87,7 @@ class NationalAccountsVolume:
                     splice_series = (series / u_series.shift(1) - 1) * 100
                     # RatioSplice(base, level(series)) = base * (1 + 0, 01 * series)
                     new_data = self.splicer.splice_and_level_forward(series11, splice_series)
-                    new_meta = pd.Series({'Variable Code': new_variable, 'Country Ameco': country,
-                                          'Frequency': get_frequency(df, country, variable),
-                                          'Scale': get_scale(df, country, variable)})
+                    new_meta = pd.Series(self.get_meta(new_variable))
                     new_series = new_meta.append(new_data)
                     self.result = self.result.append(new_series, ignore_index=True)
 
@@ -113,8 +108,7 @@ class NationalAccountsVolume:
         for number, group in enumerate([group_1, group_2]):
             for counter, variable in enumerate(group['variables']):
                 base_series = None
-                series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                               'Scale': 'billions'}
+                series_meta = self.get_meta(variable)
                 try:
                     base_series, splice_series_1, splice_series_2 = self._get_data(number + 1, group, df, ameco_df)
                 except TypeError:
@@ -214,8 +208,7 @@ class NationalAccountsVolume:
 
                 # Rebase to baseperiod
                 if u1_variable in df.index.get_level_values('Variable Code'):
-                    series_meta = {'Country Ameco': series_orig['Country Ameco'], 'Variable Code': new_variable,
-                                   'Frequency': series_orig['Frequency'], 'Scale': series_orig['Scale']}
+                    series_meta = self.get_meta(new_variable)
                     u1_series = get_series(df, self.country, u1_variable)
                     value_to_rebase = data_orig[BASE_PERIOD] / u1_series[BASE_PERIOD]
                     series_data = data_orig * value_to_rebase
@@ -227,8 +220,7 @@ class NationalAccountsVolume:
 
                 # Percent change
                 variable_6 = var + '.6.0.0.0'
-                series_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
-                               'Frequency': series_orig['Frequency'], 'Scale': 'units'}
+                series_meta = self.get_meta(variable_6)
                 series_data = data_orig.pct_change()
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
@@ -241,8 +233,7 @@ class NationalAccountsVolume:
                 series_6 = self.result.loc[result_series_index]
                 data_6 = pd.to_numeric(series_6.filter(regex='\d{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
-                series_meta = {'Country Ameco': self.country, 'Variable Code': variable_c1,
-                               'Frequency': series_6['Frequency'], 'Scale': 'units'}
+                series_meta = self.get_meta(variable_c1)
                 try:
                     series_data = data_6 * get_series(df, self.country, variable_x).shift(1) / get_series(
                         df, self.country, xvgd).shift(1)
@@ -258,7 +249,7 @@ class NationalAccountsVolume:
 
         # Contribution to percent change in GDP (calculation for additional variables)
         var = 'CMGS.1.0.0.0'
-        series_meta = get_series_noindex(self.result, self.country, var, metadata=True)
+        series_meta = self.get_meta(var)
         series_data = -get_series_noindex(self.result, self.country, var)
         index = get_index(self.result, self.country, var)
         series = pd.Series(series_meta)
@@ -267,7 +258,7 @@ class NationalAccountsVolume:
         var = 'CBGS.1.0.0.0'
         exports = 'CXGS.1.0.0.0'
         imports = 'CMGS.1.0.0.0'
-        series_meta = get_series_noindex(self.result, self.country, imports, metadata=True)
+        series_meta = self.get_meta(var)
         series_meta['Variable Code'] = var
         series_data = get_series_noindex(self.result, self.country, exports) + get_series_noindex(
             self.result, self.country, imports)
@@ -284,10 +275,8 @@ class NationalAccountsVolume:
         variable_6 = re.sub('.1.0.0.0', '.6.0.0.0', new_variable)
         total_population = 'NPTD.1.0.0.0'
         potential_gdp = 'OVGD.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
-                       'Frequency': series_orig['Frequency'], 'Scale': 'thousands'}
-        series_6_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
-                       'Frequency': series_orig['Frequency'], 'Scale': 'units'}
+        series_meta = self.get_meta(new_variable)
+        series_6_meta = self.get_meta(variable_6)
         ameco_series = get_series(ameco_df, self.country, ameco_variable)
         splice_series = get_series_noindex(self.result, self.country, potential_gdp) / get_series(
             df, self.country, total_population)
@@ -309,8 +298,7 @@ class NationalAccountsVolume:
         imports_1 = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UMGS.1.0.0.0']
         imports_2 = ['OMGN.1.0.0.0', 'OMSN.1.0.0.0', 'OMGS.1.0.0.0']
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable,
-                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_meta = self.get_meta(variable)
             series_data = (get_series(
                 df, self.country, exports_1[index]) / get_series_noindex(
                 self.result, self.country, exports_2[index]) / (
@@ -320,8 +308,7 @@ class NationalAccountsVolume:
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
             variable_6 = re.sub('3', '6', variable)
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable_6,
-                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_meta = self.get_meta(variable_6)
             series_data = series_data.pct_change()
             series = pd.Series(series_meta)
             series = series.append(series_data)
@@ -329,8 +316,7 @@ class NationalAccountsVolume:
 
         # Set up OVGD.6.1.212.0 for World GDP volume table
         variable = 'OVGD.6.1.212.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': 'OVGD.6.1.212.0',
-                       'Frequency': 'Annual', 'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         series_data = get_series_noindex(self.result, self.country, 'OVGD.6.0.0.0')
         series = pd.Series(series_meta)
         series = series.append(series_data)
@@ -340,14 +326,14 @@ class NationalAccountsVolume:
         for variable in T_VO:
             new_variable = variable + '.6.0.30.0'
             variable_6 = variable + '.6.0.0.0'
-            series_meta = {'Country Ameco': self.country, 'Variable Code': new_variable,
-                           'Frequency': 'Annual', 'Scale': 'units'}
+            series_meta = self.get_meta(new_variable)
             series_data = get_series_noindex(self.result, self.country, variable_6)
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/output4.xlsx')
         return self.result
 

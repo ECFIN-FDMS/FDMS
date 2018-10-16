@@ -18,8 +18,9 @@ from fdms.computation.country.annual.exchange_rates import ExchangeRates
 from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
 from fdms.config.variable_groups import NA_VO
-from fdms.utils.interfaces import (read_country_forecast_excel, read_ameco_txt, read_expected_result_be,
-                                   read_ameco_db_xls, read_output_gap_xls, read_xr_ir_xls, read_ameco_xne_us_xls)
+from fdms.utils.interfaces import (
+    read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
+    read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
 from fdms.utils.series import get_series, report_diff, remove_duplicates
 
 
@@ -33,8 +34,15 @@ class TestCountryCalculations(unittest.TestCase):
         self.ameco_db_df = read_ameco_db_xls()
         self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
         self.dfexp = read_expected_result_be()
-        step_1 = TransferMatrix()
+        self.scales = get_scales_from_forecast(self.country)
+        step_1 = TransferMatrix(scales=self.scales)
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
+        with open('errors_scale.txt', 'w') as f:
+            pass
+        with open('errors_scale.txt', 'w') as f:
+            pass
+        with open('raro.txt', 'a') as f:
+            pass
 
     def _get_ameco_df(self, ameco_vars):
         ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(ameco_vars, level='Variable Code')].copy().loc[
@@ -47,7 +55,7 @@ class TestCountryCalculations(unittest.TestCase):
 
     def test_country_calculation_BE(self):
         # STEP 2
-        step_2 = Population()
+        step_2 = Population(scales=self.scales)
         step_2_vars = ['NUTN.1.0.0.0', 'NETN.1.0.0.0', 'NWTD.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NETN',
                        'NLHA.1.0.0.0']
         # NECN.1.0.0.0 is calculated and used in step_2
@@ -59,7 +67,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 3
-        step_3 = GDPComponents()
+        step_3 = GDPComponents(scales=self.scales)
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
                        'UIGDW', 'UCPH', 'UCTG', 'UIGT', 'UIST']
         step_3_additional_vars = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0',
@@ -76,7 +84,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 4
-        step_4 = NationalAccountsVolume()
+        step_4 = NationalAccountsVolume(scales=self.scales)
 
         # These variables have been calculated and are needed later
         calculated = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UUITT']
@@ -107,7 +115,7 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 5
-        step_5 = NationalAccountsValue()
+        step_5 = NationalAccountsValue(scales=self.scales)
         step_5_df = self.result_1.copy()
         ovgd1 = get_series(result_4, 'BE', 'OVGD.1.0.0.0')
         result_5 = step_5.perform_computation(step_5_df, ovgd1)
@@ -134,11 +142,11 @@ class TestCountryCalculations(unittest.TestCase):
         # STEP 6
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
         ameco_df = self._get_ameco_df(ameco_vars)
-        step_6 = RecalculateUvgdh()
+        step_6 = RecalculateUvgdh(scales=self.scales)
         result_6 = step_6.perform_computation(self.df, ameco_df)
 
         # STEP 7
-        step_7 = Prices()
+        step_7 = Prices(scales=self.scales)
         step_7_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
@@ -146,7 +154,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 8
-        step_8 = CapitalStock()
+        step_8 = CapitalStock(scales=self.scales)
         step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
         result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
         # variables = list(PD)
@@ -154,21 +162,21 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 9
-        step_9 = OutputGap()
+        step_9 = OutputGap(scales=self.scales)
         result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 10
-        step_10 = ExchangeRates()
+        step_10 = ExchangeRates(scales=self.scales)
         result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 11
-        step_11 = LabourMarket()
+        step_11 = LabourMarket(scales=self.scales)
         step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)  # , result_4, result_5])
         result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
         variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
@@ -187,7 +195,7 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 13
-        step_13 = CorporateSector()
+        step_13 = CorporateSector(scales=self.scales)
         result_13 = step_13.perform_computation(self.result_1, self.ameco_df)
         variables = ['USGC.1.0.0.0', 'UOGC.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_13.loc['BE'].index)]
@@ -198,11 +206,12 @@ class TestCountryCalculations(unittest.TestCase):
                             result_9, result_10, result_11], sort=True)
         result = remove_duplicates(result)
 
-        res = result.drop(columns=['Scale'])
+        # res = result.drop(columns=['Scale'])
+        res = result.copy()
         columns = res.columns
         rows = result.index.tolist()
         self.dfexp['Frequency'] = 'Annual'
-        exp = self.dfexp[columns].loc[rows]
+        exp = self.dfexp[columns].reindex(rows)
         diff = (exp == res) | (exp != exp) & (res != res)
         diff_series = diff.all(axis=1)
         wrong_series = []

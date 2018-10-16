@@ -1,5 +1,6 @@
 import pandas as pd
 
+from fdms.config.scale_correction import SCALES
 from fdms.utils.series import COLUMN_ORDER, get_series_noindex, get_series
 from fdms.utils.splicer import Splicer
 
@@ -7,12 +8,14 @@ from fdms.utils.splicer import Splicer
 class StepMixin:
     country = 'BE'
     frequency = 'Annual'
-    scale = 'units'
+    scale = 'Units'
 
-    def __init__(self, country=country, frequency=frequency, scale=scale):
+    def __init__(self, country=country, frequency=frequency, scale=scale, scales={}):
         self.country = country
         self.frequency = frequency
         self.scale = scale
+        self.scales = scales
+        self.scale_correction = {}
         self.result = pd.DataFrame(columns=COLUMN_ORDER)
 
     def update_result(self, series):
@@ -23,13 +26,41 @@ class StepMixin:
         else:
             self.result.iloc[series.index.values[0]] = series
 
+    def get_scale(self, variable):
+        expected = SCALES.get(variable)
+        input_data = self.scales.get(variable)
+        if expected:
+            if input_data != expected:
+                if variable not in self.scale_correction:
+                    self.scale_correction[variable] = (input_data, expected)
+                with open('errors_scale.txt', 'a') as f:
+                    f.write(' '.join([variable, expected or '-', input_data or '-', '\n']))
+        return (SCALES.get(variable) or self.scales.get(variable) or self.scale).capitalize()
+
+    def apply_scale(self):
+        codes = {'Units': 0, 'Thousands': 1, 'Millions': 2, 'Billions': 3, '-': 0}
+        for variable in self.scale_correction:
+            meta = pd.Series(self.get_meta(variable))
+            series = get_series(self.result, self.country, variable)
+            orig, expected = self.scale_correction[variable]
+            if all([x is not None for x in [orig, expected]]):
+                series = series * pow(1000, codes[orig] - codes[expected])
+            try:
+                self.result.loc[self.country, variable] = pd.concat([meta, series])
+            except:
+                with open('raro.txt', 'a') as f:
+                    f.write(variable + '\n')
+
+    def get_meta(self, variable):
+        return {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': self.frequency,
+                'Scale': self.get_scale(variable)}
+
 
 class SumAndSpliceMixin:
     def _sum_and_splice(self, addends, df, ameco_h_df):
         splicer = Splicer()
         for variable, sources in addends.items():
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'units'}
+            series_meta = self.get_meta(variable)
             try:
                 base_series = get_series(ameco_h_df, self.country, variable)
             except KeyError:

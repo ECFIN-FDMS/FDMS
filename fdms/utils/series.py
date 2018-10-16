@@ -1,6 +1,7 @@
 import pandas as pd
 
 from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER
+from fdms.config.scale_correction import SCALES
 
 
 def get_series(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):
@@ -11,6 +12,9 @@ def get_series(dataframe, country_ameco, variable_code, metadata=False, null_dat
         frequency = series.get('Frequency') if series.get('Frequency') is not None else 'Annual'
         frequency = frequency if type(frequency) == str else frequency.name
         scale = series.get('Scale') if series.get('Scale') is not None else series.get('Unit of the series')
+        expected_scale = SCALES.get(variable_code)
+        if expected_scale is not None:
+            scale = expected_scale
         scale = scale if type(scale) == str else scale.name
         series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code, 'Frequency': frequency,
                        'Scale': scale}
@@ -36,7 +40,7 @@ def get_series_noindex(dataframe, country_ameco, variable_code, metadata=False, 
             dataframe['Variable Code'] == variable_code)].index.values[0]
     series = dataframe.loc[result_series_index]
     series_meta = {'Country Ameco': series['Country Ameco'], 'Variable Code': series['Variable Code'],
-                   'Frequency': series['Frequency'], 'Scale': series['Scale']}
+                   'Frequency': series['Frequency'], 'Scale': SCALES.get(variable_code) or series['Scale']}
     if metadata is True:
         return series_meta
     series = series.filter(regex='\d{4}')
@@ -90,7 +94,7 @@ def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FI
 def report_diff(result, expected, diff=None, diff_series=None, excel_filename='output/outputdiff.xlsx'):
     column_order = COLUMN_ORDER
     # TODO: Fix all scales
-    column_order.remove('Scale')
+    # column_order.remove('Scale')
     diff = (expected == result) | (expected != expected) & (result != result)
     result = result.reset_index()
     writer = pd.ExcelWriter(excel_filename, engine='xlsxwriter')

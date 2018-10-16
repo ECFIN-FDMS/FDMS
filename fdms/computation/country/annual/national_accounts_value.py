@@ -13,8 +13,7 @@ class NationalAccountsValue(StepMixin):
         component_1 = ['UVGD.1.0.0.0', 'UTVTBP.1.0.0.0', 'UVGD.1.0.0.0', 'UWCD.1.0.0.0']
         component_2 = ['UBRA.1.0.0.0', 'UYVTBP.1.0.0.0', 'UTVNBP.1.0.0.0', 'UWWD']
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'units'}
+            series_meta = self.get_meta(variable)
             if index == 0:
                 series_data = get_series(df, self.country, component_1[index]) + get_series(
                     df, self.country, component_2[index])
@@ -39,8 +38,7 @@ class NationalAccountsValue(StepMixin):
         components = ['UVGD.1.0.0.0', 'UYVG.1.0.0.0', 'UYEU.1.0.0.0', 'UWCD.1.0.0.0', 'UTVG.1.0.0.0', 'UTEU.1.0.0.0']
         series = [get_series(df, self.country, var) for var in components[:3]]
         series.extend([-get_series(df, self.country, var) for var in components[3:]])
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         series_data = sum(series)
         series = pd.Series(series_meta)
         series = series.append(series_data)
@@ -50,8 +48,7 @@ class NationalAccountsValue(StepMixin):
         total_employment = 'NETD.1.0.0.0'
         compensation = 'UWCD.1.0.0.0'
         real_compensation = 'NWTD.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         series_data = (get_series(df, self.country, total_employment) * get_series(df, self.country, compensation) /
                        get_series(df, self.country, real_compensation))
         series = pd.Series(series_meta)
@@ -61,8 +58,7 @@ class NationalAccountsValue(StepMixin):
         for variable in NA_IS_VA:
             variable_1 = variable + '.1.0.0.0'
             variable_cc = re.sub('^U', 'CC', variable_1)
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable_cc, 'Frequency': 'Annual',
-                           'Scale': 'units'}
+            series_meta = self.get_meta(variable)
             try:
                 pch = get_series(df, self.country, variable_1) / ovgd1
             except KeyError:
@@ -79,5 +75,6 @@ class NationalAccountsValue(StepMixin):
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/outputvars5.txt', 'output/output5.xlsx')
         return self.result

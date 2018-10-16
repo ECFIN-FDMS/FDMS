@@ -26,8 +26,7 @@ class CorporateSector(StepMixin, SumAndSpliceMixin):
 
         variable = 'UOGC.1.0.0.0'
         sources = {variable: ['URTG.1.0.0.0', 'UUTG.1.0.0.0']}
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         base_series = get_series(ameco_h_df, self.country, variable)
         new_data = get_series(df, self.country, 'UGVAC.1.0.0.0') + get_series(
             df, self.country, 'UYVC.1.0.0.0') - get_series(df, self.country, 'UTVC.1.0.0.0') - get_series(
@@ -42,5 +41,6 @@ class CorporateSector(StepMixin, SumAndSpliceMixin):
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/outputvars13.txt', 'output/output13.xlsx')
         return self.result

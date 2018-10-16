@@ -29,8 +29,7 @@ class FiscalSector(StepMixin, SumAndSpliceMixin):
 
         variable = 'UBLG.1.0.0.0'
         sources = {variable: ['URTG.1.0.0.0', 'UUTG.1.0.0.0']}
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         splice_series = get_series(df, self.country, sources[variable][0]).subtract(get_series(
             df, self.country, sources[variable][1], fill_value=0))
 
@@ -47,16 +46,14 @@ class FiscalSector(StepMixin, SumAndSpliceMixin):
         if self.country not in EU:
             if self.country != 'MK':
                 variable = 'UBLGE.1.0.0.0'
-                series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                               'Scale': 'units'}
+                series_meta = self.get_meta(variable)
                 series_data = get_series_noindex(self.result, self.country, 'UBLG.1.0.0.0')
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
 
                 variable = 'UYIGE.1.0.0.0'
-                series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                               'Scale': 'units'}
+                series_meta = self.get_meta(variable)
                 series_data = get_series(df, self.country, 'UYIG.1.0.0.0')
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
@@ -73,13 +70,13 @@ class FiscalSector(StepMixin, SumAndSpliceMixin):
         self._sum_and_splice(addends, df, ameco_h_df)
 
         variable = 'UDGG.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         series_data = get_series_noindex(self.result, self.country, 'UDGGL.1.0.0.0')
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/outputvars10.txt', 'output/output10.xlsx')
         return self.result

@@ -122,3 +122,17 @@ def read_ameco_xne_us_xls(ameco_xne_us_excel='fdms/sample_data/AMECO_XNE_US.xlsx
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
+
+
+def get_fc(country='BE', frequency='annual'):
+    sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
+    country_forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(country)
+    df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    return df
+
+
+def get_scales_from_forecast(country='BE', frequency='annual'):
+    df = get_fc(country, frequency)
+    scales = {index[1] + '.1.0.0.0': df.loc[index, 'Scale'].capitalize() for index in df.index}
+    scales.update({index[1]: df.loc[index, 'Scale'].capitalize() for index in df.index})
+    return scales

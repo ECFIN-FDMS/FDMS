@@ -22,21 +22,18 @@ class LabourMarket(StepMixin):
             except KeyError:
                 fetd9 = get_series(df, self.country, 'NETD.1.0.0.0')
                 fwtd9 = get_series(df, self.country, 'NWTD.1.0.0.0')
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables[0], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables[0])
             series_data = fetd9.copy()
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables[1], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables[1])
             series_data = fwtd9.copy()
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
         else:
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables[0], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables[0])
             if self.country == 'US':
                 fetd9 = get_series(df, self.country, 'NETD.1.0.0.0')
                 fwtd9 = get_series(df, self.country, 'NWTD.1.0.0.0')
@@ -49,8 +46,7 @@ class LabourMarket(StepMixin):
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables[1], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables[1])
             series_data = fwtd9.copy()
             series = pd.Series(series_meta)
             series = series.append(series_data)
@@ -65,15 +61,13 @@ class LabourMarket(StepMixin):
         variables_r1 = [re.sub('^U', 'R', variable) + 'C.3.1.0.0' for variable in variables]
         services = ['UMSN', 'UXSN', 'UMSN.1.0.0.0', 'UXSN.1.0.0.0']
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables_h1[index], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables_h1[index])
             series_data = get_series(df, self.country, variables_1[index]) / fwtd9
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables_r1[index], 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variables_r1[index])
             series_data = operators.rebase(get_series(df, self.country, variables_1[index]) / fwtd9 / get_series(
                 df, self.country, private_consumption_u) / get_series(df, self.country, private_consumption_o),
                                            base_period=BASE_PERIOD)
@@ -88,8 +82,7 @@ class LabourMarket(StepMixin):
         denominators = ['FETD9.1.0.0.0', 'FETD9.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NPAN1.1.0.0.0',
                         'NLTN.1.0.0.0']
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variable)
             if denominators[index] == 'FETD9.1.0.0.0':
                 denominator_series = fetd9
             else:
@@ -102,8 +95,7 @@ class LabourMarket(StepMixin):
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         variable = 'FETD9.6.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'units'}
+        series_meta = self.get_meta(variable)
         series_data = fetd9.pct_change()
         series = pd.Series(series_meta)
         series = series.append(series_data)
@@ -113,8 +105,7 @@ class LabourMarket(StepMixin):
         if self.country in EU:
             # ZUTN based on NUTN.1.0.0.0 and NETN.1.0.0.0 (18/01/2017) is commented out in FDMS+
             last_observation = get_series(ameco_df, self.country, variable).last_valid_index()
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variable)
             series_data = round(get_series(df, self.country, 'NUTN') / (get_series(
                 df, self.country, 'NUTN') + get_series(df, self.country, 'NETN')) * 100, 1) + round(get_series(
                 ameco_df, self.country, 'NUTN.1.0.0.0')[last_observation] - get_series(df, self.country, 'NUTN') / (
@@ -138,8 +129,7 @@ class LabourMarket(StepMixin):
         numerators = ['HWCDW.1.0.0.0', 'PLCD.3.1.0.0']
         denominators = ['RVGDE.1.0.0.0', 'PVGD.3.1.0.0']
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variable)
             if denominators[index] == 'PVGD.3.1.0.0':
                 denominator_series = get_series(df, self.country, denominators[index])
             else:
@@ -156,13 +146,13 @@ class LabourMarket(StepMixin):
                      'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0']
         variables_6 = [re.sub('.....0.0$', '.6.0.0.0', variable) for variable in variables]
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': self.country, 'Variable Code': variables_6[index], 'Frequency': 'Annual',
-                           'Scale': 'units'}
+            series_meta = self.get_meta(variables_6[index])
             series_data = get_series_noindex(self.result, self.country, variable).pct_change()
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/outputvars11.txt', 'output/output11.xlsx')
         return self.result

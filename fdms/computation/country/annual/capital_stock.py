@@ -29,8 +29,7 @@ class CapitalStock(StepMixin):
             if series_data is not None:
                 series_data = splicer.ratio_splice(series_data, get_series(ameco_db_df, self.country, variable),
                                                    kind='backward', variable=variable)[YEARS]
-                series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                               'Scale': 'billions'}
+                series_meta = self.get_meta(variable)
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -44,23 +43,20 @@ class CapitalStock(StepMixin):
         else:
             series_data = splicer.ratio_splice(ameco_data, get_series(ameco_db_df, self.country, variable)[YEARS],
                                                kind='backward')
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+        series_meta = self.get_meta(variable)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         variable = 'OKCT.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+        series_meta = self.get_meta(variable)
         series_data = get_series_noindex(self.result, self.country, 'UKCT.1.0.0.0') / (get_series(
             df, self.country, 'UIGT.1.0.0.0') / get_series(df, self.country, 'OIGT.1.0.0.0'))
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
         variable = 'OINT.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+        series_meta = self.get_meta(variable)
         series_data = get_series(df, self.country, 'OIGT.1.0.0.0') - get_series_noindex(
             self.result, self.country, 'OKCT.1.0.0.0')
         series = pd.Series(series_meta)
@@ -68,8 +64,7 @@ class CapitalStock(StepMixin):
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         variable = 'OKND.1.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+        series_meta = self.get_meta(variable)
 
         series_1 = get_series(ameco_db_df, self.country, 'OVGD.1.0.0.0')
         series_2 = get_series(ameco_db_df, self.country, 'OIGT.1.0.0.0')
@@ -113,8 +108,7 @@ class CapitalStock(StepMixin):
 
         # TODO: Fix this one, we get -6.897824 instead of -2.41 but it's because NLHT9.1.0.0.0 scale is wrong
         variable = 'ZVGDFA3.3.0.0.0'
-        series_meta = {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': 'Annual',
-                       'Scale': 'billions'}
+        series_meta = self.get_meta(variable)
         series_3 = get_series(df, self.country, 'NLHT9.1.0.0.0')
         ovgd_1 = get_series_noindex(self.result, self.country, 'OVGD.1.0.0.0')
         series_data = pd.np.log(ovgd_1 / (pow(series_3 * 1000, 0.65) * pow(new_data, 0.35)))
@@ -123,5 +117,6 @@ class CapitalStock(StepMixin):
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
         export_to_excel(self.result, 'output/outputvars8.txt', 'output/output8.xlsx')
         return self.result
