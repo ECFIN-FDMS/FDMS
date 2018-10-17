@@ -96,7 +96,7 @@ class LabourMarket(StepMixin):
 
         variable = 'FETD9.6.0.0.0'
         series_meta = self.get_meta(variable)
-        series_data = fetd9.pct_change()
+        series_data = fetd9.pct_change() * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -147,7 +147,7 @@ class LabourMarket(StepMixin):
         variables_6 = [re.sub('.....0.0$', '.6.0.0.0', variable) for variable in variables]
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variables_6[index])
-            series_data = get_series_noindex(self.result, self.country, variable).pct_change()
+            series_data = get_series_noindex(self.result, self.country, variable).pct_change() * 100
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

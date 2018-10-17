@@ -2,13 +2,13 @@ import pandas as pd
 import re
 
 from fdms.config.country_groups import EU
-from fdms.utils.mixins import StepMixin, SumAndSpliceMixin
+from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 
 
 # STEP 12
-class FiscalSector(StepMixin, SumAndSpliceMixin):
+class FiscalSector(SumAndSpliceMixin):
     def perform_computation(self, df, ameco_h_df):
         splicer = Splicer()
         addends = {

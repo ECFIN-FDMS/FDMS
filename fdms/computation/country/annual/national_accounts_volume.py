@@ -47,7 +47,7 @@ class NationalAccountsVolume(StepMixin):
                 if self.country not in FCWVACP:
                     u_series = get_series(df, self.country, variables['u_goods'][counter]) + get_series(
                         df, self.country, variables['u_services'][counter])
-                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
+                    splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
                 # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
             elif group_number == 2:
                 base_series = get_series(ameco_df, self.country, variables['exports'][counter]) - get_series(
@@ -57,7 +57,7 @@ class NationalAccountsVolume(StepMixin):
                 if self.country not in FCWVACP:
                     u_series = get_series(df, self.country, variables['u_exports'][counter]) - get_series(
                         df, self.country, variables['u_imports'][counter])
-                    splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
+                    splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
             return base_series, splice_series_1, splice_series_2
 
     def perform_computation(self, df, ameco_df=None):
@@ -85,7 +85,7 @@ class NationalAccountsVolume(StepMixin):
                         logger.warning('Missing Ameco data for variable {} (national accounts volume). Using data '
                                        'from country desk forecast'.format(variable11))
                     splice_series = (series / u_series.shift(1) - 1) * 100
-                    # RatioSplice(base, level(series)) = base * (1 + 0, 01 * series)
+                    # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
                     new_data = self.splicer.splice_and_level_forward(series11, splice_series)
                     new_meta = pd.Series(self.get_meta(new_variable))
                     new_series = new_meta.append(new_data)
@@ -133,7 +133,7 @@ class NationalAccountsVolume(StepMixin):
         u_imports = get_series(df, self.country, u_goods_imports) + get_series(df, self.country, u_services_imports)
         base_series = get_series(ameco_df, self.country, ameco_exports) - get_series(ameco_df, self.country, ameco_imports)
         splice_series_1 = export_series - import_series
-        splice_series_2 = (export_series - import_series) / (u_exports - u_imports).shift(1) - 1 * 100
+        splice_series_2 = ((export_series - import_series) / (u_exports - u_imports).shift(1) - 1) * 100
         self._update_result(var, base_series, splice_series_1, splice_series_2)
 
         # Investments
@@ -148,7 +148,7 @@ class NationalAccountsVolume(StepMixin):
         u_net_series = get_series(df, self.country, u_investments_1) - get_series(df, self.country, u_investments_2)
         base_series = get_series(ameco_df, self.country, ameco_1) - get_series(ameco_df, self.country, ameco_2)
         splice_series_1 = net_series.copy()
-        splice_series_2 = net_series / u_net_series.shift(1) - 1 * 100
+        splice_series_2 = (net_series / u_net_series.shift(1) - 1) * 100
         self._update_result(var, base_series, splice_series_1, splice_series_2)
 
         # Domestic demand
@@ -168,7 +168,7 @@ class NationalAccountsVolume(StepMixin):
             ameco_df, self.country, government_consumption) + get_series(ameco_df, self.country, use_ameco)
         splice_series_1 = get_series(df, self.country, new_private_consumption) + get_series(
             df, self.country, new_government_consumption) + get_series(df, self.country, new_use)
-        splice_series_2 = splice_series_1 / u_series.shift(1) - 1 * 100
+        splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
         self._update_result(var, base_series, splice_series_1, splice_series_2)
 
         # Domestic demand
@@ -221,7 +221,7 @@ class NationalAccountsVolume(StepMixin):
                 # Percent change
                 variable_6 = var + '.6.0.0.0'
                 series_meta = self.get_meta(variable_6)
-                series_data = data_orig.pct_change()
+                series_data = data_orig.pct_change() * 100
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -282,7 +282,7 @@ class NationalAccountsVolume(StepMixin):
             df, self.country, total_population)
         splicer = Splicer()
         series_data = splicer.ratio_splice(ameco_series, splice_series)
-        series_6_data = series_data.pct_change()
+        series_6_data = series_data.pct_change() * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -309,7 +309,7 @@ class NationalAccountsVolume(StepMixin):
             self.result = self.result.append(series, ignore_index=True, sort=True)
             variable_6 = re.sub('3', '6', variable)
             series_meta = self.get_meta(variable_6)
-            series_data = series_data.pct_change()
+            series_data = series_data.pct_change() * 100
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

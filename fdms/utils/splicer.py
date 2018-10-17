@@ -218,7 +218,7 @@ class Splicer:
             stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
                 base_series, splice_series)
             if start_splice_loc is not None:
-                new_data = stripped_splice.iloc[start_splice_loc - 1:][ 1:].copy()
+                new_data = stripped_splice.iloc[start_splice_loc - 1:][1:].copy()
                 new_data.iloc[0] = stripped_base.iloc[-1]
                 for index, item in list(new_data.iteritems())[1:]:
                     new_data.loc[index] = float(new_data.loc[index - 1]) * (1 + 0.01 * float(item))

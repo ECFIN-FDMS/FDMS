@@ -2,47 +2,58 @@ import pandas as pd
 import re
 
 from fdms.config.variable_groups import NA_IS_VA
-from fdms.utils.mixins import StepMixin
+from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.series import get_series, get_series_noindex, export_to_excel
 
 
 # STEP 5
-class NationalAccountsValue(StepMixin):
+class NationalAccountsValue(SumAndSpliceMixin):
     def perform_computation(self, df, ovgd1):
-        variables = ['UVGN.1.0.0.0', 'UTVNBP.1.0.0.0', 'UVGE.1.0.0.0', 'UWSC.1.0.0.0']
-        component_1 = ['UVGD.1.0.0.0', 'UTVTBP.1.0.0.0', 'UVGD.1.0.0.0', 'UWCD.1.0.0.0']
-        component_2 = ['UBRA.1.0.0.0', 'UYVTBP.1.0.0.0', 'UTVNBP.1.0.0.0', 'UWWD']
-        for index, variable in enumerate(variables):
-            series_meta = self.get_meta(variable)
-            if index == 0:
-                series_data = get_series(df, self.country, component_1[index]) + get_series(
-                    df, self.country, component_2[index])
-            elif index == 1:
-                series_data = get_series(df, self.country, component_1[index]) - get_series(
-                    df, self.country, component_2[index])
-                utvnbp = series_data.copy()
-            elif index == 2:
-                series_data = get_series(df, self.country, component_1[index]).subtract(utvnbp, fill_value=0)
-            else:
-                series_data = get_series(df, self.country, component_1[index]) - get_series(
-                    df, self.country, component_2[index])
-            series = pd.Series(series_meta)
-            series = series.append(series_data)
-            self.result = self.result.append(series, ignore_index=True, sort=True)
-            # TODO: Check math
-            # self.update_result(series)
-            # if variable == 'UVGE.1.0.0.0':
-            #     import code;code.interact(local=locals())
 
-        variable = 'UOGD.1.0.0.0'
-        components = ['UVGD.1.0.0.0', 'UYVG.1.0.0.0', 'UYEU.1.0.0.0', 'UWCD.1.0.0.0', 'UTVG.1.0.0.0', 'UTEU.1.0.0.0']
-        series = [get_series(df, self.country, var) for var in components[:3]]
-        series.extend([-get_series(df, self.country, var) for var in components[3:]])
-        series_meta = self.get_meta(variable)
-        series_data = sum(series)
-        series = pd.Series(series_meta)
-        series = series.append(series_data)
-        self.result = self.result.append(series, ignore_index=True, sort=True)
+        # variables = ['UVGN.1.0.0.0', 'UTVNBP.1.0.0.0', 'UVGE.1.0.0.0', 'UWSC.1.0.0.0']
+        # component_1 = ['UVGD.1.0.0.0', 'UTVTBP.1.0.0.0', 'UVGD.1.0.0.0', 'UWCD.1.0.0.0']
+        # component_2 = ['UBRA.1.0.0.0', 'UYVTBP.1.0.0.0', 'UTVNBP.1.0.0.0', 'UWWD']
+        # for index, variable in enumerate(variables):
+        #     series_meta = self.get_meta(variable)
+        #     if index == 0:
+        #         series_data = get_series(df, self.country, component_1[index]) + get_series(
+        #             df, self.country, component_2[index])
+        #     elif index == 1:
+        #         series_data = get_series(df, self.country, component_1[index]) - get_series(
+        #             df, self.country, component_2[index])
+        #         utvnbp = series_data.copy()
+        #     elif index == 2:
+        #         series_data = get_series(df, self.country, component_1[index]).subtract(utvnbp, fill_value=0)
+        #     else:
+        #         series_data = get_series(df, self.country, component_1[index]) - get_series(
+        #             df, self.country, component_2[index])
+        #     series = pd.Series(series_meta)
+        #     series = series.append(series_data)
+        #     self.result = self.result.append(series, ignore_index=True, sort=True)
+        #     # TODO: Check math
+        #     # self.update_result(series)
+        #     # if variable == 'UVGE.1.0.0.0':
+        #     #     import code;code.interact(local=locals())
+
+        # variable = 'UOGD.1.0.0.0'
+        # components = ['UVGD.1.0.0.0', 'UYVG.1.0.0.0', 'UYEU.1.0.0.0', 'UWCD.1.0.0.0', 'UTVG.1.0.0.0', 'UTEU.1.0.0.0']
+        # series = [get_series(df, self.country, var) for var in components[:3]]
+        # series.extend([-get_series(df, self.country, var) for var in components[3:]])
+        # series_meta = self.get_meta(variable)
+        # series_data = sum(series)
+        # series = pd.Series(series_meta)
+        # series = series.append(series_data)
+        # self.result = self.result.append(series, ignore_index=True, sort=True)
+        addends = {
+            'UVGN.1.0.0.0': ['UVGD.1.0.0.0', 'UBRA.1.0.0.0'],
+            'UOGD.1.0.0.0': ['UVGD.1.0.0.0', 'UYVG.1.0.0.0', 'UYEU.1.0.0.0', '-UWCD.1.0.0.0', '-UTVG.1.0.0.0',
+                             '-UTEU.1.0.0.0'],
+            'UTVNBP.1.0.0.0': ['UTVTBP.1.0.0.0', '-UYVTBP.1.0.0.0'],
+            'UVGE.1.0.0.0': ['UVGD.1.0.0.0', '-UTVNBP.1.0.0.0'],
+            'UWSC.1.0.0.0': ['UWCD.1.0.0.0', 'UWWD'],
+        }
+
+        self._sum_and_splice(addends, df, df)
 
         variable = 'UWCDA.1.0.0.0'
         total_employment = 'NETD.1.0.0.0'
@@ -63,7 +74,7 @@ class NationalAccountsValue(StepMixin):
                 pch = get_series(df, self.country, variable_1) / ovgd1
             except KeyError:
                 pch = get_series_noindex(self.result, self.country, variable_1) / ovgd1
-            pch = pch.pct_change()
+            pch = pch.pct_change() * 100
             try:
                 series_data = get_series(df, self.country, variable_1) / get_series(
                     df, self.country, 'UVGD.1.0.0.0') * pch

@@ -1,3 +1,6 @@
+from fdms.config import YEARS
+
+
 SCALES = {
     'FETD.1.0.0.0': 'Units',
     'FWTD.1.0.0.0': 'Units',
@@ -113,9 +116,16 @@ SCALES = {
     'HWSCW.1.0.0.0': 'Thousands',
     'RVGDE.1.0.0.0': 'Thousands',
     'RVGEW.1.0.0.0': 'Thousands',
+    'UBLC.1.0.0.0': 'Billions',
+    'USGC.1.0.0.0': 'Billions',
+}
+
+factors = {
+    'NLHT.1.0.0.0': 1000,
+    'NLHT9.1.0.0.0': 1000,
 }
 
 
-def apply_scale(orig, expected, series):
-    codes = {'Units': 0, 'Thousands': 1, 'Millions': 2, 'Billions': 3, '-': 0, None: 0}
-    series = series * pow(1000, codes[orig] - codes[expected])
+def fix_scales(df, country='BE'):
+    for variable, factor in factors.items():
+        df.loc[(country, variable), YEARS] = df.loc[(country, variable), YEARS] * factor

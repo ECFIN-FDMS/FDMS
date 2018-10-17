@@ -112,7 +112,7 @@ class ExchangeRates(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             try:
-                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change()
+                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change() * 100
             except IndexError:
                 missing_vars.append(variable)
             else:
@@ -127,7 +127,7 @@ class ExchangeRates(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             try:
-                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change()
+                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change() * 100
             except IndexError:
                 missing_vars.append(variable)
             else:

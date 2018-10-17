@@ -48,7 +48,7 @@ class Prices(StepMixin):
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
         series_meta = self.get_meta(variable_6)
-        series_data = series_data.copy().pct_change()
+        series_data = series_data.copy().pct_change() * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)

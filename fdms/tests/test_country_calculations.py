@@ -17,6 +17,8 @@ from fdms.computation.country.annual.output_gap import OutputGap
 from fdms.computation.country.annual.exchange_rates import ExchangeRates
 from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
+from fdms.config import YEARS
+from fdms.config.scale_correction import fix_scales
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
@@ -203,15 +205,18 @@ class TestCountryCalculations(unittest.TestCase):
 
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
-                            result_9, result_10, result_11], sort=True)
+                            result_9, result_10, result_11, result_13], sort=True)
         result = remove_duplicates(result)
+        fix_scales(result, 'BE')
 
         # res = result.drop(columns=['Scale'])
         res = result.copy()
+        # res.loc[:, YEARS] = res.loc[:, YEARS].round(decimals=4)
         columns = res.columns
         rows = result.index.tolist()
         self.dfexp['Frequency'] = 'Annual'
         exp = self.dfexp[columns].reindex(rows)
+        # exp.loc[:, YEARS] = exp.loc[:, YEARS].round(decimals=4)
         diff = (exp == res) | (exp != exp) & (res != res)
         diff_series = diff.all(axis=1)
         wrong_series = []

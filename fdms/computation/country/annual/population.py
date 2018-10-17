@@ -54,14 +54,14 @@ class Population(StepMixin):
         working_age = 'NPAN1.1.0.0.0'
         country = 'BE'
         NETD104140_meta = self.get_meta(variable)
-        NETD104140_data = get_series(df, country, employed) - get_series(df, country, working_age) * 100
+        NETD104140_data = get_series(df, country, employed) / get_series(df, country, working_age) * 100
         NETD104140 = pd.Series(NETD104140_meta)
         NETD104140 = NETD104140.append(NETD104140_data)
         self.result = self.result.append(NETD104140, ignore_index=True)
 
         # Civilian employment
         variable = 'NECN.1.0.0.0'
-        employed = 'NETN.1.0.0.0'
+        employed = 'NETN'
         NECN1000_meta = self.get_meta(variable)
         NECN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), get_series(df, country, employed),
                                              kind='forward')#, bp=True)

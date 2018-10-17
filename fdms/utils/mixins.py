@@ -9,6 +9,7 @@ class StepMixin:
     country = 'BE'
     frequency = 'Annual'
     scale = 'Units'
+    codes = {'Units': 0, 'Thousands': 1, 'Millions': 2, 'Billions': 3, '-': 0}
 
     def __init__(self, country=country, frequency=frequency, scale=scale, scales={}):
         self.country = country
@@ -38,13 +39,15 @@ class StepMixin:
         return (SCALES.get(variable) or self.scales.get(variable) or self.scale).capitalize()
 
     def apply_scale(self):
-        codes = {'Units': 0, 'Thousands': 1, 'Millions': 2, 'Billions': 3, '-': 0}
         for variable in self.scale_correction:
             meta = pd.Series(self.get_meta(variable))
-            series = get_series(self.result, self.country, variable)
+            try:
+                series = get_series(self.result, self.country, variable)
+            except KeyError:
+                return
             orig, expected = self.scale_correction[variable]
             if all([x is not None for x in [orig, expected]]):
-                series = series * pow(1000, codes[orig] - codes[expected])
+                series = series * pow(1000, self.codes[orig] - self.codes[expected])
             try:
                 self.result.loc[self.country, variable] = pd.concat([meta, series])
             except:
@@ -56,11 +59,12 @@ class StepMixin:
                 'Scale': self.get_scale(variable)}
 
 
-class SumAndSpliceMixin:
+class SumAndSpliceMixin(StepMixin):
     def _sum_and_splice(self, addends, df, ameco_h_df):
         splicer = Splicer()
         for variable, sources in addends.items():
             series_meta = self.get_meta(variable)
+            expected_scale = series_meta.get('Scale')
             try:
                 base_series = get_series(ameco_h_df, self.country, variable)
             except KeyError:
@@ -71,6 +75,9 @@ class SumAndSpliceMixin:
                 if source.startswith('-'):
                     source = source[1:]
                     factor = -1
+                src_scale = self.get_meta(source)['Scale']
+                if src_scale != series_meta.get('Scale'):
+                    factor = factor * pow(1000, self.codes[src_scale] - self.codes[expected_scale])
                 try:
                     source_data = factor * get_series(df, self.country, source)
                 except KeyError:
@@ -89,6 +96,7 @@ class SumAndSpliceMixin:
                         self.result, self.country, new_sources[1]
                     )
                 series_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
+            series_data = series_data
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

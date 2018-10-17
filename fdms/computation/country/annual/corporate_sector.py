@@ -1,15 +1,13 @@
 import pandas as pd
-import re
 
-from fdms.config.country_groups import EU
-from fdms.utils.mixins import StepMixin, SumAndSpliceMixin
+from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 
 
 # STEP 13
-class CorporateSector(StepMixin, SumAndSpliceMixin):
+class CorporateSector(SumAndSpliceMixin):
     def perform_computation(self, df, ameco_h_df):
         splicer = Splicer()
         operators = Operators()
@@ -31,10 +29,11 @@ class CorporateSector(StepMixin, SumAndSpliceMixin):
         new_data = get_series(df, self.country, 'UGVAC.1.0.0.0') + get_series(
             df, self.country, 'UYVC.1.0.0.0') - get_series(df, self.country, 'UTVC.1.0.0.0') - get_series(
             df, self.country, 'UWCC.1.0.0.0')
-        value_if_null = get_series(df, self.country, 'UOGC.1.0.0.0'), get_series(
+        value_if_null = get_series(df, self.country, 'UOGC.1.0.0.0')
+        value = get_series(
             df, self.country, 'UGVAC.1.0.0.0') + get_series(df, self.country, 'UYVC.1.0.0.0') - get_series(
             df, self.country, 'UTVC.1.0.0.0') - get_series(df, self.country, 'UWCC.1.0.0.0')
-        series_data = splicer.butt_splice(base_series, operators.iin(new_data, value_if_null))
+        series_data = splicer.butt_splice(base_series, operators.iin(new_data, value_if_null, value))
 
         series = pd.Series(series_meta)
         series = series.append(series_data)
