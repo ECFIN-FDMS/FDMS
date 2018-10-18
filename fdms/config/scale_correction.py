@@ -118,11 +118,13 @@ SCALES = {
     'RVGEW.1.0.0.0': 'Thousands',
     'UBLC.1.0.0.0': 'Billions',
     'USGC.1.0.0.0': 'Billions',
+    'CCWWD.1.0.0.0': 'Units',
 }
 
 factors = {
     'NLHT.1.0.0.0': 1000,
     'NLHT9.1.0.0.0': 1000,
+    'CCWWD.1.0.0.0': 1e-9,
 }
 
 

@@ -113,6 +113,8 @@ class NationalAccountsVolume(StepMixin):
                     base_series, splice_series_1, splice_series_2 = self._get_data(number + 1, group, df, ameco_df)
                 except TypeError:
                     logger.error('Missing data for variable {} in national accounts volume'.format(variable))
+                # if variable == 'OXGS.1.0.0.0':
+                #     import code;code.interact(local=locals())
                 self._update_result(variable, base_series, splice_series_1, splice_series_2)
 
         # Net exports goods and services

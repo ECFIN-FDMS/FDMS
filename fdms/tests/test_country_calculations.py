@@ -23,7 +23,7 @@ from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
-from fdms.utils.series import get_series, report_diff, remove_duplicates
+from fdms.utils.series import get_series, report_diff, remove_duplicates, export_to_excel
 
 
 class TestCountryCalculations(unittest.TestCase):
@@ -120,7 +120,7 @@ class TestCountryCalculations(unittest.TestCase):
         step_5 = NationalAccountsValue(scales=self.scales)
         step_5_df = self.result_1.copy()
         ovgd1 = get_series(result_4, 'BE', 'OVGD.1.0.0.0')
-        result_5 = step_5.perform_computation(step_5_df, ovgd1)
+        result_5 = step_5.perform_computation(step_5_df, self.ameco_db_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
                      'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
@@ -208,6 +208,7 @@ class TestCountryCalculations(unittest.TestCase):
                             result_9, result_10, result_11, result_13], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, 'BE')
+        export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')
 
         # res = result.drop(columns=['Scale'])
         res = result.copy()

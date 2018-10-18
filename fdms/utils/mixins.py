@@ -60,7 +60,7 @@ class StepMixin:
 
 
 class SumAndSpliceMixin(StepMixin):
-    def _sum_and_splice(self, addends, df, ameco_h_df):
+    def _sum_and_splice(self, addends, df, ameco_h_df, splice=True):
         splicer = Splicer()
         for variable, sources in addends.items():
             series_meta = self.get_meta(variable)
@@ -84,7 +84,7 @@ class SumAndSpliceMixin(StepMixin):
                     source_data = factor * get_series_noindex(self.result, self.country, source)
                 splice_series = splice_series.add(source_data, fill_value=0)
 
-            if base_series is None:
+            if base_series is None or splice is False:
                 series_data = splice_series
             else:
                 series_data = splicer.butt_splice(base_series, splice_series, kind='forward')
