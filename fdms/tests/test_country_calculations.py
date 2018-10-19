@@ -19,7 +19,7 @@ from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
 from fdms.config import YEARS
 from fdms.config.scale_correction import fix_scales
-from fdms.config.variable_groups import NA_VO
+from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
@@ -31,7 +31,8 @@ class TestCountryCalculations(unittest.TestCase):
     # National Accounts (Value) - calculate additional components
     def setUp(self):
         self.country = 'BE'
-        forecast_filename, ameco_filename = 'fdms/sample_data/LT.Forecast.SF2018.xlsm', 'fdms/sample_data/AMECO_H.TXT'
+        ameco_filename = 'fdms/sample_data/AMECO_H.TXT'
+        forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(self.country)
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
         self.ameco_db_df = read_ameco_db_xls()
         self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
@@ -48,9 +49,9 @@ class TestCountryCalculations(unittest.TestCase):
 
     def _get_ameco_df(self, ameco_vars):
         ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(ameco_vars, level='Variable Code')].copy().loc[
-            'BE']
+            self.country]
         ameco_df = pd.DataFrame(ameco_series)
-        ameco_df.insert(0, 'Country Ameco', 'BE')
+        ameco_df.insert(0, 'Country Ameco', self.country)
         ameco_df = ameco_df.reset_index()
         ameco_df.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         return ameco_df
@@ -65,7 +66,7 @@ class TestCountryCalculations(unittest.TestCase):
         result_2 = step_2.perform_computation(step_2_df, self.ameco_df)
         variables = ['NLTN.1.0.0.0', 'NETD.1.0.414.0', 'NECN.1.0.0.0', 'NLHT.1.0.0.0', 'NLHT9.1.0.0.0',
                      'NLCN.1.0.0.0', 'NSTD.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_2.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_2.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # STEP 3
@@ -82,7 +83,7 @@ class TestCountryCalculations(unittest.TestCase):
         variables = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UITT',
                      'UMGS.1.0.0.0', 'UXGS.1.0.0.0', 'UBGN.1.0.0.0', 'UBSN.1.0.0.0', 'UBGS.1.0.0.0', 'UIGG.1.0.0.0',
                      'UIGP.1.0.0.0', 'UIGNR.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UITT.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_3.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_3.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # STEP 4
@@ -92,6 +93,7 @@ class TestCountryCalculations(unittest.TestCase):
         calculated = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UUITT']
         step_4_src_vars = list(NA_VO)
         step_4_src_vars.extend(calculated)
+        step_4_src_vars.extend(['OMGS', 'OVGE', 'OVGD'])
         step_4_1000vars = [variable + '.1.0.0.0' for variable in step_4_src_vars]
         step_4_uvars = [re.sub('^.', 'U', variable) for variable in step_4_src_vars]
         step_4_1100vars = [variable + '.1.1.0.0' for variable in step_4_src_vars]
@@ -100,30 +102,30 @@ class TestCountryCalculations(unittest.TestCase):
         step_4_1000vars.append('OVGD.1.0.0.0')
         step_4_1100vars.append('RVGDP.1.1.0.0')
 
-        orig_series = self.df.loc[self.df.index.isin(step_4_src_vars, level='Variable')].copy().loc['BE']
+        orig_series = self.df.loc[self.df.index.isin(step_4_src_vars, level='Variable')].copy().loc[self.country]
         orig_series = pd.concat([orig_series, result_3.loc[result_3.index.isin(
-            step_4_uvars, level='Variable Code')].copy().loc['BE']], sort=True)
+            step_4_uvars, level='Variable Code')].copy().loc[self.country]], sort=True)
         orig_series = pd.concat([orig_series, result_3.loc[result_3.index.isin(
-            variables, level='Variable Code')].copy().loc['BE']], sort=True)
+            variables, level='Variable Code')].copy().loc[self.country]], sort=True)
         orig_series['Variable Code'] = orig_series.index
-        orig_series.insert(0, 'Country Ameco', 'BE')
+        orig_series.insert(0, 'Country Ameco', self.country)
         orig_series = orig_series.reset_index()
         orig_series.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         ameco_df = self._get_ameco_df(step_4_1100vars)
         step_4_df = self.result_1.copy()
         step_4_df = pd.concat([step_4_df, orig_series], sort=True)
-        result_4 = step_4.perform_computation(step_4_df, ameco_df)
-        # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc['BE'].index)]
+        result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
+        # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 5
         step_5 = NationalAccountsValue(scales=self.scales)
         step_5_df = self.result_1.copy()
-        ovgd1 = get_series(result_4, 'BE', 'OVGD.1.0.0.0')
+        # ovgd1 = get_series(result_4, self.country, 'OVGD.1.0.0.0')
         result_5 = step_5.perform_computation(step_5_df, self.ameco_db_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
                      'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_5.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_5.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         PD = ['PCPH.3.1.0.0', 'PCTG.3.1.0.0', 'PIGT.3.1.0.0', 'PIGCO.3.1.0.0', 'PIGDW.3.1.0.0', 'PIGNR.3.1.0.0',
@@ -152,7 +154,7 @@ class TestCountryCalculations(unittest.TestCase):
         step_7_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
-        missing_vars = [v for v in variables if v not in list(result_7.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_7.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # STEP 8
@@ -160,21 +162,21 @@ class TestCountryCalculations(unittest.TestCase):
         step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
         result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
         # variables = list(PD)
-        # missing_vars = [v for v in variables if v not in list(result_8.loc['BE'].index)]
+        # missing_vars = [v for v in variables if v not in list(result_8.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 9
         step_9 = OutputGap(scales=self.scales)
         result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
-        # missing_vars = [v for v in variables if v not in list(result_9.loc['BE'].index)]
+        # missing_vars = [v for v in variables if v not in list(result_9.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 10
         step_10 = ExchangeRates(scales=self.scales)
         result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
-        # missing_vars = [v for v in variables if v not in list(result_10.loc['BE'].index)]
+        # missing_vars = [v for v in variables if v not in list(result_10.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 11
@@ -186,28 +188,28 @@ class TestCountryCalculations(unittest.TestCase):
                      'RVGEW.1.0.0.0', 'ZATN9.1.0.0.0', 'ZETN9.1.0.0.0', 'ZUTN9.1.0.0.0', 'FETD9.6.0.0.0',
                      'PLCD.3.1.0.0', 'QLCD.3.1.0.0', 'RWCDC.6.0.0.0', 'PLCD.6.0.0.0', 'QLCD.6.0.0.0', 'HWCDW.6.0.0.0',
                      'HWSCW.6.0.0.0', 'HWWDW.6.0.0.0', 'RVGDE.6.0.0.0', 'RVGEW.6.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_11.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_11.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # STEP 12
         # step_12 = FiscalSector()
         # result_12 = step_12.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
-        # missing_vars = [v for v in variables if v not in list(result_12.loc['BE'].index)]
+        # missing_vars = [v for v in variables if v not in list(result_12.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 13
         step_13 = CorporateSector(scales=self.scales)
         result_13 = step_13.perform_computation(self.result_1, self.ameco_df)
         variables = ['USGC.1.0.0.0', 'UOGC.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_13.loc['BE'].index)]
+        missing_vars = [v for v in variables if v not in list(result_13.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
                             result_9, result_10, result_11, result_13], sort=True)
         result = remove_duplicates(result)
-        fix_scales(result, 'BE')
+        fix_scales(result, self.country)
         export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')
 
         # res = result.drop(columns=['Scale'])

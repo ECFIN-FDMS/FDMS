@@ -202,7 +202,7 @@ class Splicer:
 
         return result
 
-    def splice_and_level_forward(self, base_series, splice_series, kind='forward', variable=None, period=None):
+    def splice_and_level_forward(self, base_series, splice_series, kind='forward', variable=None, scales=None):
         '''
         SPLICE_AND_LEVEL performs the operation RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         '''

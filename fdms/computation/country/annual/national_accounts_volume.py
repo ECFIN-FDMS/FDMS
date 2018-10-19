@@ -21,8 +21,7 @@ from fdms.utils.series import get_series, get_series_noindex, get_index, get_sca
 class NationalAccountsVolume(StepMixin):
     splicer = Splicer()
 
-    def _update_result(self, variable, base_series, splice_series_1, splice_series_2, frequency='Annual',
-                       scale='Billions'):
+    def _update_result(self, variable, base_series, splice_series_1, splice_series_2, scale='Billions'):
         if self.country in FCWVACP:
             series_data = self.splicer.ratio_splice(base_series, splice_series_1, kind='forward')
         else:
@@ -37,28 +36,30 @@ class NationalAccountsVolume(StepMixin):
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
-    def _get_data(self, group_number, variables, df=None, ameco_df=None):
+    def _get_data(self, variable, components, df=None, ameco_df=None):
         splice_series_2 = None
-        for counter, variable in enumerate(variables['variables']):
-            if group_number == 1:
-                base_series = get_series(ameco_df, self.country, variables['ameco'][counter])
-                splice_series_1 = get_series(df, self.country, variables['goods'][counter]) + get_series(
-                    df, self.country, variables['services'][counter])
-                if self.country not in FCWVACP:
-                    u_series = get_series(df, self.country, variables['u_goods'][counter]) + get_series(
-                        df, self.country, variables['u_services'][counter])
-                    splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
-                # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
-            elif group_number == 2:
-                base_series = get_series(ameco_df, self.country, variables['exports'][counter]) - get_series(
-                    ameco_df, self.country, variables['imports'][counter])
-                splice_series_1 = get_series(df, self.country, variables['new_exports'][counter]) - get_series(
-                    df, self.country, variables['new_imports'][counter])
-                if self.country not in FCWVACP:
-                    u_series = get_series(df, self.country, variables['u_exports'][counter]) - get_series(
-                        df, self.country, variables['u_imports'][counter])
-                    splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
-            return base_series, splice_series_1, splice_series_2
+        if variable in ['OMGS.1.0.0.0', 'OXGS.1.0.0.0']:
+            base_series = get_series(ameco_df, self.country, components['ameco'])
+            splice_series_1 = get_series(df, self.country, components['goods']) + get_series(
+                df, self.country, components['services'])
+            if self.country not in FCWVACP:
+                u_series = get_series(df, self.country, components['u_goods']) + get_series(
+                    df, self.country, components['u_services'])
+                splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
+            # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
+        else:
+            try:
+                base_series = get_series(ameco_df, self.country, components['exports']) - get_series(
+                    ameco_df, self.country, components['imports'])
+            except KeyError:
+                base_series = None
+            splice_series_1 = get_series(df, self.country, components['new_exports']) - get_series(
+                df, self.country, components['new_imports'])
+            if self.country not in FCWVACP:
+                u_series = get_series(df, self.country, components['u_exports']) - get_series(
+                    df, self.country, components['u_imports'])
+                splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
+        return base_series, splice_series_1, splice_series_2
 
     def perform_computation(self, df, ameco_df=None):
         ameco_df = ameco_df if ameco_df is not None else df
@@ -92,30 +93,26 @@ class NationalAccountsVolume(StepMixin):
                     self.result = self.result.append(new_series, ignore_index=True)
 
         # Imports / exports of goods and services
-        group_1 = {'variables': ['OMGS.1.0.0.0', 'OXGS.1.0.0.0'], 'ameco': ['OMGS.1.1.0.0', 'OXGS.1.1.0.0'],
-                   'goods': ['OMGN', 'OXGN'], 'services': ['OMSN', 'OXSN'], 'u_goods': ['UMGN', 'UXGN'],
-                   'u_services': ['UMSN', 'UXSN']}
+        omgs, oxgs, obgn, obsn, oigp = 'OMGS.1.0.0.0', 'OXGS.1.0.0.0', 'OBGN.1.0.0.0', 'OBSN.1.0.0.0', 'OIGP.1.0.0.0'
+        variables = {omgs: {'ameco': 'OMGS.1.1.0.0', 'goods': 'OMGN', 'services': 'OMSN', 'u_goods': 'UMGN',
+                               'u_services': 'UMSN'}}
+        variables[oxgs] = {'ameco': 'OXGS.1.1.0.0', 'goods': 'OXGN', 'services': 'OXSN', 'u_goods': 'UXGN',
+                                    'u_services': 'UXSN'}
+        variables[obgn] = {'exports': 'OXGN.1.1.0.0', 'imports': 'OMGN.1.1.0.0', 'new_exports': 'OXGN',
+                                      'u_exports': 'UXGN', 'new_imports': 'OMGN', 'u_imports': 'UMGN'}
+        variables[obsn] = {'exports': 'OXSN.1.1.0.0', 'imports': 'OXSN.1.1.0.0', 'new_exports': 'OXSN',
+                                      'u_exports': 'UXSN', 'new_imports': 'OMGN', 'u_imports': 'UMGN'}
+        variables[oigp] = {'exports': 'OIGT.1.1.0.0', 'imports': 'OIGG.1.1.0.0', 'new_exports': 'OIGG',
+                                      'u_exports': 'UIGG', 'new_imports': 'OIGG', 'u_imports': 'UIGG'}
 
-        # Net imports / exports of goods, services and investments
-        group_2 = {
-            'variables': ['OBGN.1.0.0.0', 'OBSN.1.0.0.0', 'OIGP.1.0.0.0'],
-            'exports': ['OXGN.1.1.0.0', 'OXSN.1.1.0.0', 'OIGT.1.1.0.0'],
-            'imports': ['OMGN.1.1.0.0', 'OMSN.1.1.0.0', 'OIGG.1.1.0.0'],
-            'new_exports': ['OXGN', 'OXSN', 'OIGT'], 'new_imports': ['OMGN', 'OMGN', 'OIGG'],
-            'u_exports': ['UXGN', 'UXSN', 'UIGT'], 'u_imports': ['UMGN', 'UMGN', 'UIGG']
-        }
-
-        for number, group in enumerate([group_1, group_2]):
-            for counter, variable in enumerate(group['variables']):
-                base_series = None
-                series_meta = self.get_meta(variable)
-                try:
-                    base_series, splice_series_1, splice_series_2 = self._get_data(number + 1, group, df, ameco_df)
-                except TypeError:
-                    logger.error('Missing data for variable {} in national accounts volume'.format(variable))
-                # if variable == 'OXGS.1.0.0.0':
-                #     import code;code.interact(local=locals())
-                self._update_result(variable, base_series, splice_series_1, splice_series_2)
+        for variable in variables:
+            base_series = None
+            try:
+                base_series, splice_series_1, splice_series_2 = self._get_data(variable, variables[variable], df,
+                                                                               ameco_df)
+            except TypeError:
+                logger.error('Missing data for variable {} in national accounts volume'.format(variable))
+            self._update_result(variable, base_series, splice_series_1, splice_series_2)
 
         # Net exports goods and services
         var = 'OBGS.1.0.0.0'
@@ -203,10 +200,15 @@ class NationalAccountsVolume(StepMixin):
             new_variable = var + '.1.0.0.0'
             u1_variable = re.sub('^.', 'U', var) + '.1.0.0.0'
 
-            if new_variable in self.result['Variable Code'].values:
-                result_series_index = get_index(self.result, self.country, new_variable)
-                series_orig = self.result.loc[result_series_index]
-                data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
+            # TODO: Review this
+            new_vars = ['OXGS.1.0.0.0', 'OVGE.1.0.0.0']
+            if new_variable in self.result['Variable Code'].values.tolist() + new_vars:
+                if new_variable not in new_vars:
+                    result_series_index = get_index(self.result, self.country, new_variable)
+                    series_orig = self.result.loc[result_series_index]
+                    data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
+                else:
+                    logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
 
                 # Rebase to baseperiod
                 if u1_variable in df.index.get_level_values('Variable Code'):
@@ -248,6 +250,11 @@ class NationalAccountsVolume(StepMixin):
 
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
+            r = self.result.copy()
+            wtf = r.loc[(r['Country Ameco'] == 'BE') & (r['Variable Code'] == 'OVGD.1.0.0.0')].copy()
+            if new_variable == 'OVGD.1.0.0.0':
+                ovgd1 = get_series_noindex(self.result, self.country, 'OVGD.1.0.0.0')
+
 
         # Contribution to percent change in GDP (calculation for additional variables)
         var = 'CMGS.1.0.0.0'
@@ -272,6 +279,7 @@ class NationalAccountsVolume(StepMixin):
 
         # Per-capita GDP
         # TODO: fix scale, frequency and country everywhere
+        # TODO: fix this
         new_variable = 'RVGDP.1.0.0.0'
         ameco_variable = 'RVGDP.1.1.0.0'
         variable_6 = re.sub('.1.0.0.0', '.6.0.0.0', new_variable)
@@ -280,8 +288,7 @@ class NationalAccountsVolume(StepMixin):
         series_meta = self.get_meta(new_variable)
         series_6_meta = self.get_meta(variable_6)
         ameco_series = get_series(ameco_df, self.country, ameco_variable)
-        splice_series = get_series_noindex(self.result, self.country, potential_gdp) / get_series(
-            df, self.country, total_population)
+        splice_series = ovgd1 / get_series(df, self.country, total_population)
         splicer = Splicer()
         series_data = splicer.ratio_splice(ameco_series, splice_series)
         series_6_data = series_data.pct_change() * 100
@@ -334,8 +341,13 @@ class NationalAccountsVolume(StepMixin):
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
+        series_meta = self.get_meta('OVGD.1.0.0.0')
+        series = pd.Series(series_meta)
+        # TODO: This shouldn't be needed... Check what's going on
+        series = series.append(ovgd1)
+        self.result = self.result.append(series, ignore_index=True, sort=True)
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
         export_to_excel(self.result, 'output/output4.xlsx')
-        return self.result
+        return self.result, ovgd1
 
