@@ -4,34 +4,34 @@ from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER
 from fdms.config.scale_correction import SCALES
 
 
-def get_series(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):
-    '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
-    dataframe.sort_index(level=[0, 1], inplace=True)
-    if metadata is True:
-        series = dataframe.loc[(country_ameco, variable_code)]
-        frequency = series.get('Frequency') if series.get('Frequency') is not None else 'Annual'
-        frequency = frequency if type(frequency) == str else frequency.name
-        scale = series.get('Scale') if series.get('Scale') is not None else series.get('Unit of the series')
-        expected_scale = SCALES.get(variable_code)
-        if expected_scale is not None:
-            scale = expected_scale
-        scale = scale if type(scale) == str else scale.name
-        series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code, 'Frequency': frequency,
-                       'Scale': scale}
-        return series_meta
-    series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
-    if series.empty:
-        series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
-    if series.empty:
-        return None
-    # TODO: Log these and make sure that this is correct, check values and get the best one
-    if len(series.shape) > 1:
-        series = series.iloc[0]
-    series = pd.to_numeric(series.squeeze(), errors='coerce')
-    if null_dates is not None:
-        for year in null_dates:
-            series[year] = pd.np.nan
-    return series
+# def self.get_data(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):
+#     '''Get quarterly or yearly data from dataframe with indexes "Country AMECO" and "Variable Code"'''
+#     dataframe.sort_index(level=[0, 1], inplace=True)
+#     if metadata is True:
+#         series = dataframe.loc[(country_ameco, variable_code)]
+#         frequency = series.get('Frequency') if series.get('Frequency') is not None else 'Annual'
+#         frequency = frequency if type(frequency) == str else frequency.name
+#         scale = series.get('Scale') if series.get('Scale') is not None else series.get('Unit of the series')
+#         expected_scale = SCALES.get(variable_code)
+#         if expected_scale is not None:
+#             scale = expected_scale
+#         scale = scale if type(scale) == str else scale.name
+#         series_meta = {'Country Ameco': country_ameco, 'Variable Code': variable_code, 'Frequency': frequency,
+#                        'Scale': scale}
+#         return series_meta
+#     series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}')
+#     if series.empty:
+#         series = dataframe.loc[(country_ameco, variable_code)].filter(regex='\d{4}Q[1234]')
+#     if series.empty:
+#         return None
+#     # TODO: Log these and make sure that this is correct, check values and get the best one
+#     if len(series.shape) > 1:
+#         series = series.iloc[0]
+#     series = pd.to_numeric(series.squeeze(), errors='coerce')
+#     if null_dates is not None:
+#         for year in null_dates:
+#             series[year] = pd.np.nan
+#     return series
 
 
 # def self.get_data(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):

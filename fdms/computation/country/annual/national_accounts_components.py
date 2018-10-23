@@ -9,7 +9,7 @@ import pandas as pd
 
 from fdms.utils.mixins import StepMixin
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # National Accounts - Calculate additional GDP components
@@ -25,7 +25,7 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, goods[index]) + get_series(df, country, services[index])
+            series_data = self.get_data(df, goods[index]) + self.get_data(df, services[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -36,7 +36,7 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, grossfcf[index])
+            series_data = self.get_data(df, grossfcf[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -53,15 +53,15 @@ class GDPComponents(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             try:
-                exports_data = get_series(df, country, exports_goods_and_services[index])
+                exports_data = self.get_data(df, exports_goods_and_services[index])
             except KeyError:
                 exports_data = self.result.loc[self.result['Variable Code'] == exports_goods_and_services[index]].filter(
                     regex='^\d{4}$')
             try:
-                imports_data = get_series(df, country, imports_goods_and_services[index])
+                imports_data = self.get_data(df, imports_goods_and_services[index])
             except KeyError:
-                imports_data = self.result.loc[self.result['Variable Code'] == imports_goods_and_services[index]].filter(
-                    regex='^\d{4}$')
+                imports_data = self.result.loc[self.result['Variable Code'] == imports_goods_and_services[
+                    index]].filter(regex='^\d{4}$')
             if type(exports_data) == pd.DataFrame:
                 exports_data = exports_data.iloc[0]
             if type(imports_data) == pd.DataFrame:
@@ -84,8 +84,8 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, private_consumption[index]) + get_series(
-                df, country, total[index]) + get_series(df, country, government[index])
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(
+                df, total[index]) + self.get_data(df, government[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -99,8 +99,8 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
-                index]) + get_series(df, country, government[index]) + get_series(df, country, changes[index])
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(df, total[
+                index]) + self.get_data(df, government[index]) + self.get_data(df, changes[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -116,9 +116,9 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
-                index]) + get_series(df, country, government[index]) + get_series(df, country, changes[
-                index]) + get_series(df, country, export_goods[index]) + get_series(df, country, export_services[index])
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(df, total[
+                index]) + self.get_data(df, government[index]) + self.get_data(df, changes[
+                index]) + self.get_data(df, export_goods[index]) + self.get_data(df, export_services[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -130,7 +130,7 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(df, country, total[index]) + get_series(df, country, changes[index])
+            series_data = self.get_data(df, total[index]) + self.get_data(df, changes[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

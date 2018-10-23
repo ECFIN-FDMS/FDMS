@@ -11,7 +11,7 @@ from fdms.config.variable_groups import TM, NA_VO, TM_TBBO, TM_TBM
 from fdms.utils.mixins import StepMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 1
@@ -31,10 +31,10 @@ class TransferMatrix(StepMixin):
                     meta1000 = self.get_meta(new_variable)
                     meta['Variable Code'] = variable
                     meta1000['Variable Code'] = new_variable
-                    splice_series = get_series(df, country, variable)
+                    splice_series = self.get_data(df, variable)
                     base_series = None
                     try:
-                        base_series = get_series(ameco_df, country, new_variable)
+                        base_series = self.get_data(ameco_df, new_variable)
                     except KeyError:
                         logger.warning('Missing Ameco data for variable {} (transfer matrix)'.format(new_variable))
                     orig_series = splice_series.copy()

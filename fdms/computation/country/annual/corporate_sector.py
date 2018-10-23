@@ -3,7 +3,7 @@ import pandas as pd
 from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 13
@@ -25,14 +25,12 @@ class CorporateSector(SumAndSpliceMixin):
         variable = 'UOGC.1.0.0.0'
         sources = {variable: ['URTG.1.0.0.0', 'UUTG.1.0.0.0']}
         series_meta = self.get_meta(variable)
-        base_series = get_series(ameco_h_df, self.country, variable)
-        new_data = get_series(df, self.country, 'UGVAC.1.0.0.0') + get_series(
-            df, self.country, 'UYVC.1.0.0.0') - get_series(df, self.country, 'UTVC.1.0.0.0') - get_series(
-            df, self.country, 'UWCC.1.0.0.0')
-        value_if_null = get_series(df, self.country, 'UOGC.1.0.0.0')
-        value = get_series(
-            df, self.country, 'UGVAC.1.0.0.0') + get_series(df, self.country, 'UYVC.1.0.0.0') - get_series(
-            df, self.country, 'UTVC.1.0.0.0') - get_series(df, self.country, 'UWCC.1.0.0.0')
+        base_series = self.get_data(ameco_h_df, variable)
+        new_data = self.get_data(df, 'UGVAC.1.0.0.0') + self.get_data(df, 'UYVC.1.0.0.0') - self.get_data(
+            df, 'UTVC.1.0.0.0') - self.get_data(df, 'UWCC.1.0.0.0')
+        value_if_null = self.get_data(df, 'UOGC.1.0.0.0')
+        value = self.get_data(df, 'UGVAC.1.0.0.0') + self.get_data(df, 'UYVC.1.0.0.0') - self.get_data(
+            df, 'UTVC.1.0.0.0') - self.get_data(df, 'UWCC.1.0.0.0')
         series_data = splicer.butt_splice(base_series, operators.iin(new_data, value_if_null, value))
 
         series = pd.Series(series_meta)

@@ -3,7 +3,7 @@ import re
 
 from fdms.config.variable_groups import NA_IS_VA
 from fdms.utils.mixins import SumAndSpliceMixin
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 5
@@ -24,8 +24,8 @@ class NationalAccountsValue(SumAndSpliceMixin):
         compensation = 'UWCD.1.0.0.0'
         real_compensation = 'NWTD.1.0.0.0'
         series_meta = self.get_meta(variable)
-        series_data = (get_series(df, self.country, total_employment) * get_series(df, self.country, compensation) /
-                       get_series(df, self.country, real_compensation))
+        series_data = (self.get_data(df, total_employment) * self.get_data(df, compensation) / self.get_data(
+            df, real_compensation))
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -37,14 +37,12 @@ class NationalAccountsValue(SumAndSpliceMixin):
             try:
                 pch = self.get_data(self.result, variable_1) / ovgd1
             except IndexError:
-                pch = get_series(df, self.country, variable_1) / ovgd1
+                pch = self.get_data(df, variable_1) / ovgd1
             pch = pch.pct_change() * 100
             try:
-                series_data = self.get_data(self.result, variable_1) / get_series(
-                    df, self.country, 'UVGD.1.0.0.0') * pch
+                series_data = self.get_data(self.result, variable_1) / self.get_data(df, 'UVGD.1.0.0.0') * pch
             except IndexError:
-                series_data = get_series(df, self.country, variable_1) / get_series(
-                    df, self.country, 'UVGD.1.0.0.0') * pch
+                series_data = self.get_data(df, variable_1) / self.get_data(df, 'UVGD.1.0.0.0') * pch
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

@@ -1,7 +1,7 @@
 import pandas as pd
 
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 9
@@ -10,7 +10,7 @@ class OutputGap(StepMixin):
         variables = ['ZNAWRU.1.0.0.0', 'AVGDGP.1.0.0.0', 'AVGDGT.1.0.0.0', 'OVGDP.1.0.0.0', 'OVGDT.1.0.0.0']
         for variable in variables:
             series_meta = self.get_meta(variable)
-            series_data = get_series(output_gap_df, self.country, variable)
+            series_data = self.get_data(output_gap_df, variable)
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

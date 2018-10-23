@@ -4,7 +4,7 @@ import re
 from fdms.config.country_groups import EU
 from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 12
@@ -30,13 +30,13 @@ class FiscalSector(SumAndSpliceMixin):
         variable = 'UBLG.1.0.0.0'
         sources = {variable: ['URTG.1.0.0.0', 'UUTG.1.0.0.0']}
         series_meta = self.get_meta(variable)
-        splice_series = get_series(df, self.country, sources[variable][0]).subtract(get_series(
-            df, self.country, sources[variable][1], fill_value=0))
+        splice_series = self.get_data(df, sources[variable][0]).subtract(self.get_data(
+            df, sources[variable][1], fill_value=0))
 
         if self.country == 'JP':
             series_data = splice_series.copy()
         else:
-            base_series = get_series(ameco_h_df, self.country, variable)
+            base_series = self.get_data(ameco_h_df, variable)
             series_data = splicer.butt_splice(base_series, splice_series, kind='forward')
 
         series = pd.Series(series_meta)
@@ -54,7 +54,7 @@ class FiscalSector(SumAndSpliceMixin):
 
                 variable = 'UYIGE.1.0.0.0'
                 series_meta = self.get_meta(variable)
-                series_data = get_series(df, self.country, 'UYIG.1.0.0.0')
+                series_data = self.get_data(df, 'UYIG.1.0.0.0')
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)

@@ -5,7 +5,7 @@ import pandas as pd
 from fdms.config import COLUMN_ORDER, LAST_YEAR
 from fdms.config.country_groups import EA, get_membership_date
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 from fdms.utils.splicer import Splicer
 
 
@@ -14,9 +14,9 @@ class ExchangeRates(StepMixin):
     def perform_computation(self, ameco_db_df, xr_df, ameco_xne_us_df):
         splicer = Splicer()
         variable = 'XNE.1.0.99.0'
-        series_data = get_series(ameco_db_df, self.country, variable)
+        series_data = self.get_data(ameco_db_df, variable)
         try:
-            xr_data = get_series(xr_df, self.country, variable)
+            xr_data = self.get_data(xr_df, variable)
         except KeyError:
             pass
         else:
@@ -34,9 +34,8 @@ class ExchangeRates(StepMixin):
         null_dates = list(range(int(datetime.datetime.now().year) - 1, LAST_YEAR))
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            series_data = get_series(ameco_db_df, self.country, sources[index], null_dates=null_dates)
-            series_data = splicer.butt_splice(series_data, get_series(xr_df, self.country, sources[index]),
-                                              kind='forward')
+            series_data = self.get_data(ameco_db_df, sources[index], null_dates=null_dates)
+            series_data = splicer.butt_splice(series_data, self.get_data(xr_df, sources[index]), kind='forward')
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -49,7 +48,7 @@ class ExchangeRates(StepMixin):
 
             variable = 'XNEF.1.0.99.0'
             series_meta = self.get_meta(variable)
-            series_data = get_series(ameco_db_df, self.country, 'XNE.1.0.99.0')
+            series_data = self.get_data(ameco_db_df, 'XNE.1.0.99.0')
             last_valid = series_data.last_valid_index()
             if last_valid < LAST_YEAR:
                 for index in range(last_valid + 1, LAST_YEAR + 1):
@@ -76,9 +75,9 @@ class ExchangeRates(StepMixin):
             self.result = self.result.append(series, ignore_index=True, sort=True)
 
         variable = 'XNU.1.0.30.0'
-        xne_us = get_series(xr_df, 'US', 'XNE.1.0.99.0')
+        xne_us = self.get_data(xr_df, 'XNE.1.0.99.0', country='US')
         last_observation = xne_us.first_valid_index()
-        new_xne_us = get_series(ameco_xne_us_df, 'US', 'XNE.1.0.99.0')
+        new_xne_us = self.get_data(ameco_xne_us_df, 'XNE.1.0.99.0', country='US')
         for year in range(last_observation + 1, LAST_YEAR + 1):
             new_xne_us[year] = pd.np.nan
         series_meta = self.get_meta(variable)
@@ -99,7 +98,7 @@ class ExchangeRates(StepMixin):
         for variable in variables:
             series_meta = self.get_meta(variable)
             try:
-                series_data = get_series(ameco_db_df, self.country, variable)
+                series_data = self.get_data(ameco_db_df, variable)
             except KeyError:
                 missing_vars.append(variable)
             else:

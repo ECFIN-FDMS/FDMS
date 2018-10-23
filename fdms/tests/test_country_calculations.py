@@ -23,7 +23,7 @@ from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
-from fdms.utils.series import get_series, report_diff, remove_duplicates, export_to_excel
+from fdms.utils.series import report_diff, remove_duplicates, export_to_excel
 
 
 class TestCountryCalculations(unittest.TestCase):
@@ -121,7 +121,6 @@ class TestCountryCalculations(unittest.TestCase):
         # STEP 5
         step_5 = NationalAccountsValue(scales=self.scales)
         step_5_df = self.result_1.copy()
-        # ovgd1 = get_series(result_4, self.country, 'OVGD.1.0.0.0')
         result_5 = step_5.perform_computation(step_5_df, self.ameco_db_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
                      'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']

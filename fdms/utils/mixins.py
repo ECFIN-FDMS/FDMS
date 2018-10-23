@@ -1,7 +1,7 @@
 import pandas as pd
 
 from fdms.config.scale_correction import SCALES
-from fdms.utils.series import COLUMN_ORDER, get_series
+from fdms.utils.series import COLUMN_ORDER
 from fdms.utils.splicer import Splicer
 
 
@@ -42,7 +42,7 @@ class StepMixin:
         for variable in self.scale_correction:
             meta = pd.Series(self.get_meta(variable))
             try:
-                series = get_series(self.result, self.country, variable)
+                series = self.get_data(self.result, variable)
             except KeyError:
                 return
             orig, expected = self.scale_correction[variable]
@@ -58,13 +58,14 @@ class StepMixin:
         return {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': self.frequency,
                 'Scale': self.get_scale(variable)}
 
-    def get_data(self, dataframe, variable, null_dates=None):
+    def get_data(self, dataframe, variable, country=None, null_dates=None):
         '''Get quarterly or yearly data from dataframe (input with MultiIndex or result with RangeIndex)'''
+        country = self.country if country is None else country
         if type(dataframe.index) == pd.MultiIndex:
             dataframe.sort_index(level=[0, 1], inplace=True)
-            series = dataframe.loc[(self.country, variable)].filter(regex='\d{4}')
+            series = dataframe.loc[(country, variable)].filter(regex='\d{4}')
             if series.empty:
-                series = dataframe.loc[(self.country, variable)].filter(regex='\d{4}Q[1234]')
+                series = dataframe.loc[(country, variable)].filter(regex='\d{4}Q[1234]')
             if series.empty:
                 return None
             # TODO: Log these and make sure that this is correct, check values and get the best one
@@ -77,7 +78,7 @@ class StepMixin:
             return series
 
         elif type(dataframe.index) == pd.RangeIndex:
-            result_series_index = dataframe.loc[(dataframe['Country Ameco'] == self.country) & (
+            result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country) & (
                     dataframe['Variable Code'] == variable)].index.values[0]
             series = dataframe.loc[result_series_index]
             series = series.filter(regex='\d{4}')
@@ -102,7 +103,7 @@ class SumAndSpliceMixin(StepMixin):
             series_meta = self.get_meta(variable)
             expected_scale = series_meta.get('Scale')
             try:
-                base_series = get_series(ameco_h_df, self.country, variable)
+                base_series = self.get_data(ameco_h_df, variable)
             except KeyError:
                 base_series = None
             splice_series = pd.Series()
@@ -115,7 +116,7 @@ class SumAndSpliceMixin(StepMixin):
                 if src_scale != series_meta.get('Scale'):
                     factor = factor * pow(1000, self.codes[src_scale] - self.codes[expected_scale])
                 try:
-                    source_data = factor * get_series(df, self.country, source)
+                    source_data = factor * self.get_data(df, source)
                 except KeyError:
                     source_data = factor * self.get_data(self.result, source)
                 splice_series = splice_series.add(source_data, fill_value=0)

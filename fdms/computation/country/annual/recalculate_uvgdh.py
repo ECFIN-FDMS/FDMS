@@ -3,7 +3,7 @@ import re
 
 from fdms.config.variable_groups import NA_IS_VA
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 from fdms.utils.splicer import Splicer
 
 
@@ -14,16 +14,16 @@ class RecalculateUvgdh(StepMixin):
         series_meta = self.get_meta(uvgdh)
         splicer = Splicer()
         try:
-            series_data = get_series(ameco_df, self.country, uvgdh_1)
-            series_data = splicer.ratio_splice(series_data, get_series(df, self.country, uvgdh_1), type='forward')
+            series_data = self.get_data(ameco_df, uvgdh_1)
+            series_data = splicer.ratio_splice(series_data, self.get_data(df, uvgdh_1), type='forward')
         except KeyError:
-            series_data = get_series(df, self.country, uvgdh)
+            series_data = self.get_data(df, uvgdh)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
         series_meta = self.get_meta(knp)
-        series_data = get_series(ameco_df, self.country, knp)
+        series_data = self.get_data(ameco_df, knp)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)

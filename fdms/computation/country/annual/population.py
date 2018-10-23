@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series, get_scale, get_frequency, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 2
@@ -22,8 +22,8 @@ class Population(StepMixin):
         unemployed = 'NUTN.1.0.0.0'
         employed = 'NETN.1.0.0.0'
         country = 'BE'
-        base_series = get_series(ameco_df, country, variable)
-        splice_series = get_series(df, country, unemployed) + get_series(df, country, employed)
+        base_series = self.get_data(ameco_df, variable)
+        splice_series = self.get_data(df, unemployed) + self.get_data(df, employed)
         NLTN1000_meta = self.get_meta(variable)
         NLTN1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
         NLTN1000 = pd.Series(NLTN1000_meta)
@@ -37,11 +37,11 @@ class Population(StepMixin):
         country = 'BE'
         base_series = None
         try:
-            base_series = get_series(ameco_df, country, variable)
+            base_series = self.get_data(ameco_df, variable)
         except KeyError:
             logger.warning('Missing Ameco data for variable {} (population). Using data '
                            'from country desk forecast'.format(variable))
-        splice_series = get_series(df, country, employed) - get_series(df, country, salary_earners)
+        splice_series = self.get_data(df, employed) - self.get_data(df, salary_earners)
         NSTD1000_meta = self.get_meta(variable)
         NSTD1000_data = splicer.ratio_splice(base_series, splice_series, kind='forward', variable=variable)
         NSTD1000 = pd.Series(NSTD1000_meta)
@@ -54,7 +54,7 @@ class Population(StepMixin):
         working_age = 'NPAN1.1.0.0.0'
         country = 'BE'
         NETD104140_meta = self.get_meta(variable)
-        NETD104140_data = get_series(df, country, employed) / get_series(df, country, working_age) * 100
+        NETD104140_data = self.get_data(df, employed) / self.get_data(df, working_age) * 100
         NETD104140 = pd.Series(NETD104140_meta)
         NETD104140 = NETD104140.append(NETD104140_data)
         self.result = self.result.append(NETD104140, ignore_index=True)
@@ -63,7 +63,7 @@ class Population(StepMixin):
         variable = 'NECN.1.0.0.0'
         employed = 'NETN'
         NECN1000_meta = self.get_meta(variable)
-        NECN1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), get_series(df, country, employed),
+        NECN1000_data = splicer.ratio_splice(self.get_data(ameco_df, variable), self.get_data(df, employed),
                                              kind='forward')#, bp=True)
         NECN1000 = pd.Series(NECN1000_meta)
         NECN1000 = NECN1000.append(NECN1000_data)
@@ -73,9 +73,9 @@ class Population(StepMixin):
         variable = 'NLHT.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
+        total_hours_data = self.get_data(df, employed) * self.get_data(df, average_hours)
         NLHT1000_meta = self.get_meta(variable)
-        NLHT1000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
+        NLHT1000_data = splicer.ratio_splice(self.get_data(ameco_df, variable), total_hours_data, kind='forward')
         NLHT1000 = pd.Series(NLHT1000_meta)
         NLHT1000 = NLHT1000.append(NLHT1000_data)
         self.result = self.result.append(NLHT1000, ignore_index=True)
@@ -84,9 +84,9 @@ class Population(StepMixin):
         variable = 'NLHT9.1.0.0.0'
         average_hours = 'NLHA.1.0.0.0'
         employed = 'NETD.1.0.0.0'
-        total_hours_data = get_series(df, country, employed) * get_series(df, country, average_hours)
+        total_hours_data = self.get_data(df, employed) * self.get_data(df, average_hours)
         NLHT91000_meta = self.get_meta(variable)
-        NLHT91000_data = splicer.ratio_splice(get_series(ameco_df, country, variable), total_hours_data, kind='forward')
+        NLHT91000_data = splicer.ratio_splice(self.get_data(ameco_df, variable), total_hours_data, kind='forward')
         NLHT91000 = pd.Series(NLHT91000_meta)
         NLHT91000 = NLHT91000.append(NLHT91000_data)
         self.result = self.result.append(NLHT91000, ignore_index=True)
@@ -97,11 +97,11 @@ class Population(StepMixin):
         unemployed = 'NUTN.1.0.0.0'
         NLCN1000_meta = self.get_meta(variable)
         try:
-            base_series = get_series(ameco_df, country, variable)
+            base_series = self.get_data(ameco_df, variable)
         except KeyError:
             logger.warning('Missing Ameco data for variable {} (population). Using data '
                            'from country desk forecast'.format(variable))
-        NLCN1000_data = splicer.ratio_splice(base_series, NECN1000_data + get_series(df, country, unemployed),
+        NLCN1000_data = splicer.ratio_splice(base_series, NECN1000_data + self.get_data(df, unemployed),
                                              kind='forward', variable=variable)#, bp=True)
         NLCN1000 = pd.Series(NLCN1000_meta)
         NLCN1000 = NLCN1000.append(NLCN1000_data)
