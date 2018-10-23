@@ -4,7 +4,7 @@ import re
 from fdms.config import BASE_PERIOD
 from fdms.config.country_groups import EU, FCRIF
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel, get_scale
+from fdms.utils.series import get_series, export_to_excel, get_scale
 from fdms.utils.operators import Operators
 from fdms.utils.splicer import Splicer
 
@@ -133,8 +133,8 @@ class LabourMarket(StepMixin):
             if denominators[index] == 'PVGD.3.1.0.0':
                 denominator_series = get_series(df, self.country, denominators[index])
             else:
-                denominator_series = get_series_noindex(self.result, self.country, denominators[index])
-            series_data = operators.rebase(get_series_noindex(self.result, self.country, numerators[
+                denominator_series = self.get_data(self.result, denominators[index])
+            series_data = operators.rebase(self.get_data(self.result, numerators[
                 index]) / denominator_series, base_period=BASE_PERIOD)
             if index == 0:
                 plcd3 = series_data.copy()
@@ -147,7 +147,7 @@ class LabourMarket(StepMixin):
         variables_6 = [re.sub('.....0.0$', '.6.0.0.0', variable) for variable in variables]
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variables_6[index])
-            series_data = get_series_noindex(self.result, self.country, variable).pct_change() * 100
+            series_data = self.get_data(self.result, variable).pct_change() * 100
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

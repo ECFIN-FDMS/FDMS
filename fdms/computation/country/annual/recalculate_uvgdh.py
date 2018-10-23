@@ -3,7 +3,7 @@ import re
 
 from fdms.config.variable_groups import NA_IS_VA
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 from fdms.utils.splicer import Splicer
 
 

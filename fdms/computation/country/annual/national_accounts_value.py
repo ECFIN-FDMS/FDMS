@@ -3,7 +3,7 @@ import re
 
 from fdms.config.variable_groups import NA_IS_VA
 from fdms.utils.mixins import SumAndSpliceMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 
 
 # STEP 5
@@ -35,12 +35,12 @@ class NationalAccountsValue(SumAndSpliceMixin):
             variable_cc = re.sub('^U', 'CC', variable_1)
             series_meta = self.get_meta(variable_cc)
             try:
-                pch = get_series_noindex(self.result, self.country, variable_1) / ovgd1
+                pch = self.get_data(self.result, variable_1) / ovgd1
             except IndexError:
                 pch = get_series(df, self.country, variable_1) / ovgd1
             pch = pch.pct_change() * 100
             try:
-                series_data = get_series_noindex(self.result, self.country, variable_1) / get_series(
+                series_data = self.get_data(self.result, variable_1) / get_series(
                     df, self.country, 'UVGD.1.0.0.0') * pch
             except IndexError:
                 series_data = get_series(df, self.country, variable_1) / get_series(

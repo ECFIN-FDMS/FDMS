@@ -14,7 +14,7 @@ from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.config.country_groups import FCWVACP
 from fdms.utils.splicer import Splicer
 from fdms.config import BASE_PERIOD
-from fdms.utils.series import get_series, get_series_noindex, get_index, get_scale, get_frequency, export_to_excel
+from fdms.utils.series import get_series, get_index, get_scale, get_frequency, export_to_excel
 
 
 # STEP 4
@@ -253,13 +253,13 @@ class NationalAccountsVolume(StepMixin):
             r = self.result.copy()
             wtf = r.loc[(r['Country Ameco'] == 'BE') & (r['Variable Code'] == 'OVGD.1.0.0.0')].copy()
             if new_variable == 'OVGD.1.0.0.0':
-                ovgd1 = get_series_noindex(self.result, self.country, 'OVGD.1.0.0.0')
+                ovgd1 = self.get_data(self.result, 'OVGD.1.0.0.0')
 
 
         # Contribution to percent change in GDP (calculation for additional variables)
         var = 'CMGS.1.0.0.0'
         series_meta = self.get_meta(var)
-        series_data = -get_series_noindex(self.result, self.country, var)
+        series_data = -self.get_data(self.result, var)
         index = get_index(self.result, self.country, var)
         series = pd.Series(series_meta)
         series = series.append(series_data)
@@ -269,8 +269,8 @@ class NationalAccountsVolume(StepMixin):
         imports = 'CMGS.1.0.0.0'
         series_meta = self.get_meta(var)
         series_meta['Variable Code'] = var
-        series_data = get_series_noindex(self.result, self.country, exports) + get_series_noindex(
-            self.result, self.country, imports)
+        series_data = self.get_data(self.result, exports) + self.get_data(
+            self.result, imports)
         index = get_index(self.result, self.country, var)
         series = pd.Series(series_meta)
         series = series.append(series_data)
@@ -309,10 +309,10 @@ class NationalAccountsVolume(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             series_data = (get_series(
-                df, self.country, exports_1[index]) / get_series_noindex(
-                self.result, self.country, exports_2[index]) / (
-                    get_series(df, self.country, imports_1[index]) / get_series_noindex(
-                self.result, self.country, imports_2[index]))) * 100
+                df, self.country, exports_1[index]) / self.get_data(
+                self.result, exports_2[index]) / (
+                    get_series(df, self.country, imports_1[index]) / self.get_data(
+                self.result, imports_2[index]))) * 100
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -326,7 +326,7 @@ class NationalAccountsVolume(StepMixin):
         # Set up OVGD.6.1.212.0 for World GDP volume table
         variable = 'OVGD.6.1.212.0'
         series_meta = self.get_meta(variable)
-        series_data = get_series_noindex(self.result, self.country, 'OVGD.6.0.0.0')
+        series_data = self.get_data(self.result, 'OVGD.6.0.0.0')
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -336,7 +336,7 @@ class NationalAccountsVolume(StepMixin):
             new_variable = variable + '.6.0.30.0'
             variable_6 = variable + '.6.0.0.0'
             series_meta = self.get_meta(new_variable)
-            series_data = get_series_noindex(self.result, self.country, variable_6)
+            series_data = self.get_data(self.result, variable_6)
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)

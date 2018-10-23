@@ -5,7 +5,7 @@ import pandas as pd
 from fdms.config import COLUMN_ORDER, LAST_YEAR
 from fdms.config.country_groups import EA, get_membership_date
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 from fdms.utils.splicer import Splicer
 
 
@@ -60,8 +60,8 @@ class ExchangeRates(StepMixin):
 
             variable = 'XNEB.1.0.99.0'
             series_meta = self.get_meta(variable)
-            series_data = get_series_noindex(self.result, self.country, 'XNE.1.0.99.0') * get_series_noindex(
-                self.result, self.country, 'XNEF.1.0.99.0')
+            series_data = self.get_data(self.result, 'XNE.1.0.99.0') * self.get_data(
+                self.result, 'XNEF.1.0.99.0')
             for year in range(membership_date, LAST_YEAR + 1):
                 self.result.loc[self.result['Variable Code'] == 'XNEF.1.0.99.0', year] = pd.np.nan
             series = pd.Series(series_meta)
@@ -70,7 +70,7 @@ class ExchangeRates(StepMixin):
         else:
             variable = 'XNEB.1.0.99.0'
             series_meta = self.get_meta(variable)
-            series_data = get_series_noindex(self.result, self.country, 'XNE.1.0.99.0').copy()
+            series_data = self.get_data(self.result, 'XNE.1.0.99.0').copy()
             series = pd.Series(series_meta)
             series = series.append(series_data)
             self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -112,7 +112,7 @@ class ExchangeRates(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             try:
-                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change() * 100
+                series_data = self.get_data(self.result, sources[index]).copy().pct_change() * 100
             except IndexError:
                 missing_vars.append(variable)
             else:
@@ -127,7 +127,7 @@ class ExchangeRates(StepMixin):
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
             try:
-                series_data = get_series_noindex(self.result, self.country, sources[index]).copy().pct_change() * 100
+                series_data = self.get_data(self.result, sources[index]).copy().pct_change() * 100
             except IndexError:
                 missing_vars.append(variable)
             else:

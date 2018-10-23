@@ -11,7 +11,7 @@ from fdms.config.variable_groups import TM, NA_VO, TM_TBBO, TM_TBM
 from fdms.utils.mixins import StepMixin
 from fdms.utils.splicer import Splicer
 from fdms.utils.operators import Operators
-from fdms.utils.series import get_series, get_scale, get_frequency, export_to_excel, apply_scale
+from fdms.utils.series import get_series, export_to_excel
 
 
 # STEP 1

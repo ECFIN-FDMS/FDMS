@@ -1,7 +1,7 @@
 import pandas as pd
 
 from fdms.config.scale_correction import SCALES
-from fdms.utils.series import COLUMN_ORDER, get_series_noindex, get_series
+from fdms.utils.series import COLUMN_ORDER, get_series
 from fdms.utils.splicer import Splicer
 
 
@@ -58,6 +58,42 @@ class StepMixin:
         return {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': self.frequency,
                 'Scale': self.get_scale(variable)}
 
+    def get_data(self, dataframe, variable, null_dates=None):
+        '''Get quarterly or yearly data from dataframe (input with MultiIndex or result with RangeIndex)'''
+        if type(dataframe.index) == pd.MultiIndex:
+            dataframe.sort_index(level=[0, 1], inplace=True)
+            series = dataframe.loc[(self.country, variable)].filter(regex='\d{4}')
+            if series.empty:
+                series = dataframe.loc[(self.country, variable)].filter(regex='\d{4}Q[1234]')
+            if series.empty:
+                return None
+            # TODO: Log these and make sure that this is correct, check values and get the best one
+            if len(series.shape) > 1:
+                series = series.iloc[-1]
+            series = pd.to_numeric(series.squeeze(), errors='coerce')
+            if null_dates is not None:
+                for year in null_dates:
+                    series[year] = pd.np.nan
+            return series
+
+        elif type(dataframe.index) == pd.RangeIndex:
+            result_series_index = dataframe.loc[(dataframe['Country Ameco'] == self.country) & (
+                    dataframe['Variable Code'] == variable)].index.values[0]
+            series = dataframe.loc[result_series_index]
+            series = series.filter(regex='\d{4}')
+            if series.empty:
+                series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
+            if series.empty:
+                return None
+            if len(series.shape) > 1:
+                series = series.iloc[0]
+            series = pd.to_numeric(series.squeeze(), errors='coerce')
+            if null_dates is not None:
+                for year in null_dates:
+                    series[year] = pd.np.nan
+            return series
+
+
 
 class SumAndSpliceMixin(StepMixin):
     def _sum_and_splice(self, addends, df, ameco_h_df, splice=True):
@@ -81,7 +117,7 @@ class SumAndSpliceMixin(StepMixin):
                 try:
                     source_data = factor * get_series(df, self.country, source)
                 except KeyError:
-                    source_data = factor * get_series_noindex(self.result, self.country, source)
+                    source_data = factor * self.get_data(self.result, source)
                 splice_series = splice_series.add(source_data, fill_value=0)
 
             if base_series is None or splice is False:
@@ -91,9 +127,9 @@ class SumAndSpliceMixin(StepMixin):
             if self.country == 'JP' and variable in ['UUTG.1.0.0.0', 'URTG.1.0.0.0']:
                 if variable == 'URTG.1.0.0.0':
                     new_sources = ['UUTG.1.0.0.0', 'UBLG.1.0.0.0']
-                    splice_series = get_series_noindex(
-                        self.result, self.country, new_sources[0]) + get_series_noindex(
-                        self.result, self.country, new_sources[1]
+                    splice_series = self.get_data(
+                        self.result, new_sources[0]) + self.get_data(
+                        self.result, new_sources[1]
                     )
                 series_data = splicer.ratio_splice(base_series, splice_series, kind='forward')
             series_data = series_data

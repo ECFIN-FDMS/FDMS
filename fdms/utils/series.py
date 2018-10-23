@@ -34,27 +34,27 @@ def get_series(dataframe, country_ameco, variable_code, metadata=False, null_dat
     return series
 
 
-def get_series_noindex(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):
-    '''Get quarterly or yearly data from dataframe with default RangeIndex from "Country AMECO" and "Variable Code"'''
-    result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country_ameco) & (
-            dataframe['Variable Code'] == variable_code)].index.values[0]
-    series = dataframe.loc[result_series_index]
-    series_meta = {'Country Ameco': series['Country Ameco'], 'Variable Code': series['Variable Code'],
-                   'Frequency': series['Frequency'], 'Scale': SCALES.get(variable_code) or series['Scale']}
-    if metadata is True:
-        return series_meta
-    series = series.filter(regex='\d{4}')
-    if series.empty:
-        series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
-    if series.empty:
-        return None
-    if len(series.shape) > 1:
-        series = series.iloc[0]
-    series = pd.to_numeric(series.squeeze(), errors='coerce')
-    if null_dates is not None:
-        for year in null_dates:
-            series[year] = pd.np.nan
-    return series
+# def self.get_data(dataframe, country_ameco, variable_code, metadata=False, null_dates=None):
+#     '''Get quarterly or yearly data from dataframe with default RangeIndex from "Country AMECO" and "Variable Code"'''
+#     result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country_ameco) & (
+#             dataframe['Variable Code'] == variable_code)].index.values[0]
+#     series = dataframe.loc[result_series_index]
+#     series_meta = {'Country Ameco': series['Country Ameco'], 'Variable Code': series['Variable Code'],
+#                    'Frequency': series['Frequency'], 'Scale': SCALES.get(variable_code) or series['Scale']}
+#     if metadata is True:
+#         return series_meta
+#     series = series.filter(regex='\d{4}')
+#     if series.empty:
+#         series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
+#     if series.empty:
+#         return None
+#     if len(series.shape) > 1:
+#         series = series.iloc[0]
+#     series = pd.to_numeric(series.squeeze(), errors='coerce')
+#     if null_dates is not None:
+#         for year in null_dates:
+#             series[year] = pd.np.nan
+#     return series
 
 
 def get_index(dataframe, country_ameco, variable_code):

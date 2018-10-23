@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 import pandas as pd
 
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 from fdms.utils.splicer import Splicer
 from fdms.config import FIRST_YEAR, LAST_YEAR, YEARS
 
@@ -50,15 +50,15 @@ class CapitalStock(StepMixin):
 
         variable = 'OKCT.1.0.0.0'
         series_meta = self.get_meta(variable)
-        series_data = get_series_noindex(self.result, self.country, 'UKCT.1.0.0.0') / (get_series(
+        series_data = self.get_data(self.result, 'UKCT.1.0.0.0') / (get_series(
             df, self.country, 'UIGT.1.0.0.0') / get_series(df, self.country, 'OIGT.1.0.0.0'))
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
         variable = 'OINT.1.0.0.0'
         series_meta = self.get_meta(variable)
-        series_data = get_series(df, self.country, 'OIGT.1.0.0.0') - get_series_noindex(
-            self.result, self.country, 'OKCT.1.0.0.0')
+        series_data = get_series(df, self.country, 'OIGT.1.0.0.0') - self.get_data(
+            self.result, 'OKCT.1.0.0.0')
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -76,7 +76,7 @@ class CapitalStock(StepMixin):
 
         new_series = pd.Series(series_meta)
         oint_1 = get_series(ameco_db_df, self.country, 'OINT.1.0.0.0').copy()
-        oigt_1 = get_series_noindex(self.result, self.country, 'OIGT.1.0.0.0').copy()
+        oigt_1 = self.get_data(self.result, 'OIGT.1.0.0.0').copy()
         new_data = pd.Series({year: pd.np.nan for year in range(last_observation, LAST_YEAR + 1)})
         new_data[last_observation] = 3 * series_1[last_observation]
         for year in range(last_observation + 1, LAST_YEAR):
@@ -100,8 +100,8 @@ class CapitalStock(StepMixin):
 
             self.result.loc[
                 self.result['Variable Code'] == 'UKCT.1.0.0.0', [year]] = (self.result.loc[
-                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] * get_series_noindex(
-                self.result, self.country, 'UIGT.1.0.0.0')[year] / oigt_1[year]).iloc[0, 0]
+                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] * self.get_data(
+                self.result, 'UIGT.1.0.0.0')[year] / oigt_1[year]).iloc[0, 0]
 
         new_series = new_series.append(new_data[YEARS].copy())
         self.result = self.result.append(new_series, ignore_index=True, sort=True)
@@ -110,7 +110,7 @@ class CapitalStock(StepMixin):
         variable = 'ZVGDFA3.3.0.0.0'
         series_meta = self.get_meta(variable)
         series_3 = get_series(df, self.country, 'NLHT9.1.0.0.0')
-        ovgd_1 = get_series_noindex(self.result, self.country, 'OVGD.1.0.0.0')
+        ovgd_1 = self.get_data(self.result, 'OVGD.1.0.0.0')
         series_data = pd.np.log(ovgd_1 / (pow(series_3 * 1000, 0.65) * pow(new_data, 0.35)))
         series = pd.Series(series_meta)
         series = series.append(series_data[YEARS].copy())

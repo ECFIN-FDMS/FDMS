@@ -4,7 +4,7 @@ import re
 from fdms.config import BASE_PERIOD
 from fdms.config.variable_groups import PD
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 from fdms.utils.operators import Operators
 
 
@@ -42,8 +42,8 @@ class Prices(StepMixin):
         gross_income = 'UVGN.1.0.0.0'
         gross_domestic_product = 'PVGD.3.1.0.0'
         series_meta = self.get_meta(variable)
-        series_data = get_series(df, self.country, gross_income) / get_series_noindex(
-            self.result, self.country, gross_domestic_product) * 100
+        series_data = get_series(df, self.country, gross_income) / self.get_data(
+            self.result, gross_domestic_product) * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)

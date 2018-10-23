@@ -4,7 +4,7 @@ import re
 from fdms.config.country_groups import EU
 from fdms.utils.mixins import SumAndSpliceMixin
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series, get_series_noindex, export_to_excel
+from fdms.utils.series import get_series, export_to_excel
 
 
 # STEP 12
@@ -47,7 +47,7 @@ class FiscalSector(SumAndSpliceMixin):
             if self.country != 'MK':
                 variable = 'UBLGE.1.0.0.0'
                 series_meta = self.get_meta(variable)
-                series_data = get_series_noindex(self.result, self.country, 'UBLG.1.0.0.0')
+                series_data = self.get_data(self.result, 'UBLG.1.0.0.0')
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -71,7 +71,7 @@ class FiscalSector(SumAndSpliceMixin):
 
         variable = 'UDGG.1.0.0.0'
         series_meta = self.get_meta(variable)
-        series_data = get_series_noindex(self.result, self.country, 'UDGGL.1.0.0.0')
+        series_data = self.get_data(self.result, 'UDGGL.1.0.0.0')
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
