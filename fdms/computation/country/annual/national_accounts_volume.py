@@ -14,7 +14,7 @@ from fdms.config.variable_groups import NA_VO, T_VO
 from fdms.config.country_groups import FCWVACP
 from fdms.utils.splicer import Splicer
 from fdms.config import BASE_PERIOD
-from fdms.utils.series import get_index, get_scale, get_frequency, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # STEP 4
@@ -95,7 +95,7 @@ class NationalAccountsVolume(StepMixin):
         # Imports / exports of goods and services
         omgs, oxgs, obgn, obsn, oigp = 'OMGS.1.0.0.0', 'OXGS.1.0.0.0', 'OBGN.1.0.0.0', 'OBSN.1.0.0.0', 'OIGP.1.0.0.0'
         variables = {omgs: {'ameco': 'OMGS.1.1.0.0', 'goods': 'OMGN', 'services': 'OMSN', 'u_goods': 'UMGN',
-                               'u_services': 'UMSN'}}
+                            'u_services': 'UMSN'}}
         variables[oxgs] = {'ameco': 'OXGS.1.1.0.0', 'goods': 'OXGN', 'services': 'OXSN', 'u_goods': 'UXGN',
                                     'u_services': 'UXSN'}
         variables[obgn] = {'exports': 'OXGN.1.1.0.0', 'imports': 'OMGN.1.1.0.0', 'new_exports': 'OXGN',
@@ -204,7 +204,7 @@ class NationalAccountsVolume(StepMixin):
             new_vars = ['OXGS.1.0.0.0', 'OVGE.1.0.0.0']
             if new_variable in self.result['Variable Code'].values.tolist() + new_vars:
                 if new_variable not in new_vars:
-                    result_series_index = get_index(self.result, self.country, new_variable)
+                    result_series_index = self.get_index(new_variable)
                     series_orig = self.result.loc[result_series_index]
                     data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
                 else:
@@ -233,7 +233,7 @@ class NationalAccountsVolume(StepMixin):
                 # Contribution to percent change in GDP
                 variable_c1 = re.sub('^.', 'C', var) + '.1.0.0.0'
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
-                series_6_index = get_index(self.result, self.country, variable_6)
+                series_6_index = self.get_index(variable_6)
                 series_6 = self.result.loc[result_series_index]
                 data_6 = pd.to_numeric(series_6.filter(regex='\d{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
@@ -254,12 +254,11 @@ class NationalAccountsVolume(StepMixin):
             if new_variable == 'OVGD.1.0.0.0':
                 ovgd1 = self.get_data(self.result, 'OVGD.1.0.0.0')
 
-
         # Contribution to percent change in GDP (calculation for additional variables)
         var = 'CMGS.1.0.0.0'
         series_meta = self.get_meta(var)
         series_data = -self.get_data(self.result, var)
-        index = get_index(self.result, self.country, var)
+        index = self.get_index(var)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result.iloc[index] = series
@@ -269,7 +268,7 @@ class NationalAccountsVolume(StepMixin):
         series_meta = self.get_meta(var)
         series_meta['Variable Code'] = var
         series_data = self.get_data(self.result, exports) + self.get_data(self.result, imports)
-        index = get_index(self.result, self.country, var)
+        index = self.get_index(var)
         series = pd.Series(series_meta)
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -345,4 +344,3 @@ class NationalAccountsVolume(StepMixin):
         self.apply_scale()
         export_to_excel(self.result, 'output/output4.xlsx')
         return self.result, ovgd1
-

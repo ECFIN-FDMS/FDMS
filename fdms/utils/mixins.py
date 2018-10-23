@@ -94,6 +94,11 @@ class StepMixin:
                     series[year] = pd.np.nan
             return series
 
+    def get_index(self, variable_code, dataframe=None, country=None):
+        dataframe = self.result if dataframe is None else dataframe
+        country = self.country if country is None else country
+        return dataframe.loc[(dataframe['Country Ameco'] == country) & (
+                dataframe['Variable Code'] == variable_code)].index.values[0]
 
 
 class SumAndSpliceMixin(StepMixin):

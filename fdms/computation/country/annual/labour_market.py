@@ -4,7 +4,7 @@ import re
 from fdms.config import BASE_PERIOD
 from fdms.config.country_groups import EU, FCRIF
 from fdms.utils.mixins import StepMixin
-from fdms.utils.series import export_to_excel, get_scale
+from fdms.utils.series import export_to_excel
 from fdms.utils.operators import Operators
 from fdms.utils.splicer import Splicer
 
@@ -105,10 +105,10 @@ class LabourMarket(StepMixin):
             # ZUTN based on NUTN.1.0.0.0 and NETN.1.0.0.0 (18/01/2017) is commented out in FDMS+
             last_observation = self.get_data(ameco_df, variable).last_valid_index()
             series_meta = self.get_meta(variable)
-            series_data = round(self.get_data(df, 'NUTN') / (
-                    self.get_data(df, 'NUTN') + self.get_data(df, 'NETN')) * 100, 1) + round(self.get_data(
-                ameco_df, 'NUTN.1.0.0.0')[last_observation] - self.get_data(df, 'NUTN') / (self.get_data(
-                df, 'NUTN')[last_observation] + self.get_data(df, 'NETN')[last_observation]), 1)
+            series_data = round(self.get_data(df, 'NUTN') / (self.get_data(df, 'NUTN') + self.get_data(
+                df, 'NETN')) * 100, 1) + round(self.get_data(
+                    ameco_df, 'NUTN.1.0.0.0')[last_observation] - self.get_data(df, 'NUTN') / (
+                    self.get_data(df, 'NUTN')[last_observation] + self.get_data(df, 'NETN')[last_observation]), 1)
             series_data = splicer.butt_splice(self.get_data(ameco_df, variable), self.get_data(
                 ameco_df, variable), kind='forward')
         else:

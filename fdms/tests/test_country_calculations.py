@@ -128,19 +128,19 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         PD = ['PCPH.3.1.0.0', 'PCTG.3.1.0.0', 'PIGT.3.1.0.0', 'PIGCO.3.1.0.0', 'PIGDW.3.1.0.0', 'PIGNR.3.1.0.0',
-              'PIGEQ.3.1.0.0', 'PIGOT.3.1.0.0', 'PUNF.3.1.0.0', 'PUNT.3.1.0.0', 'PUTT.3.1.0.0', 'PVGD.3.1.0.0', 'PXGS.3.1.0.0',
-              'PMGS.3.1.0.0', 'PXGN.3.1.0.0', 'PXSN.3.1.0.0', 'PMGN.3.1.0.0', 'PMSN.3.1.0.0', 'PIGP.3.1.0.0', 'PIST.3.1.0.0',
-              'PVGE.3.1.0.0']
+              'PIGEQ.3.1.0.0', 'PIGOT.3.1.0.0', 'PUNF.3.1.0.0', 'PUNT.3.1.0.0', 'PUTT.3.1.0.0', 'PVGD.3.1.0.0',
+              'PXGS.3.1.0.0', 'PMGS.3.1.0.0', 'PXGN.3.1.0.0', 'PXSN.3.1.0.0', 'PMGN.3.1.0.0', 'PMSN.3.1.0.0',
+              'PIGP.3.1.0.0', 'PIST.3.1.0.0', 'PVGE.3.1.0.0']
 
         PD_O = ['OCPH.1.0.0.0', 'OCTG.1.0.0.0', 'OIGT.1.0.0.0', 'OIGCO.1.0.0.0', 'OIGDW.1.0.0.0', 'OIGNR.1.0.0.0',
-                'OIGEQ.1.0.0.0', 'OIGOT.1.0.0.0', 'OUNF.1.0.0.0', 'OUNT.1.0.0.0', 'OUTT.1.0.0.0', 'OVGD.1.0.0.0', 'OXGS.1.0.0.0',
-                'OMGS.1.0.0.0', 'OXGN.1.0.0.0', 'OXSN.1.0.0.0', 'OMGN.1.0.0.0', 'OMSN.1.0.0.0', 'OIGP.1.0.0.0', 'OIST.1.0.0.0',
-                'OVGE.1.0.0.0']
+                'OIGEQ.1.0.0.0', 'OIGOT.1.0.0.0', 'OUNF.1.0.0.0', 'OUNT.1.0.0.0', 'OUTT.1.0.0.0', 'OVGD.1.0.0.0',
+                'OXGS.1.0.0.0', 'OMGS.1.0.0.0', 'OXGN.1.0.0.0', 'OXSN.1.0.0.0', 'OMGN.1.0.0.0', 'OMSN.1.0.0.0',
+                'OIGP.1.0.0.0', 'OIST.1.0.0.0', 'OVGE.1.0.0.0']
 
         PD_U = ['UCPH.1.0.0.0', 'UCTG.1.0.0.0', 'UIGT.1.0.0.0', 'UIGCO.1.0.0.0', 'UIGDW.1.0.0.0', 'UIGNR.1.0.0.0',
-                'UIGEQ.1.0.0.0', 'UIGOT.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UVGD.1.0.0.0', 'UXGS.1.0.0.0',
-                'UMGS.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UIGP.1.0.0.0', 'UIST.1.0.0.0',
-                'UVGE.1.0.0.0']
+                'UIGEQ.1.0.0.0', 'UIGOT.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UVGD.1.0.0.0',
+                'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0',
+                'UIGP.1.0.0.0', 'UIST.1.0.0.0', 'UVGE.1.0.0.0']
 
         # STEP 6
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
@@ -180,7 +180,7 @@ class TestCountryCalculations(unittest.TestCase):
 
         # STEP 11
         step_11 = LabourMarket(scales=self.scales)
-        step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)  # , result_4, result_5])
+        step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)
         result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
         variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
                      'RWWDC.3.1.0.0', 'HWSCW.1.0.0.0', 'RWSCC.3.1.0.0', 'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0',
@@ -227,7 +227,6 @@ class TestCountryCalculations(unittest.TestCase):
                 assert_series_equal(res.iloc[i], exp.iloc[i])
             except AssertionError:
                 wrong_series.append(res.iloc[i])
-        # report_diff(res, exp, diff, diff_series)
         wrong_names = [series.name for series in wrong_series]
         res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
         report_diff(res_wrong, exp_wrong)

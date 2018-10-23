@@ -87,21 +87,21 @@ class CapitalStock(StepMixin):
         # We need to pass all_data=True to read_ameco_db_xls and get the right ameco_db_df
 
         for year in range(last_observation + 1, LAST_YEAR + 1):
-            self.result.loc[
-                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] = (new_data[year - 1] * self.result.loc[
-                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year - 1]] / new_data[year - 2]).iloc[0, 0]
+            self.result.loc[self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] = (
+                    new_data[year - 1] * self.result.loc[self.result['Variable Code'] == 'OKCT.1.0.0.0',
+                                                         [year - 1]] / new_data[year - 2]).iloc[0, 0]
 
             new_data[year] = (new_data[year - 1] + oigt_1[year] - self.result.loc[
                 self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]]).iloc[0, 0]
 
             self.result.loc[
-                self.result['Variable Code'] == 'OINT.1.0.0.0', [year]] = (oigt_1[year] - self.result.loc[
-                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]]).iloc[0, 0]
+                self.result['Variable Code'] == 'OINT.1.0.0.0', [year]] = (
+                    oigt_1[year] - self.result.loc[self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]]).iloc[0, 0]
 
             self.result.loc[
-                self.result['Variable Code'] == 'UKCT.1.0.0.0', [year]] = (self.result.loc[
-                self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] * self.get_data(
-                self.result, 'UIGT.1.0.0.0')[year] / oigt_1[year]).iloc[0, 0]
+                self.result['Variable Code'] == 'UKCT.1.0.0.0', [year]] = (
+                    self.result.loc[self.result['Variable Code'] == 'OKCT.1.0.0.0', [year]] * self.get_data(
+                        self.result, 'UIGT.1.0.0.0')[year] / oigt_1[year]).iloc[0, 0]
 
         new_series = new_series.append(new_data[YEARS].copy())
         self.result = self.result.append(new_series, ignore_index=True, sort=True)

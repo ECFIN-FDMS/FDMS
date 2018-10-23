@@ -40,7 +40,8 @@ def read_ameco_txt(ameco_filename=AMECO):
         lines = [line.strip() for line in f.readlines()]
     ameco_df = pd.DataFrame.from_records([line.split(',') for line in lines[1:]], columns=lines[0].split(','))
     ameco_df = ameco_df.set_index('CODE')
-    ameco_df['Country Ameco'] = ameco_df.apply(lambda row: _get_ameco(_get_from_series_code(row.name, 'country')), axis=1)
+    ameco_df['Country Ameco'] = ameco_df.apply(lambda row: _get_ameco(_get_from_series_code(row.name, 'country')),
+                                               axis=1)
     ameco_df['Variable Code'] = ameco_df.apply(lambda row: _get_from_series_code(row.name, 'variable'), axis=1)
     ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
     ameco_df = ameco_df.reset_index()

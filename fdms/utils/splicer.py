@@ -22,7 +22,8 @@ class Splicer:
 
     def _strip_nan(self, series, direction='both'):
         try:
-            start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(series.last_valid_index())
+            start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(
+                series.last_valid_index())
         except KeyError:
             # TODO: Check why we get empty series here sometimes
             logger.warning('Series {} seems to be empty'.format(series.name))
@@ -229,4 +230,3 @@ class Splicer:
                     base_series.name[1], base_series.name[0]))
 
         return result
-

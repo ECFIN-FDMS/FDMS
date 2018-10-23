@@ -64,7 +64,7 @@ class Population(StepMixin):
         employed = 'NETN'
         NECN1000_meta = self.get_meta(variable)
         NECN1000_data = splicer.ratio_splice(self.get_data(ameco_df, variable), self.get_data(df, employed),
-                                             kind='forward')#, bp=True)
+                                             kind='forward')
         NECN1000 = pd.Series(NECN1000_meta)
         NECN1000 = NECN1000.append(NECN1000_data)
         self.result = self.result.append(NECN1000, ignore_index=True)
@@ -102,7 +102,7 @@ class Population(StepMixin):
             logger.warning('Missing Ameco data for variable {} (population). Using data '
                            'from country desk forecast'.format(variable))
         NLCN1000_data = splicer.ratio_splice(base_series, NECN1000_data + self.get_data(df, unemployed),
-                                             kind='forward', variable=variable)#, bp=True)
+                                             kind='forward', variable=variable)
         NLCN1000 = pd.Series(NLCN1000_meta)
         NLCN1000 = NLCN1000.append(NLCN1000_data)
         self.result = self.result.append(NLCN1000, ignore_index=True)

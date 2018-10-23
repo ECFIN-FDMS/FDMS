@@ -55,4 +55,3 @@ def get_membership_date(country):
             return 2014
         elif country == 'LT':
             return 2015
-
