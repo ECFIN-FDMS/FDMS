@@ -119,6 +119,7 @@ SCALES = {
     'UBLC.1.0.0.0': 'Billions',
     'USGC.1.0.0.0': 'Billions',
     'CCWWD.1.0.0.0': 'Units',
+    'UTOG.1.0.0.0': 'Billions',
 }
 
 factors = {

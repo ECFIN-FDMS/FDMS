@@ -27,7 +27,14 @@ class StepMixin:
         else:
             self.result.iloc[series.index.values[0]] = series
 
-    def get_scale(self, variable):
+    def get_scale(self, variable, dataframe=None, country=None):
+        if dataframe is not None:
+            country = self.country if country is None else country
+            try:
+                return dataframe.loc[(country, variable)]['Scale']
+            except KeyError:
+                pass
+
         expected = SCALES.get(variable)
         input_data = self.scales.get(variable)
         if expected:
@@ -117,8 +124,9 @@ class SumAndSpliceMixin(StepMixin):
                 if source.startswith('-'):
                     source = source[1:]
                     factor = -1
-                src_scale = self.get_meta(source)['Scale']
-                if src_scale != series_meta.get('Scale'):
+                src_scale = self.get_scale(source, dataframe=df)
+                expected_scale = self.get_scale(variable)
+                if src_scale != expected_scale:
                     factor = factor * pow(1000, self.codes[src_scale] - self.codes[expected_scale])
                 try:
                     source_data = factor * self.get_data(df, source)

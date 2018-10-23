@@ -191,8 +191,8 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 12
-        # step_12 = FiscalSector()
-        # result_12 = step_12.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
+        step_12 = FiscalSector()
+        result_12 = step_12.perform_computation(self.result_1, self.ameco_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_12.loc[self.country].index)]
         # self.assertFalse(missing_vars)
@@ -206,7 +206,7 @@ class TestCountryCalculations(unittest.TestCase):
 
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
-                            result_9, result_10, result_11, result_13], sort=True)
+                            result_9, result_10, result_11, result_12, result_13], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, self.country)
         export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')
