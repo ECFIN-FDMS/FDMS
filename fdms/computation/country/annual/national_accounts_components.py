@@ -15,7 +15,7 @@ from fdms.utils.series import export_to_excel
 # National Accounts - Calculate additional GDP components
 # STEP 3
 class GDPComponents(StepMixin):
-    def perform_computation(self, df):
+    def perform_computation(self, df, ameco_h_df):
         splicer = Splicer()
 
         # Imports and exports of goods and services at current prices (National accounts)
