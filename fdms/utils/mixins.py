@@ -25,7 +25,7 @@ class StepMixin:
         if series.empty:
             self.result.append(series, ignore_index=True, sort=True)
         else:
-            self.result.iloc[series.index.values[0]] = series
+            self.result.iloc[series.index.values[-1]] = series
 
     def get_scale(self, variable, dataframe=None, country=None):
         if dataframe is not None:
@@ -70,9 +70,9 @@ class StepMixin:
         country = self.country if country is None else country
         if type(dataframe.index) == pd.MultiIndex:
             dataframe.sort_index(level=[0, 1], inplace=True)
-            series = dataframe.loc[(country, variable)].filter(regex='\d{4}')
-            if series.empty:
-                series = dataframe.loc[(country, variable)].filter(regex='\d{4}Q[1234]')
+            series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}')
+            # if series.empty:
+            #     series = dataframe.loc[(country, variable)].filter(regex='\d{4}Q[1234]')
             if series.empty:
                 return None
             # TODO: Log these and make sure that this is correct, check values and get the best one
@@ -86,15 +86,15 @@ class StepMixin:
 
         elif type(dataframe.index) == pd.RangeIndex:
             result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country) & (
-                    dataframe['Variable Code'] == variable)].index.values[0]
+                    dataframe['Variable Code'] == variable)].index.values[-1]
             series = dataframe.loc[result_series_index]
-            series = series.filter(regex='\d{4}')
-            if series.empty:
-                series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
+            series = series.filter(regex='[0-9]{4}')
+            # if series.empty:
+            #     series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
             if series.empty:
                 return None
             if len(series.shape) > 1:
-                series = series.iloc[0]
+                series = series.iloc[-1]
             series = pd.to_numeric(series.squeeze(), errors='coerce')
             if null_dates is not None:
                 for year in null_dates:
@@ -105,7 +105,7 @@ class StepMixin:
         dataframe = self.result if dataframe is None else dataframe
         country = self.country if country is None else country
         return dataframe.loc[(dataframe['Country Ameco'] == country) & (
-                dataframe['Variable Code'] == variable_code)].index.values[0]
+                dataframe['Variable Code'] == variable_code)].index.values[-1]
 
 
 class SumAndSpliceMixin(StepMixin):

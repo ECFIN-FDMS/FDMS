@@ -34,6 +34,8 @@ class NationalAccountsVolume(StepMixin):
         series_meta = self.get_meta(variable)
         series = pd.Series(series_meta)
         series = series.append(series_data)
+        # if variable == 'OXGS.1.0.0.0':
+        #     import code;code.interact(local=locals())
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
     def _get_data(self, variable, components, df=None, ameco_df=None):
@@ -56,8 +58,6 @@ class NationalAccountsVolume(StepMixin):
             if self.country not in FCWVACP:
                 u_series = self.get_data(df, components['u_exports']) - self.get_data(df, components['u_imports'])
                 splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
-        if variable == 'OXGS.1.0.0.0.':
-            import code;code.interact(local=locals())
         return base_series, splice_series_1, splice_series_2
 
     def perform_computation(self, df, ameco_df):
