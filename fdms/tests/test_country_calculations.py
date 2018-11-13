@@ -100,19 +100,9 @@ class TestCountryCalculations(unittest.TestCase):
         step_4_1000vars.append('OVGD.1.0.0.0')
         step_4_1100vars.append('RVGDP.1.1.0.0')
 
-        orig_series = self.df.loc[self.df.index.isin(step_4_src_vars, level='Variable')].copy().loc[self.country]
-        orig_series = pd.concat([orig_series, result_3.loc[result_3.index.isin(
-            step_4_uvars, level='Variable Code')].copy().loc[self.country]], sort=True)
-        orig_series = pd.concat([orig_series, result_3.loc[result_3.index.isin(
-            variables, level='Variable Code')].copy().loc[self.country]], sort=True)
-        orig_series['Variable Code'] = orig_series.index
-        orig_series.insert(0, 'Country Ameco', self.country)
-        orig_series = orig_series.reset_index()
-        orig_series.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        ameco_df = self._get_ameco_df(step_4_1100vars)
-        step_4_df = self.result_1.copy()
-        step_4_df = pd.concat([step_4_df, orig_series], sort=True)
-        result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
+        step_4_df = pd.concat([self.df, self.result_1, result_3], sort=True)
+        # result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
+        result_4, ovgd1 = step_4.perform_computation(step_4_df, self.ameco_df)
         # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 

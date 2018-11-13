@@ -40,11 +40,9 @@ class NationalAccountsVolume(StepMixin):
         splice_series_2 = None
         if variable in ['OMGS.1.0.0.0', 'OXGS.1.0.0.0']:
             base_series = self.get_data(ameco_df, components['ameco'])
-            splice_series_1 = self.get_data(df, components['goods']) + self.get_data(
-                df, components['services'])
+            splice_series_1 = self.get_data(df, components['goods']) + self.get_data(df, components['services'])
             if self.country not in FCWVACP:
-                u_series = self.get_data(df, components['u_goods']) + self.get_data(
-                    df, components['u_services'])
+                u_series = self.get_data(df, components['u_goods']) + self.get_data(df, components['u_services'])
                 splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
             # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         else:
@@ -56,41 +54,45 @@ class NationalAccountsVolume(StepMixin):
             splice_series_1 = self.get_data(df, components['new_exports']) - self.get_data(
                 df, components['new_imports'])
             if self.country not in FCWVACP:
-                u_series = self.get_data(df, components['u_exports']) - self.get_data(
-                    df, components['u_imports'])
+                u_series = self.get_data(df, components['u_exports']) - self.get_data(df, components['u_imports'])
                 splice_series_2 = (splice_series_1 / u_series.shift(1) - 1) * 100
+        if variable == 'OXGS.1.0.0.0.':
+            import code;code.interact(local=locals())
         return base_series, splice_series_1, splice_series_2
 
-    def perform_computation(self, df, ameco_df=None):
-        ameco_df = ameco_df if ameco_df is not None else df
-        for index, row in df.iterrows():
-            country = index[0]
-            self.country = country
-            variable = index[1]
+    def perform_computation(self, df, ameco_df):
+        for variable in NA_VO:
             new_variable = variable + '.1.0.0.0'
             u_variable = re.sub('^.', 'U', variable)
             variable11 = variable + '.1.1.0.0'
-            if variable in NA_VO:
-                if country in FCWVACP:
+            if self.country in FCWVACP:
+                try:
                     new_data = self.splicer.ratio_splice(self.get_data(ameco_df, u_variable),
                                                          self.get_data(df, variable), kind='forward')
-                    new_meta = pd.Series(self.get_meta(new_variable))
-                    new_series = new_meta.append(new_data)
-                    self.result = self.result.append(new_series, ignore_index=True)
-                else:
+                except KeyError:
+                    logger.error('Failed to calculate {} (national accounts volume).'.format(variable))
+                    continue
+                new_meta = pd.Series(self.get_meta(new_variable))
+                new_series = new_meta.append(new_data)
+                self.result = self.result.append(new_series, ignore_index=True)
+            else:
+                try:
                     series = self.get_data(df, variable)
                     u_series = self.get_data(df, u_variable)
-                    try:
-                        series11 = self.get_data(ameco_df, variable11)
-                    except KeyError:
-                        logger.warning('Missing Ameco data for variable {} (national accounts volume). Using data '
-                                       'from country desk forecast'.format(variable11))
-                    splice_series = (series / u_series.shift(1) - 1) * 100
-                    # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
-                    new_data = self.splicer.splice_and_level_forward(series11, splice_series)
-                    new_meta = pd.Series(self.get_meta(new_variable))
-                    new_series = new_meta.append(new_data)
-                    self.result = self.result.append(new_series, ignore_index=True)
+                except KeyError:
+                    logger.error('Failed to calculate {} (national accounts volume).'.format(variable))
+                    continue
+                try:
+                    series11 = self.get_data(ameco_df, variable11)
+                except KeyError:
+                    logger.warning('Missing Ameco data for variable {} (national accounts volume). Using data '
+                                   'from country desk forecast'.format(variable11))
+                splice_series = (series / u_series.shift(1) - 1) * 100
+                # RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
+                new_data = self.splicer.splice_and_level_forward(series11, splice_series)
+                new_meta = pd.Series(self.get_meta(new_variable))
+                new_series = new_meta.append(new_data)
+                self.result = self.result.append(new_series, ignore_index=True)
 
         # Imports / exports of goods and services
         omgs, oxgs, obgn, obsn, oigp = 'OMGS.1.0.0.0', 'OXGS.1.0.0.0', 'OBGN.1.0.0.0', 'OBSN.1.0.0.0', 'OIGP.1.0.0.0'
@@ -206,7 +208,7 @@ class NationalAccountsVolume(StepMixin):
                 if new_variable not in new_vars:
                     result_series_index = self.get_index(new_variable)
                     series_orig = self.result.loc[result_series_index]
-                    data_orig = pd.to_numeric(series_orig.filter(regex='\d{4}'), errors='coerce')
+                    data_orig = pd.to_numeric(series_orig.filter(regex=r'\d{4}'), errors='coerce')
                 else:
                     logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
 
@@ -235,7 +237,7 @@ class NationalAccountsVolume(StepMixin):
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
                 series_6_index = self.get_index(variable_6)
                 series_6 = self.result.loc[result_series_index]
-                data_6 = pd.to_numeric(series_6.filter(regex='\d{4}'), errors='coerce')
+                data_6 = pd.to_numeric(series_6.filter(regex=r'\d{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
                 series_meta = self.get_meta(variable_c1)
                 try:

@@ -32,6 +32,9 @@ def _get_from_series_code(series_code, param='variable'):
 def read_country_forecast_excel(country_forecast_filename=FORECAST, frequency='annual'):
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    df = df.reset_index()
+    df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
+    df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
 
 

@@ -21,7 +21,6 @@ class Population(StepMixin):
         variable = 'NLTN.1.0.0.0'
         unemployed = 'NUTN.1.0.0.0'
         employed = 'NETN.1.0.0.0'
-        country = 'BE'
         base_series = self.get_data(ameco_df, variable)
         splice_series = self.get_data(df, unemployed) + self.get_data(df, employed)
         NLTN1000_meta = self.get_meta(variable)
@@ -34,7 +33,6 @@ class Population(StepMixin):
         variable = 'NSTD.1.0.0.0'
         employed = 'NETN.1.0.0.0'
         salary_earners = 'NWTD.1.0.0.0'
-        country = 'BE'
         base_series = None
         try:
             base_series = self.get_data(ameco_df, variable)
@@ -52,7 +50,6 @@ class Population(StepMixin):
         variable = 'NETD.1.0.414.0'
         employed = 'NETD.1.0.0.0'
         working_age = 'NPAN1.1.0.0.0'
-        country = 'BE'
         NETD104140_meta = self.get_meta(variable)
         NETD104140_data = self.get_data(df, employed) / self.get_data(df, working_age) * 100
         NETD104140 = pd.Series(NETD104140_meta)
