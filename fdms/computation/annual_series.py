@@ -70,4 +70,3 @@ class Compute:
         step_4 = NationalAccountsVolume()
         result_4 = step_4.perform_computation(step_4_df)
         self.result = pd.concat([self.result, result_4], sort=True)
-

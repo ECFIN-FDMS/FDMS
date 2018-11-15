@@ -32,6 +32,9 @@ def _get_from_series_code(series_code, param='variable'):
 def read_country_forecast_excel(country_forecast_filename=FORECAST, frequency='annual'):
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    df = df.reset_index()
+    df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
+    df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
 
 
@@ -40,7 +43,8 @@ def read_ameco_txt(ameco_filename=AMECO):
         lines = [line.strip() for line in f.readlines()]
     ameco_df = pd.DataFrame.from_records([line.split(',') for line in lines[1:]], columns=lines[0].split(','))
     ameco_df = ameco_df.set_index('CODE')
-    ameco_df['Country Ameco'] = ameco_df.apply(lambda row: _get_ameco(_get_from_series_code(row.name, 'country')), axis=1)
+    ameco_df['Country Ameco'] = ameco_df.apply(lambda row: _get_ameco(_get_from_series_code(row.name, 'country')),
+                                               axis=1)
     ameco_df['Variable Code'] = ameco_df.apply(lambda row: _get_from_series_code(row.name, 'variable'), axis=1)
     ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
     ameco_df = ameco_df.reset_index()
@@ -122,3 +126,17 @@ def read_ameco_xne_us_xls(ameco_xne_us_excel='fdms/sample_data/AMECO_XNE_US.xlsx
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
+
+
+def get_fc(country='BE', frequency='annual'):
+    sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
+    country_forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(country)
+    df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
+    return df
+
+
+def get_scales_from_forecast(country='BE', frequency='annual'):
+    df = get_fc(country, frequency)
+    scales = {index[1] + '.1.0.0.0': df.loc[index, 'Scale'].capitalize() for index in df.index}
+    scales.update({index[1]: df.loc[index, 'Scale'].capitalize() for index in df.index})
+    return scales

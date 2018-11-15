@@ -10,9 +10,9 @@ with open('README.rst') as readme_file:
 
 requirements = ['Click>=6.0', ]
 
-setup_requirements = [ ]
+setup_requirements = []
 
-test_requirements = [ ]
+test_requirements = []
 
 setup(
     author="Marcos Bartolome",

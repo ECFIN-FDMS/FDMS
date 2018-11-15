@@ -43,7 +43,7 @@ class Operators:
     def pch(self, series):
         return series.pct_change() * 100
 
-    def rebase(self, series, base_period, bp1=False):
+    def rebase(self, series, base_period):
         new_series = pd.Series({base_period: 100})
         splicer = Splicer()
         return splicer.ratio_splice(new_series, series, kind='both')

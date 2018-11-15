@@ -22,7 +22,8 @@ class Splicer:
 
     def _strip_nan(self, series, direction='both'):
         try:
-            start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(series.last_valid_index())
+            start, end = series.index.get_loc(series.first_valid_index()), series.index.get_loc(
+                series.last_valid_index())
         except KeyError:
             # TODO: Check why we get empty series here sometimes
             logger.warning('Series {} seems to be empty'.format(series.name))
@@ -202,7 +203,7 @@ class Splicer:
 
         return result
 
-    def splice_and_level_forward(self, base_series, splice_series, kind='forward', variable=None, period=None):
+    def splice_and_level_forward(self, base_series, splice_series, kind='forward', variable=None, scales=None):
         '''
         SPLICE_AND_LEVEL performs the operation RatioSplice(base, level(series)) = base * (1 + 0,01 * series)
         '''
@@ -218,7 +219,7 @@ class Splicer:
             stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
                 base_series, splice_series)
             if start_splice_loc is not None:
-                new_data = stripped_splice.iloc[start_splice_loc - 1:][ 1:].copy()
+                new_data = stripped_splice.iloc[start_splice_loc - 1:][1:].copy()
                 new_data.iloc[0] = stripped_base.iloc[-1]
                 for index, item in list(new_data.iteritems())[1:]:
                     new_data.loc[index] = float(new_data.loc[index - 1]) * (1 + 0.01 * float(item))
@@ -229,4 +230,3 @@ class Splicer:
                     base_series.name[1], base_series.name[0]))
 
         return result
-

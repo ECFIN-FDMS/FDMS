@@ -1,4 +1,3 @@
-from fdms.utils.series import get_series, get_series_noindex
 from fdms.utils.interfaces import read_expected_result_be
 
 

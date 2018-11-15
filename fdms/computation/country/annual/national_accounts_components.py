@@ -7,17 +7,15 @@ logger = logging.getLogger(__name__)
 
 import pandas as pd
 
+from fdms.utils.mixins import StepMixin
 from fdms.utils.splicer import Splicer
-from fdms.utils.series import get_series, export_to_excel
+from fdms.utils.series import export_to_excel
 
 
 # National Accounts - Calculate additional GDP components
 # STEP 3
-class GDPComponents:
-    source_df = pd.DataFrame()
-
-    def perform_computation(self, df):
-        result = pd.DataFrame()
+class GDPComponents(StepMixin):
+    def perform_computation(self, df, ameco_h_df):
         splicer = Splicer()
 
         # Imports and exports of goods and services at current prices (National accounts)
@@ -26,24 +24,22 @@ class GDPComponents:
         services = ['UMSN', 'UXSN', 'UMSN.1.0.0.0', 'UXSN.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, goods[index]) + get_series(df, country, services[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, goods[index]) + self.get_data(df, services[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Gross fixed capital formation at current prices: general government
         variables = ['UIGG', 'UIGG.1.0.0.0']
         grossfcf = ['UIGG0', 'UIGG0.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, grossfcf[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, grossfcf[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Net exports of goods, services, and goods & services at current prices (National accounts)
         # TODO: Check that the 4th variable is correct in exports_goods_and_services and imports_goods_and_services
@@ -55,18 +51,17 @@ class GDPComponents:
                                       'UIGG.1.0.0.0', 'UIGDW.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
+            series_meta = self.get_meta(variable)
             try:
-                exports_data = get_series(df, country, exports_goods_and_services[index])
+                exports_data = self.get_data(df, exports_goods_and_services[index])
             except KeyError:
-                exports_data = result.loc[result['Variable Code'] == exports_goods_and_services[index]].filter(
-                    regex='^\d{4}$')
+                exports_data = self.result.loc[self.result['Variable Code'] == exports_goods_and_services[
+                    index]].filter(regex='^\d{4}$')
             try:
-                imports_data = get_series(df, country, imports_goods_and_services[index])
+                imports_data = self.get_data(df, imports_goods_and_services[index])
             except KeyError:
-                imports_data = result.loc[result['Variable Code'] == imports_goods_and_services[index]].filter(
-                    regex='^\d{4}$')
+                imports_data = self.result.loc[self.result['Variable Code'] == imports_goods_and_services[
+                    index]].filter(regex='^\d{4}$')
             if type(exports_data) == pd.DataFrame:
                 exports_data = exports_data.iloc[0]
             if type(imports_data) == pd.DataFrame:
@@ -79,7 +74,7 @@ class GDPComponents:
                 series_data = exports_data - imports_data
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Domestic demand excluding stocks at current prices
         variables = ['UUNF', 'UUNF.1.0.0.0']
@@ -88,13 +83,12 @@ class GDPComponents:
         total = ['UIGT', 'UIGT.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, private_consumption[index]) + get_series(
-                df, country, total[index]) + get_series(df, country, government[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(
+                df, total[index]) + self.get_data(df, government[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Domestic demand including stocks at current prices
         variables = ['UUNT', 'UUNT.1.0.0.0']
@@ -104,13 +98,12 @@ class GDPComponents:
         changes = ['UIST', 'UIST.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
-                index]) + get_series(df, country, government[index]) + get_series(df, country, changes[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(df, total[
+                index]) + self.get_data(df, government[index]) + self.get_data(df, changes[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Final demand at current prices
         variables = ['UUTT', 'UUTT.1.0.0.0']
@@ -122,14 +115,14 @@ class GDPComponents:
         export_services = ['UXSN', 'UXSN.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, private_consumption[index]) + get_series(df, country, total[
-                index]) + get_series(df, country, government[index]) + get_series(df, country, changes[
-                index]) + get_series(df, country, export_goods[index]) + get_series(df, country, export_services[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, private_consumption[index]) + self.get_data(
+                df, total[index]) + self.get_data(df, government[index]) + self.get_data(
+                    df, changes[index]) + self.get_data(df, export_goods[index]) + self.get_data(
+                    df, export_services[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
         # Gross capital formation at current prices: total economy
         variables = ['UITT', 'UITT.1.0.0.0']
@@ -137,14 +130,13 @@ class GDPComponents:
         changes = ['UIST', 'UIST.1.0.0.0']
         country = 'BE'
         for index, variable in enumerate(variables):
-            series_meta = {'Country Ameco': country, 'Variable Code': variable, 'Frequency': 'Annual',
-                           'Scale': 'billions'}
-            series_data = get_series(df, country, total[index]) + get_series(df, country, changes[index])
+            series_meta = self.get_meta(variable)
+            series_data = self.get_data(df, total[index]) + self.get_data(df, changes[index])
             series = pd.Series(series_meta)
             series = series.append(series_data)
-            result = result.append(series, ignore_index=True, sort=True)
+            self.result = self.result.append(series, ignore_index=True, sort=True)
 
-        result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        export_to_excel(result, 'output/outputvars3.txt', 'output/output3.xlsx')
-        return result
-
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
+        export_to_excel(self.result, 'output/outputvars3.txt', 'output/output3.xlsx')
+        return self.result
