@@ -75,6 +75,14 @@ class FiscalSector(SumAndSpliceMixin):
         series = series.append(series_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
+        # TODO: copy EATTG, EATYG and EATSG from cyclical adjustment database
+        # for variable in ['EATTG', 'EATYG', 'EATSG']:
+        #     series_meta = self.get_meta(variable)
+        #     series_data = self.get_data(self.result, 'UDGGL.1.0.0.0')
+        #     series = pd.Series(series_meta)
+        #     series = series.append(series_data)
+        #     self.result = self.result.append(series, ignore_index=True, sort=True)
+
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
         export_to_excel(self.result, 'output/outputvars12.txt', 'output/output12.xlsx')

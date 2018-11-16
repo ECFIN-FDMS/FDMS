@@ -34,8 +34,6 @@ class NationalAccountsVolume(StepMixin):
         series_meta = self.get_meta(variable)
         series = pd.Series(series_meta)
         series = series.append(series_data)
-        # if variable == 'OXGS.1.0.0.0':
-        #     import code;code.interact(local=locals())
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
     def _get_data(self, variable, components, df=None, ameco_df=None):
@@ -245,6 +243,8 @@ class NationalAccountsVolume(StepMixin):
                 except KeyError:
                     logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
                     continue
+                # if variable_c1 == 'CBGN.1.0.0.0':
+                #     import code;code.interact(local=locals())
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -289,7 +289,7 @@ class NationalAccountsVolume(StepMixin):
         ameco_series = self.get_data(ameco_df, ameco_variable)
         splice_series = ovgd1 / self.get_data(df, total_population)
         splicer = Splicer()
-        series_data = splicer.ratio_splice(ameco_series, splice_series)
+        series_data = splicer.ratio_splice(ameco_series, splice_series, kind='forward')
         series_6_data = series_data.pct_change() * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)
