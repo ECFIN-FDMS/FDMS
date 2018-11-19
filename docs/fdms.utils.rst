@@ -36,6 +36,8 @@ fdms.utils.metadata module
     :undoc-members:
     :show-inheritance:
 
+.. _stepmixin:
+
 fdms.utils.mixins module
 ------------------------
 
