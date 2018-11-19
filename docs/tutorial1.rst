@@ -49,7 +49,9 @@ For this tutorial we will create a new step Household Sector. This is our source
 
     .. code-block:: console
 
-        $ for item in UYOH.1.0.0.0 UOGH.1.0.0.0 UYNH.1.0.0.0 UVGH.1.0.0.0 UWCH.1.0.0.0 UCTRH.1.0.0.0 UTYH.1.0.0.0 UCTPH.1.0.0.0 UVGHA.1.0.0.0 UEHH.1.0.0.0 PCPH.3.1.0.0 USGH.1.0.0.0 ASGH.1.0.0.0 UBLH.1.0.0.0 UITH.1.0.0.0 UKOH.1.0.0.0;
+        $ for item in UYOH.1.0.0.0 UOGH.1.0.0.0 UYNH.1.0.0.0 UVGH.1.0.0.0 UWCH.1.0.0.0 \
+        UCTRH.1.0.0.0 UTYH.1.0.0.0 UCTPH.1.0.0.0 UVGHA.1.0.0.0 UEHH.1.0.0.0 \
+        PCPH.3.1.0.0 USGH.1.0.0.0 ASGH.1.0.0.0 UBLH.1.0.0.0 UITH.1.0.0.0 UKOH.1.0.0.0;
         do ack $item output/;
         done
         output/outputall.txt
@@ -103,9 +105,56 @@ For this tutorial we will create a new step Household Sector. This is our source
         output/outputvars1.txt
         104:UKOH.1.0.0.0
 
-3. Therefore, the parameters needed for this step are result_1 and ameco_h.
+3. Therefore, the parameters needed for this step are result_1, result_7 and ameco_h.
     In this step we observe that all lines except numbers 5 and 7 are combining butt_splice and ignoremissingsum / ignoremissingsubtract.
     Since this type of calculation appears multiple times, we have a mixin to simplify those called :ref:`fdms.utils.mixins.SumAndSpliceMixin<stepmixin>`.
-    So, we will have to create the file computation/country/annual/household_sector.py with the following contents:
 
-.. include:: ../../../computation/country/annual/fiscal_sector.py
+    We will create the file computation/country/annual/household_sector.py and call the method :meth:`perform_computation` of the corresponding class in tests/country_calculation.py.
+
+
+    .. code-block:: python
+
+        # tests/test_country_calculation.py
+        ...
+        from fdms.computation.country.annual.household_sector import HouseholdSector
+        ...
+
+        # STEP 14
+        step_14 = HouseholdSector(scales=self.scales)
+        result_14 = step_14.perform_computation(self.result_1, result_7, self.ameco_df)
+        variables = ['UYOH.1.0.0.0', 'UOGH.1.0.0.0', 'UYNH.1.0.0.0', 'UVGH.1.0.0.0', 'UWCH.1.0.0.0', 'UCTRH.1.0.0.0',
+                     'UTYH.1.0.0.0', 'UCTPH.1.0.0.0', 'UVGHA.1.0.0.0', 'UEHH.1.0.0.0', 'PCPH.3.1.0.0', 'USGH.1.0.0.0',
+                     'ASGH.1.0.0.0', 'UBLH.1.0.0.0', 'UITH.1.0.0.0', 'UKOH.1.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
+        self.assertFalse(missing_vars)
+
+
+    For now, we will create computation/country/annual/household_sector.py the following contents:
+
+    .. code-block:: python
+
+        # computation/country/annual/household_sector.py
+        import pandas as pd
+
+        from fdms.utils.mixins import SumAndSpliceMixin
+        from fdms.utils.splicer import Splicer
+        from fdms.utils.operators import Operators
+        from fdms.utils.series import export_to_excel
+
+
+        # STEP 14
+        class HouseholdSector(SumAndSpliceMixin):
+            def perform_computation(self, df, ameco_h_df):
+                splicer = Splicer()
+                operators = Operators()
+                # First we will calculate ASGH.1.0.0.0 and OVGHA.3.0.0.0, and then we
+                # will use the _sum_and_splice method from SumAndSpliceMixin to calculate
+                # all the rest
+                import pdb;pdb.set_trace()
+
+    This will cause the test to stop at this point and display the Python prompt. We can then check that we have all the data in the interactive session and test our calculations.
+    We run the tests and try to calculate the new series:
+
+    .. code-block:: console
+
+        $ pytest fdms -s

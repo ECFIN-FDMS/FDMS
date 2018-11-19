@@ -8,11 +8,12 @@ from fdms.utils.series import export_to_excel
 
 # STEP 14
 class HouseholdSector(SumAndSpliceMixin):
-    def perform_computation(self, df, ameco_h_df):
+    def perform_computation(self, result_1, result_7, ameco_h_df):
         splicer = Splicer()
         operators = Operators()
         # First we will calculate ASGH.1.0.0.0 and OVGHA.3.0.0.0, and then we will use the _sum_and_splice method
         # From SumAndSpliceMixin to calculate all the rest
+        # import pdb;pdb.set_trace()
 
         # addends = {
         #     'USGC.1.0.0.0': ['UGVAC.1.0.0.0', 'UYVC.1.0.0.0', '-UTVC.1.0.0.0', '-UWCC.1.0.0.0', 'UYNC.1.0.0.0',
@@ -37,7 +38,7 @@ class HouseholdSector(SumAndSpliceMixin):
         # series = series.append(series_data)
         # self.result = self.result.append(series, ignore_index=True, sort=True)
 
-        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
-        self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars13.txt', 'output/output13.xlsx')
-        return self.result
+        # self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        # self.apply_scale()
+        # export_to_excel(self.result, 'output/outputvars13.txt', 'output/output13.xlsx')
+        # return self.result
