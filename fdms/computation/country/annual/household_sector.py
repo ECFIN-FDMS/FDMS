@@ -14,6 +14,30 @@ class HouseholdSector(SumAndSpliceMixin):
         # First we will calculate ASGH.1.0.0.0 and OVGHA.3.0.0.0, and then we will use the _sum_and_splice method
         # From SumAndSpliceMixin to calculate all the rest
         # import pdb;pdb.set_trace()
+        addends = {'UYOH.1.0.0.0': ['UOGH.1.0.0.0', 'UYNH.1.0.0.0']}
+        self._sum_and_splice(addends, result_1, ameco_h_df, splice=False)
+        new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+        new_input_df = pd.concat([new_input_df, result_1], sort=True)
+        addends = {'UVGH.1.0.0.0': ['UWCH.1.0.0.0', 'UYOH.1.0.0.0', 'UCTRH.1.0.0.0', '-UTYH.1.0.0.0', '-UCTPH.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+        new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+        new_input_df = pd.concat([new_input_df, result_1], sort=True)
+        addends = {'UVGHA.1.0.0.0': ['UVGH.1.0.0.0', 'UEHH.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+        addends = {'USGH.1.0.0.0': ['UWCH.1.0.0.0', 'UOGH.1.0.0.0', 'UYNH.1.0.0.0', 'UCTRH.1.0.0.0', '-UTYH.1.0.0.0',
+                                    '-UCTPH.1.0.0.0', 'UEHH.1.0.0.0', '-UCPH0.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+        new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+        new_input_df = pd.concat([new_input_df, result_1], sort=True)
+        # Since this formula is using *ignoremissingsubtract* instead of *ignoremissingsum*, we change the sign of all
+        # but the first variables in the list
+        addends = {'UBLH.1.0.0.0': ['USGH.1.0.0.0', '-UITH.1.0.0.0', '-UKOH.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+        import code;code.interact(local=locals())
 
         # addends = {
         #     'USGC.1.0.0.0': ['UGVAC.1.0.0.0', 'UYVC.1.0.0.0', '-UTVC.1.0.0.0', '-UWCC.1.0.0.0', 'UYNC.1.0.0.0',

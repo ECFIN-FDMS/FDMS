@@ -22,6 +22,7 @@ class Operators:
          value. The MERGE function can be used to combine data values and observation metadata.
         The MERGE function combines values to fill gaps and extends values on both ends of the series, between
          Calculation start and end periods. A common usage for the function is to combine values from different sources.
+
         :param args: Series to merge.
         :return:
         '''
@@ -31,6 +32,7 @@ class Operators:
         '''
         Iin evaluates the input on a per-observation level, and returns one value if an individual observation is
          empty, and another value if not.
+
         :param series: Required.
         :param value_if_null: Required.
         :param value_if_not_null: Optional. if not present it will return the original value in the output.
