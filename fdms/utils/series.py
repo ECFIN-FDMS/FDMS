@@ -1,9 +1,17 @@
 import pandas as pd
+import os
 
-from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER
+from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER, PROJECT_ROOT
 
 
-def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FILENAME, sheet_name='Sheet1'):
+def get_filenames_for_step(step):
+    return os.path.join(PROJECT_ROOT, 'output/outputvars{}.txt'.format(step)), os.path.join(
+        PROJECT_ROOT, 'output/output{}.xlsx'.format(step))
+
+
+def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FILENAME, step=None, sheet_name='Sheet1'):
+    if step is not None:
+        vars_filename, excel_filename = get_filenames_for_step(step)
     column_order = COLUMN_ORDER
     export_data = result.copy()
     export_data = export_data.reset_index()

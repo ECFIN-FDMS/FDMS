@@ -206,7 +206,7 @@ class NationalAccountsVolume(StepMixin):
                 if new_variable not in new_vars:
                     result_series_index = self.get_index(new_variable)
                     series_orig = self.result.loc[result_series_index]
-                    data_orig = pd.to_numeric(series_orig.filter(regex=r'\d{4}'), errors='coerce')
+                    data_orig = pd.to_numeric(series_orig.filter(regex=r'[0-9]{4}'), errors='coerce')
                 else:
                     logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
 
@@ -235,7 +235,7 @@ class NationalAccountsVolume(StepMixin):
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
                 series_6_index = self.get_index(variable_6)
                 series_6 = self.result.loc[result_series_index]
-                data_6 = pd.to_numeric(series_6.filter(regex=r'\d{4}'), errors='coerce')
+                data_6 = pd.to_numeric(series_6.filter(regex=r'[0-9]{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
                 series_meta = self.get_meta(variable_c1)
                 try:

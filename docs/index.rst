@@ -2,6 +2,14 @@ Welcome to FDMS STAR's documentation!
 =====================================
 
 
+.. toctree::
+   :maxdepth: 2
+
+   development_environment
+   project_setup
+   Tutorial: add new country calculation<tutorial1>
+   modules
+
 .. _overview:
 
 :ref:`FDMS STAR - Overview <overview>`
@@ -39,8 +47,5 @@ All these classes inherit from:: :ref:`utils.mixins.StepMixin <stepmixin>`, and 
 
 
 :ref:`Tutorial: adding new country calculations <tutorial1>`
-----------------------------------------------
+-------------------------------------------------------------
 
-.. toctree::
-   :maxdepth: 2
-      abc <overview.rst>
