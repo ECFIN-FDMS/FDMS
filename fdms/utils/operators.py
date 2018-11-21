@@ -26,7 +26,7 @@ class Operators:
         :param args: Series to merge.
         :return:
         '''
-        return dataframe.bfill(axis=0).iloc[0, :].filter(regex='\d{4}')
+        return dataframe.bfill(axis=0).iloc[0, :].filter(regex='[0-9]{4}')
 
     def iin(self, series, value_if_null, value_if_not_null=None):
         '''

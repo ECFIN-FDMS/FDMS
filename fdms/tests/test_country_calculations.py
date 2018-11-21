@@ -203,7 +203,7 @@ class TestCountryCalculations(unittest.TestCase):
 
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
-                            result_9, result_10, result_11, result_12, result_13], sort=True)
+                            result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, self.country)
         export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')

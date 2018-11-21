@@ -46,7 +46,7 @@ def read_ameco_txt(ameco_filename=AMECO):
     ameco_df['Country Ameco'] = ameco_df.apply(lambda row: _get_ameco(_get_from_series_code(row.name, 'country')),
                                                axis=1)
     ameco_df['Variable Code'] = ameco_df.apply(lambda row: _get_from_series_code(row.name, 'variable'), axis=1)
-    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
+    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     ameco_df = ameco_df.reset_index()
     ameco_df = ameco_df.set_index(['Country Ameco', 'Variable Code'])
     return ameco_df
@@ -54,7 +54,7 @@ def read_ameco_txt(ameco_filename=AMECO):
 
 def read_expected_result(xls_export='fdms/sample_data/BE.exp.xlsx'):
     df = pd.read_excel(xls_export, sheet_name='Table')
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df = df.reset_index()
     df = df.set_index(['Country', 'Variable'])
     return df
@@ -63,7 +63,7 @@ def read_expected_result(xls_export='fdms/sample_data/BE.exp.xlsx'):
 def read_expected_result_be(xls_export='fdms/sample_data/BE_expected_scale.xlsx'):
     df = pd.read_excel(xls_export, sheet_name='BE', index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
@@ -74,7 +74,7 @@ def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, f
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
     ameco_df = pd.read_excel(ameco_filename, sheet_name=ameco_sheet_name, index_col=[0, 1])
-    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^\d+$', c)}, inplace=True)
+    ameco_df.rename(columns={c: int(c) for c in ameco_df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     return df, ameco_df
 
 
@@ -83,7 +83,7 @@ def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency
     sheet_name = 'BE'
     df = pd.read_excel(ameco_db_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     # TODO: We need to update this db?
@@ -99,7 +99,7 @@ def read_output_gap_xls(output_gap_excel='fdms/sample_data/OUTPUT_GAP.xlsx', fre
     sheet_name = 'output_gap'
     df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
@@ -110,7 +110,7 @@ def read_xr_ir_xls(output_gap_excel='fdms/sample_data/XR_IR.xlsx', frequency='an
     sheet_name = 'xr-ir'
     df = pd.read_excel(output_gap_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])
@@ -121,7 +121,7 @@ def read_ameco_xne_us_xls(ameco_xne_us_excel='fdms/sample_data/AMECO_XNE_US.xlsx
     sheet_name = 'ameco_xne_us'
     df = pd.read_excel(ameco_xne_us_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^\d+$', c)}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
     df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     df = df.set_index(['Country Ameco', 'Variable Code'])

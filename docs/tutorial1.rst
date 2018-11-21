@@ -472,6 +472,7 @@ Now we can write the complete class, This is how both files will look after addi
 
 
     .. code-block:: python
+        :emphasize-lines: 9-15
 
         # tests/test_country_calculation.py
         ...
@@ -487,9 +488,10 @@ Now we can write the complete class, This is how both files will look after addi
         self.assertFalse(missing_vars)
 
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
-                            result_9, result_10, result_11, result_12, result_13], sort=True)
+                            result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
 
     .. code-block:: python
+        :emphasize-lines: 40-62
 
         # computation/country/annual/household_sector.py
         import pandas as pd

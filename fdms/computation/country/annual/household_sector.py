@@ -10,6 +10,7 @@ from fdms.utils.series import export_to_excel
 # STEP 14
 class HouseholdSector(SumAndSpliceMixin):
     def perform_computation(self, result_1, result_7, ameco_h_df):
+        # TODO: Check the scales of the output variables
         splicer = Splicer()
         operators = Operators()
         # First we will calculate ASGH.1.0.0.0 and OVGHA.3.0.0.0, and then we will use the _sum_and_splice method
