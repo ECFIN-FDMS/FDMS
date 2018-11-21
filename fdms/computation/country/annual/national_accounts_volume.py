@@ -34,8 +34,6 @@ class NationalAccountsVolume(StepMixin):
         series_meta = self.get_meta(variable)
         series = pd.Series(series_meta)
         series = series.append(series_data)
-        # if variable == 'OXGS.1.0.0.0':
-        #     import code;code.interact(local=locals())
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
     def _get_data(self, variable, components, df=None, ameco_df=None):
@@ -208,7 +206,7 @@ class NationalAccountsVolume(StepMixin):
                 if new_variable not in new_vars:
                     result_series_index = self.get_index(new_variable)
                     series_orig = self.result.loc[result_series_index]
-                    data_orig = pd.to_numeric(series_orig.filter(regex=r'\d{4}'), errors='coerce')
+                    data_orig = pd.to_numeric(series_orig.filter(regex=r'[0-9]{4}'), errors='coerce')
                 else:
                     logger.error('Missing data for variable {} in national accounts volume'.format(u1_variable))
 
@@ -237,7 +235,7 @@ class NationalAccountsVolume(StepMixin):
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
                 series_6_index = self.get_index(variable_6)
                 series_6 = self.result.loc[result_series_index]
-                data_6 = pd.to_numeric(series_6.filter(regex=r'\d{4}'), errors='coerce')
+                data_6 = pd.to_numeric(series_6.filter(regex=r'[0-9]{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
                 series_meta = self.get_meta(variable_c1)
                 try:
@@ -245,6 +243,8 @@ class NationalAccountsVolume(StepMixin):
                 except KeyError:
                     logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
                     continue
+                # if variable_c1 == 'CBGN.1.0.0.0':
+                #     import code;code.interact(local=locals())
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
                 self.result = self.result.append(series, ignore_index=True, sort=True)
@@ -289,7 +289,7 @@ class NationalAccountsVolume(StepMixin):
         ameco_series = self.get_data(ameco_df, ameco_variable)
         splice_series = ovgd1 / self.get_data(df, total_population)
         splicer = Splicer()
-        series_data = splicer.ratio_splice(ameco_series, splice_series)
+        series_data = splicer.ratio_splice(ameco_series, splice_series, kind='forward')
         series_6_data = series_data.pct_change() * 100
         series = pd.Series(series_meta)
         series = series.append(series_data)

@@ -5,12 +5,12 @@ from fdms.computation.country.annual.transfer_matrix import TransferMatrix
 from fdms.computation.country.annual.population import Population
 from fdms.computation.country.annual.national_accounts_components import GDPComponents
 from fdms.computation.country.annual.national_accounts_volume import NationalAccountsVolume
-from fdms.config import FORECAST, AMECO, SHEET
+from fdms.config import FORECAST, AMECO, AMECO_SHEET
 from fdms.utils.interfaces import read_country_forecast_excel, read_ameco_txt
 
 
 class Compute:
-    def __init__(self, country_forecast_filename=FORECAST, ameco_filename=AMECO, ameco_sheet_name=SHEET):
+    def __init__(self, country_forecast_filename=FORECAST, ameco_filename=AMECO, ameco_sheet_name=AMECO_SHEET):
         self.excel_raw = country_forecast_filename
         self.ameco_filename = ameco_filename
         self.ameco_sheet_name = ameco_sheet_name
@@ -56,8 +56,8 @@ class Compute:
         ameco_series = ameco_df.loc[ameco_df.index.isin(step_3_additional_vars, level='Variable Code')].copy()
         step_3_df = step_3_df.append(ameco_series)
         step_3 = GDPComponents()
-        result_3 = step_3.perform_computation(step_3_df)
-        self.result = pd.concat([self.result, result_3], sort=True)
+        # result_3 = step_3.perform_computation(step_3_df)
+        # self.result = pd.concat([self.result, result_3], sort=True)
 
         # National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent
         #  change, per-capita GDP, and contribution to %change in GDP
@@ -68,5 +68,5 @@ class Compute:
                        'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0', 'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
         step_4_df = result_1.loc[result_1.index.isin(step_4_vars, level='Variable Code')].copy()
         step_4 = NationalAccountsVolume()
-        result_4 = step_4.perform_computation(step_4_df)
-        self.result = pd.concat([self.result, result_4], sort=True)
+        # result_4 = step_4.perform_computation(step_4_df)
+        # self.result = pd.concat([self.result, result_4], sort=True)

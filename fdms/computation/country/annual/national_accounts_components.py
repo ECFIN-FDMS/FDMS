@@ -56,12 +56,12 @@ class GDPComponents(StepMixin):
                 exports_data = self.get_data(df, exports_goods_and_services[index])
             except KeyError:
                 exports_data = self.result.loc[self.result['Variable Code'] == exports_goods_and_services[
-                    index]].filter(regex='^\d{4}$')
+                    index]].filter(regex='^[0-9]{4}$')
             try:
                 imports_data = self.get_data(df, imports_goods_and_services[index])
             except KeyError:
                 imports_data = self.result.loc[self.result['Variable Code'] == imports_goods_and_services[
-                    index]].filter(regex='^\d{4}$')
+                    index]].filter(regex='^[0-9]$')
             if type(exports_data) == pd.DataFrame:
                 exports_data = exports_data.iloc[0]
             if type(imports_data) == pd.DataFrame:
@@ -138,5 +138,5 @@ class GDPComponents(StepMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars3.txt', 'output/output3.xlsx')
+        export_to_excel(self.result, step=3)
         return self.result

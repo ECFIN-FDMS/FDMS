@@ -72,7 +72,7 @@ class StepMixin:
             dataframe.sort_index(level=[0, 1], inplace=True)
             series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}')
             # if series.empty:
-            #     series = dataframe.loc[(country, variable)].filter(regex='\d{4}Q[1234]')
+            #     series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}Q[1234]')
             if series.empty:
                 return None
             # TODO: Log these and make sure that this is correct, check values and get the best one
@@ -90,7 +90,7 @@ class StepMixin:
             series = dataframe.loc[result_series_index]
             series = series.filter(regex='[0-9]{4}')
             # if series.empty:
-            #     series = dataframe.loc[result_series_index].filter(regex='\d{4}Q[1234]')
+            #     series = dataframe.loc[result_series_index].filter(regex='[0-9]{4}Q[1234]')
             if series.empty:
                 return None
             if len(series.shape) > 1:

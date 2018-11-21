@@ -65,5 +65,5 @@ class TransferMatrix(StepMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars1.txt', 'output/output1.xlsx')
+        export_to_excel(self.result, step=1)
         return self.result
