@@ -125,8 +125,11 @@ class Splicer:
                     stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                    variable, country))
                 if kind == 'forward':
                     return base_series
 
@@ -146,8 +149,11 @@ class Splicer:
                     stripped_splice.index[0])], new_data, stripped_result], sort=True)
                 result.name = name
             else:
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
                 logger.warning('Failed to splice {} backward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                    variable, country))
                 if kind == 'backward':
                     return base_series
 

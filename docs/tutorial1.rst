@@ -8,7 +8,7 @@ Adding a new step consists on writing the new class and call it from tests/count
 In order to add more calculations and maintain the same structure it is convenient to follow these steps:
 
 1. Read the source algorithm and determine what input variables we need and what output variables we need to calculate.
-2. Check where the input data comes from (source data from the country, source databases -ameco_h, output_gap, etc.- or data calculated in previous steps or in this one.
+2. Check where the input data comes from (source data from the country, source databases -ameco_h, output_gap, etc.- or data calculated in previous steps or in this one) and
    Prepare the necessary input dataframes. In order to easily identify what variables we get in each step, we export .txt and .xls files with the results at the end.
 3. Create the class to perform the calculations, and call it from tests/test_country_calculation.py
 
@@ -267,6 +267,11 @@ For this tutorial we will create a new step Household Sector. This is our source
 
     Great!, we have all the data we need. To check that the data we have is correct, we can check the file sample_data/BE_expected_scale.xlsx. The data in this case is correct. If it were not, that would mean that there's an error in a previous calculation that needs to be fixed.
 
+    .. note::
+        The methods :meth:`get_meta` and :meth:`get_data` belong to utils.mixins.StepMixin.
+        Therefore, In order to be able to access self.get_meta and self.get_data, we need to set the breakpoint inside a class that inherit from StepMixin.
+        In other words, we cannot access self.get_meta or self.get_data if we insert the breakpoint in tests/test_country_calculations.py, only if we do it inside one of the steps.
+
     We will edit computation/country/annual/household_sector.py and add the following contents:
 
     .. code-block:: python
@@ -375,6 +380,9 @@ For this tutorial we will create a new step Household Sector. This is our source
           Country Ameco Variable Code Frequency  Scale          1993          1994          1995          1996          1997      ...               2011          2012          2013          2014          2015          2016          2017          2018          2019
         0            BE  UYOH.1.0.0.0    Annual  Units  5.203930e+10  5.428490e+10  6.045990e+10  5.934860e+10  6.048500e+10      ...       7.766890e+10  7.658320e+10  7.657180e+10  7.666410e+10  7.671070e+10  7.636740e+10  7.919630e+10  9.168901e+09  9.526069e+09
         1            BE  UVGH.1.0.0.0    Annual  Units  1.279338e+11  1.324030e+11  1.396412e+11  1.402694e+11  1.435605e+11      ...       2.238218e+11  2.281629e+11  2.307986e+11  2.333724e+11  2.355313e+11  2.410091e+11  2.496097e+11  2.780952e+10  2.926091e+10
+        2            BE UVGHA.1.0.0.0    Annual  Units  1.288849e+11  1.335221e+11  1.407341e+11  1.415994e+11  1.450232e+11      ...       2.267257e+11  2.309947e+11  2.336148e+11  2.360287e+11  2.382873e+11  2.438101e+11  2.524723e+11  2.794058e+10  2.939197e+10
+        3            BE  USGH.1.0.0.0    Annual  Units  2.741620e+10  2.727490e+10  2.735010e+10  2.499250e+10  2.453200e+10      ...       3.065650e+10  2.981250e+10  2.923000e+10  2.913980e+10  2.839920e+10  2.723580e+10  2.842230e+10 -5.190258e+08 -6.535760e+08
+        4            BE  UBLH.1.0.0.0    Annual  Units  1.626210e+10  1.506570e+10  1.360990e+10  1.183120e+10  9.851900e+09      ...       7.749400e+09  6.057800e+09  5.337700e+09  3.548400e+09  2.166900e+09  6.682000e+08  1.093200e+09 -2.255858e+09 -2.459065e+09
 
         [2 rows x 31 columns]
         >>>
@@ -384,4 +392,165 @@ For this tutorial we will create a new step Household Sector. This is our source
     - {Country}|OVGHA.3.0.0.0[t] = rebase({Country}|UVGHA.1.0.0.0[t] / {Country}|PCPH.3.1.0.0[t], {BasePeriod}) / 100 * {Country}|UVGHA.1.0.0.0[{BasePeriod}]
     - {Country}|ASGH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|ASGH.1.0.0.0[t], {Country}|USGH.1.0.0.0[t] / {Country}|UVGHA.1.0.0.0[t] * 100, MsSpliceDirection.Forward)
 
+    .. code-block:: bash
+
+        (venvs) C:\marcos\w\FDMS>pytest --cov fdms -s
+        ========================================= test session starts =========================================
+        platform win32 -- Python 3.6.5, pytest-3.9.2, py-1.7.0, pluggy-0.8.0
+        rootdir: C:\marcos\w\FDMS, inifile:
+        plugins: profiling-1.3.0, cov-2.6.0
+        collected 2 items
+
+        fdms\tests\test_country_calculations.py Python 3.6.5 |Anaconda, Inc.| (default, Mar 29 2018, 13:32:41) [
+        MSC v.1900 64 bit (AMD64)] on win32
+        Type "help", "copyright", "credits" or "license" for more information.
+        (InteractiveConsole)
+        >>> uvgha_data = self.get_data(new_input_df, 'UVGHA.1.0.0.0')
+        >>> pcph_data = self.get_data(result_7, 'PCPH.3.1.0.0')
+        >>> from fdms.config import BASE_PERIOD
+        >>> BASE_PERIOD
+        2010
+        >>> uvgha_base_period = uvgha_data.loc[BASE_PERIOD]
+        >>> ovgha_data = operators.rebase(uvgha_data / pcph_data, BASE_PERIOD) / 100 * uvgha_base_period
+        >>> ovgha_data
+        1993    1.761430e+11
+        1994    1.784480e+11
+        1995    1.852247e+11
+        1996    1.852111e+11
+        1997    1.868547e+11
+        1998    1.905963e+11
+        1999    1.946040e+11
+        2000    1.982959e+11
+        2001    2.036943e+11
+        2002    2.027852e+11
+        2003    2.032246e+11
+        2004    2.031676e+11
+        2005    2.051609e+11
+        2006    2.098121e+11
+        2007    2.144530e+11
+        2008    2.199113e+11
+        2009    2.244137e+11
+        2010    2.228193e+11
+        2011    2.201072e+11
+        2012    2.198295e+11
+        2013    2.204724e+11
+        2014    2.213983e+11
+        2015    2.222941e+11
+        2016    2.240762e+11
+        2017    2.272537e+11
+        2018    2.451236e+10
+        2019    2.523060e+10
+        dtype: float64
+        >>> series_meta = self.get_meta('OVGAH.3.0.0.0')
+        >>> series = pd.Series(series_meta)
+        >>> series = series.append(ovgha_data)
+        >>> self.result = self.result.append(series, ignore_index=True, sort=True)
+        >>>
+        >>> usgh_data = self.get_data(new_input_df, 'USGH.1.0.0.0')
+        >>> uvgha_data = self.get_data(new_input_df, 'UVGHA.1.0.0.0')
+        >>> asgh_ameco_h = self.get_data(ameco_h_df, 'ASGH.1.0.0.0')
+        >>> asgh_data = splicer.butt_splice(asgh_ameco_h, usgh_data / uvgha_data * 100)
+        >>> series_meta = self.get_meta('ASGH.1.0.0.0')
+        >>> new_series = pd.Series(series_meta)
+        >>> new_series = new_series.append(asgh_data)
+        >>> self.result = self.result.append(new_series, ignore_index=True, sort=True)
+        >>> self.result
+          Country Ameco  Variable Code Frequency      ...               2017          2018          2019
+        0            BE   UYOH.1.0.0.0    Annual      ...       7.919630e+10  9.168901e+09  9.526069e+09
+        1            BE   UVGH.1.0.0.0    Annual      ...       2.496097e+11  2.780952e+10  2.926091e+10
+        2            BE  UVGHA.1.0.0.0    Annual      ...       2.524723e+11  2.794058e+10  2.939197e+10
+        3            BE   USGH.1.0.0.0    Annual      ...       2.842230e+10 -5.190258e+08 -6.535760e+08
+        4            BE   UBLH.1.0.0.0    Annual      ...       1.093200e+09 -2.255858e+09 -2.459065e+09
+        5            BE  OVGAH.3.0.0.0    Annual      ...       2.272537e+11  2.451236e+10  2.523060e+10
+        6            BE   ASGH.1.0.0.0    Annual      ...       1.125766e+01 -1.857606e+00 -2.223655e+00
+
+        [7 rows x 31 columns]
+        >>>
+
+
+Now we can write the complete class, This is how both files will look after adding our new calculations:
+
+
+    .. code-block:: python
+
+        # tests/test_country_calculation.py
+        ...
+        from fdms.computation.country.annual.household_sector import HouseholdSector
+        ...
+
+        # STEP 14
+        step_14 = HouseholdSector(scales=self.scales)
+        result_14 = step_14.perform_computation(self.result_1, result_7, self.ameco_df)
+        variables = ['UYOH.1.0.0.0', 'UVGH.1.0.0.0', 'UVGHA.1.0.0.0', 'OVGHA.3.0.0.0', 'USGH.1.0.0.0', 'ASGH.1.0.0.0',
+                     'UBLH.1.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
+        self.assertFalse(missing_vars)
+
+        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
+                            result_9, result_10, result_11, result_12, result_13], sort=True)
+
+    .. code-block:: python
+
+        # computation/country/annual/household_sector.py
+        import pandas as pd
+
+        from fdms.config import BASE_PERIOD
+        from fdms.utils.mixins import SumAndSpliceMixin
+        from fdms.utils.splicer import Splicer
+        from fdms.utils.operators import Operators
+        from fdms.utils.series import export_to_excel
+
+
+        # STEP 14
+        class HouseholdSector(SumAndSpliceMixin):
+            def perform_computation(self, result_1, result_7, ameco_h_df):
+                splicer = Splicer()
+                operators = Operators()
+                # First we will calculate ASGH.1.0.0.0 and OVGHA.3.0.0.0, and then we will use the _sum_and_splice method
+                # From SumAndSpliceMixin to calculate all the rest
+                addends = {'UYOH.1.0.0.0': ['UOGH.1.0.0.0', 'UYNH.1.0.0.0']}
+                self._sum_and_splice(addends, result_1, ameco_h_df, splice=False)
+                new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+                new_input_df = pd.concat([new_input_df, result_1], sort=True)
+                addends = {'UVGH.1.0.0.0': ['UWCH.1.0.0.0', 'UYOH.1.0.0.0', 'UCTRH.1.0.0.0', '-UTYH.1.0.0.0', '-UCTPH.1.0.0.0']}
+                self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+                new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+                new_input_df = pd.concat([new_input_df, result_1], sort=True)
+                addends = {'UVGHA.1.0.0.0': ['UVGH.1.0.0.0', 'UEHH.1.0.0.0']}
+                self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+                addends = {'USGH.1.0.0.0': ['UWCH.1.0.0.0', 'UOGH.1.0.0.0', 'UYNH.1.0.0.0', 'UCTRH.1.0.0.0', '-UTYH.1.0.0.0',
+                                            '-UCTPH.1.0.0.0', 'UEHH.1.0.0.0', '-UCPH0.1.0.0.0']}
+                self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+                new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+                new_input_df = pd.concat([new_input_df, result_1], sort=True)
+                # Since this formula is using *ignoremissingsubtract* instead of *ignoremissingsum*, we change the sign of all
+                # but the first variables in the list
+                addends = {'UBLH.1.0.0.0': ['USGH.1.0.0.0', '-UITH.1.0.0.0', '-UKOH.1.0.0.0']}
+                self._sum_and_splice(addends, new_input_df, ameco_h_df, splice=False)
+
+                uvgha_data = self.get_data(new_input_df, 'UVGHA.1.0.0.0')
+                pcph_data = self.get_data(result_7, 'PCPH.3.1.0.0')
+                uvgha_base_period = uvgha_data.loc[BASE_PERIOD]
+                ovgha_data = operators.rebase(uvgha_data / pcph_data, BASE_PERIOD) / 100 * uvgha_base_period
+                series_meta = self.get_meta('OVGHA.3.0.0.0')
+                series = pd.Series(series_meta)
+                series = series.append(ovgha_data)
+                self.result = self.result.append(series, ignore_index=True, sort=True)
+
+                usgh_data = self.get_data(new_input_df, 'USGH.1.0.0.0')
+                uvgha_data = self.get_data(new_input_df, 'UVGHA.1.0.0.0')
+                asgh_ameco_h = self.get_data(ameco_h_df, 'ASGH.1.0.0.0')
+                asgh_data = splicer.butt_splice(asgh_ameco_h, usgh_data / uvgha_data * 100)
+                series_meta = self.get_meta('ASGH.1.0.0.0')
+                new_series = pd.Series(series_meta)
+                new_series = new_series.append(asgh_data)
+                self.result = self.result.append(new_series, ignore_index=True, sort=True)
+
+                self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+                self.apply_scale()
+                export_to_excel(self.result, step=14)
+                return self.result
 

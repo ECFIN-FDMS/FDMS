@@ -196,11 +196,10 @@ class TestCountryCalculations(unittest.TestCase):
         # STEP 14
         step_14 = HouseholdSector(scales=self.scales)
         result_14 = step_14.perform_computation(self.result_1, result_7, self.ameco_df)
-        variables = ['UYOH.1.0.0.0', 'UOGH.1.0.0.0', 'UYNH.1.0.0.0', 'UVGH.1.0.0.0', 'UWCH.1.0.0.0', 'UCTRH.1.0.0.0',
-                     'UTYH.1.0.0.0', 'UCTPH.1.0.0.0', 'UVGHA.1.0.0.0', 'UEHH.1.0.0.0', 'PCPH.3.1.0.0', 'USGH.1.0.0.0',
-                     'ASGH.1.0.0.0', 'UBLH.1.0.0.0', 'UITH.1.0.0.0', 'UKOH.1.0.0.0']
-        # missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
-        # self.assertFalse(missing_vars)
+        variables = ['UYOH.1.0.0.0', 'UVGH.1.0.0.0', 'UVGHA.1.0.0.0', 'OVGHA.3.0.0.0', 'USGH.1.0.0.0', 'ASGH.1.0.0.0',
+                     'UBLH.1.0.0.0']
+        missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
+        self.assertFalse(missing_vars)
 
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
