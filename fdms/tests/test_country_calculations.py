@@ -18,9 +18,8 @@ from fdms.computation.country.annual.exchange_rates import ExchangeRates
 from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
 from fdms.computation.country.annual.household_sector import HouseholdSector
-from fdms.config import YEARS
 from fdms.config.scale_correction import fix_scales
-from fdms.config.variable_groups import NA_VO, T_VO
+from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
@@ -101,7 +100,11 @@ class TestCountryCalculations(unittest.TestCase):
         step_4_1000vars.append('OVGD.1.0.0.0')
         step_4_1100vars.append('RVGDP.1.1.0.0')
 
-        step_4_df = pd.concat([self.df, self.result_1, result_3], sort=True)
+        df_input = self.df.copy()
+        df_input[1993] = pd.np.nan
+        df_input[1994] = pd.np.nan
+        df_input[1995] = pd.np.nan
+        step_4_df = pd.concat([df_input, self.result_1, result_3], sort=True)
         # result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
         result_4, ovgd1 = step_4.perform_computation(step_4_df, self.ameco_df)
         # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc[self.country].index)]

@@ -80,8 +80,11 @@ class Splicer:
                 result = pd.concat([stripped_base, splice_series.iloc[start_splice_loc + 1:]], sort=True)
                 result.name = name
             else:
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series. '
-                               'Returning original series'.format(base_series.name[1], base_series.name[0]))
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    variable, country))
                 return base_series
 
         if kind == 'backward' or kind == 'both':
@@ -95,8 +98,11 @@ class Splicer:
                                     stripped_result], sort=True)
                 result.name = name
             else:
-                logger.warning('Failed to splice {} backward, country {}, splice series starts after base series. '
-                               'Returning original series'.format(base_series.name[1], base_series.name[0]))
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
+                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
+                    variable, country))
                 return base_series
 
         return result
@@ -184,8 +190,11 @@ class Splicer:
                     stripped_splice.index[-1]) + 1:]], sort=True)
                 result.name = name
             else:
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                    variable, country))
 
         if kind == 'backward' or kind == 'both':
             stripped_base, stripped_splice, greater_splice_loc = self._strip_and_get_backward_splice_boundaries(
@@ -204,8 +213,11 @@ class Splicer:
                     stripped_splice.index[0])], new_data, stripped_result], sort=True)
                 result.name = name
             else:
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                    variable, country))
 
         return result
 
@@ -232,7 +244,10 @@ class Splicer:
                 result = pd.concat([stripped_base, new_data[1:]], sort=True)
                 result.name = name
             else:
+                variable, country = 'unknown', 'unknown'
+                if type(base_series.name) == tuple:
+                    variable, country = base_series.name[1], base_series.name[0]
                 logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    base_series.name[1], base_series.name[0]))
+                    variable, country))
 
         return result
