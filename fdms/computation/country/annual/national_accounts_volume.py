@@ -245,8 +245,14 @@ class NationalAccountsVolume(StepMixin):
                 data_x = self.get_data(df, variable_x).shift(1)
                 data_xvgd = self.get_data(df, xvgd).shift(1)
                 if variable_c1 not in ['CBGN.1.0.0.0']:
-                    data_x[1996] = data_x[1997]
-                    data_xvgd[1996] = data_xvgd[1997]
+                    try:
+                        data_x[1996] = self.get_data(ameco_df, variable_x)[1996]
+                    except KeyError:
+                        pass
+                    try:
+                        data_x[1996] = self.get_data(ameco_df, xvgd)[1996]
+                    except KeyError:
+                        pass
                 try:
                     series_data = data_6 * data_x / data_xvgd
                 except KeyError:

@@ -1,3 +1,15 @@
+'''
+Naming conventions:
+    In order to make it easier to read the data from the different files we will name them as follows:
+
+    - Country Forecast excel file: `'{}.forecast.{}.xlsm'.format(country, year)`
+    - Country expected result: `'{}.exp.xls'.format(country)`
+    - AMECO Historical data: `AMECO_H.TXT`
+    - AMECO current excel file for country: `'{}_AMECO.xlsx'.format(country)`
+    - Output Gap database: `OUTPUT_GAP.xlsx`
+    - Exchange rates database: `XR_IR.xlsx`
+    - Cycolical Adjustment: `CYCLICAL_ADJUSTMENT.xlsx`
+'''
 import logging
 
 
@@ -12,6 +24,7 @@ import re
 
 from fdms.config import AMECO, FORECAST, COLUMN_ORDER
 from fdms.config.countries import COUNTRIES
+from fdms.config.country_groups import ALL_COUNTRIES
 
 
 def _get_iso(ameco_code):
@@ -29,7 +42,9 @@ def _get_from_series_code(series_code, param='variable'):
     return '.'.join([parts[-1], *parts[1:-1]])
 
 
-def read_country_forecast_excel(country_forecast_filename=FORECAST, frequency='annual'):
+def read_country_forecast_excel(country_forecast_filename=FORECAST, frequency='annual', country=None):
+    if country in ALL_COUNTRIES:
+        country_forecast_filename = '{}.Forecast.xlsm'.format(country)
     sheet_name = 'Transfer FDMS+ Q' if frequency == 'quarterly' else 'Transfer FDMS+ A'
     df = pd.read_excel(country_forecast_filename, sheet_name=sheet_name, header=10, index_col=[1, 3])
     df = df.reset_index()
