@@ -67,11 +67,14 @@ def read_ameco_txt(ameco_filename=AMECO):
     return ameco_df
 
 
-def read_expected_result(xls_export='fdms/sample_data/BE.exp.xlsx'):
-    df = pd.read_excel(xls_export, sheet_name='Table')
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
+def read_expected_result(xls_export='fdms/sample_data/BE.exp.xlsx', country=None):
+    if country in ALL_COUNTRIES:
+        xls_export = 'fdms/sample_data/{}.exp.xlsx'.format(country)
+    df = pd.read_excel(xls_export, sheet_name='Sheet1')
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', str(c))}, inplace=True)
+    df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
     df = df.reset_index()
-    df = df.set_index(['Country', 'Variable'])
+    df = df.set_index(['Country Ameco', 'Variable Code'])
     return df
 
 

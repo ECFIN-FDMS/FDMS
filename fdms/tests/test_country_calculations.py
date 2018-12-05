@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import pandas as pd
 import re
 
@@ -21,24 +22,26 @@ from fdms.computation.country.annual.household_sector import HouseholdSector
 from fdms.config.scale_correction import fix_scales
 from fdms.config.variable_groups import NA_VO
 from fdms.utils.interfaces import (
-    read_country_forecast_excel, read_ameco_txt, read_expected_result_be, read_ameco_db_xls, read_output_gap_xls,
+    read_country_forecast_excel, read_ameco_txt, read_expected_result, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
 from fdms.utils.series import report_diff, remove_duplicates, export_to_excel
 
 
+@pytest.mark.usefixtures('country')
 class TestCountryCalculations(unittest.TestCase):
     # National Accounts - Calculate additional GDP components
     # National Accounts (Value) - calculate additional components
+
     def setUp(self):
-        self.country = 'BE'
+        self.country = self.country or 'BE'
         ameco_filename = 'fdms/sample_data/AMECO_H.TXT'
         forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(self.country)
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
         self.ameco_db_df = read_ameco_db_xls()
         self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
-        self.dfexp = read_expected_result_be()
+        self.dfexp = read_expected_result(country=self.country)
         self.scales = get_scales_from_forecast(self.country)
-        step_1 = TransferMatrix(scales=self.scales)
+        step_1 = TransferMatrix(scales=self.scales, country=self.country)
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
         with open('errors_scale.txt', 'w') as f:
             pass
@@ -58,7 +61,7 @@ class TestCountryCalculations(unittest.TestCase):
 
     def test_country_calculation_BE(self):
         # STEP 2
-        step_2 = Population(scales=self.scales)
+        step_2 = Population(scales=self.scales, country=self.country)
         step_2_vars = ['NUTN.1.0.0.0', 'NETN.1.0.0.0', 'NWTD.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NETN',
                        'NLHA.1.0.0.0']
         # NECN.1.0.0.0 is calculated and used in step_2
@@ -70,7 +73,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 3
-        step_3 = GDPComponents(scales=self.scales)
+        step_3 = GDPComponents(scales=self.scales, country=self.country)
         step_3_vars = ['UMGN', 'UMSN', 'UXGN', 'UXSN', 'UMGN', 'UMSN', 'UXGS', 'UMGS', 'UIGG0', 'UIGT', 'UIGG', 'UIGCO',
                        'UIGDW', 'UCPH', 'UCTG', 'UIGT', 'UIST']
         step_3_additional_vars = ['UMGN.1.0.0.0', 'UMSN.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0',
@@ -85,7 +88,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 4
-        step_4 = NationalAccountsVolume(scales=self.scales)
+        step_4 = NationalAccountsVolume(scales=self.scales, country=self.country)
 
         # These variables have been calculated and are needed later
         calculated = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UUITT']
@@ -111,7 +114,7 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 5
-        step_5 = NationalAccountsValue(scales=self.scales)
+        step_5 = NationalAccountsValue(scales=self.scales, country=self.country)
         step_5_df = self.result_1.copy()
         result_5 = step_5.perform_computation(step_5_df, self.ameco_db_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
@@ -137,11 +140,11 @@ class TestCountryCalculations(unittest.TestCase):
         # STEP 6
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
         ameco_df = self._get_ameco_df(ameco_vars)
-        step_6 = RecalculateUvgdh(scales=self.scales)
+        step_6 = RecalculateUvgdh(scales=self.scales, country=self.country)
         result_6 = step_6.perform_computation(self.df, ameco_df)
 
         # STEP 7
-        step_7 = Prices(scales=self.scales)
+        step_7 = Prices(scales=self.scales, country=self.country)
         step_7_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
@@ -149,7 +152,7 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 8
-        step_8 = CapitalStock(scales=self.scales)
+        step_8 = CapitalStock(scales=self.scales, country=self.country)
         step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
         result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
         # variables = list(PD)
@@ -157,21 +160,21 @@ class TestCountryCalculations(unittest.TestCase):
         # self.assertFalse(missing_vars)
 
         # STEP 9
-        step_9 = OutputGap(scales=self.scales)
+        step_9 = OutputGap(scales=self.scales, country=self.country)
         result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 10
-        step_10 = ExchangeRates(scales=self.scales)
+        step_10 = ExchangeRates(scales=self.scales, country=self.country)
         result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 11
-        step_11 = LabourMarket(scales=self.scales)
+        step_11 = LabourMarket(scales=self.scales, country=self.country)
         step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)
         result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
         variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
@@ -183,21 +186,21 @@ class TestCountryCalculations(unittest.TestCase):
         self.assertFalse(missing_vars)
 
         # STEP 12
-        step_12 = FiscalSector()
+        step_12 = FiscalSector(scales=self.scales, country=self.country)
         result_12 = step_12.perform_computation(self.result_1, self.ameco_df)
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_12.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 13
-        step_13 = CorporateSector(scales=self.scales)
+        step_13 = CorporateSector(scales=self.scales, country=self.country)
         result_13 = step_13.perform_computation(self.result_1, self.ameco_df)
         variables = ['USGC.1.0.0.0', 'UOGC.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_13.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
         # STEP 14
-        step_14 = HouseholdSector(scales=self.scales)
+        step_14 = HouseholdSector(scales=self.scales, country=self.country)
         result_14 = step_14.perform_computation(self.result_1, result_7, self.ameco_df)
         variables = ['UYOH.1.0.0.0', 'UVGH.1.0.0.0', 'UVGHA.1.0.0.0', 'OVGHA.3.0.0.0', 'USGH.1.0.0.0', 'ASGH.1.0.0.0',
                      'UBLH.1.0.0.0']
@@ -209,7 +212,8 @@ class TestCountryCalculations(unittest.TestCase):
                             result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, self.country)
-        export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')
+        export_to_excel(result, 'output/{}/outputall.txt'.format(self.country), 'output/{}/outputall.xlsx'.format(
+            self.country))
 
         # res = result.drop(columns=['Scale'])
         res = result.copy()

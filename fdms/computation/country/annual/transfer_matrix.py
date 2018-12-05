@@ -18,7 +18,6 @@ from fdms.utils.series import export_to_excel
 class TransferMatrix(StepMixin):
     def perform_computation(self, df, ameco_df):
         for index, row in df.iterrows():
-            country = index[0]
             variable = index[1]
             if variable in TM:
                 # Convert all transfer matrix variables to 1.0.0.0 (except National Account (volume)) and splice in
