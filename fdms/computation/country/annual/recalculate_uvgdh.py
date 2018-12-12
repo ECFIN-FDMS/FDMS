@@ -29,6 +29,6 @@ class RecalculateUvgdh(StepMixin):
         self.result = self.result.append(series, ignore_index=True, sort=True)
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars6.txt', 'output/output6.xlsx')
+        export_to_excel(self.result, step=6, country=self.country)
 
         return self.result

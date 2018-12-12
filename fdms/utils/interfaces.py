@@ -97,12 +97,16 @@ def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, f
 
 
 # TODO: check if we're using ameco historic instead of this one in some places by mistake
-def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/BE_AMECO.xlsx', frequency='annual', all_data=False):
+def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/AMECO_DB_BE.xlsx', frequency='annual', country=None,
+                      all_data=False):
     sheet_name = 'BE'
+    if country in ALL_COUNTRIES:
+        ameco_db_excel = 'fdms/sample_data/AMECO_DB_{}.xlsx'.format(country)
+        sheet_name = country
     df = pd.read_excel(ameco_db_excel, sheet_name=sheet_name, index_col=[0, 1])
     df = df.reset_index()
-    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', c)}, inplace=True)
-    df.rename(columns={'Scale Name': 'Scale', 'Country AMECO': 'Country Ameco'}, inplace=True)
+    df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', str(c))}, inplace=True)
+    df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
     # TODO: We need to update this db?
     if 2019 not in df.columns:

@@ -2,11 +2,12 @@ import pandas as pd
 import os
 
 from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER, PROJECT_ROOT
+from fdms.config.country_groups import ALL_COUNTRIES
 
 
 def get_filenames_for_step(step, country):
-    return os.path.join(PROJECT_ROOT, 'output/{}/outputvars{}.txt'.format(country, step)), os.path.join(
-        PROJECT_ROOT, 'output/{}/output{}.xlsx'.format(country, step))
+    return os.path.join(PROJECT_ROOT, 'output\\{}\\outputvars{}.txt'.format(country, step)), os.path.join(
+        PROJECT_ROOT, 'output\\{}\\output{}.xlsx'.format(country, step))
 
 
 def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FILENAME, step=None, sheet_name='Sheet1',
@@ -20,16 +21,20 @@ def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FI
     export_data[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')],
                                        sheet_name=sheet_name, index=False)
     result_vars = result.index.get_level_values('Variable Code').tolist()
+    # We shouldn't need this line
+    assert(os.path.exists(os.path.join(PROJECT_ROOT, 'output\\{}'.format(country))))
     with open(vars_filename, 'w') as f:
         f.write('\n'.join(result_vars))
 
 
-def report_diff(result, expected, diff=None, diff_series=None, excel_filename='output/outputdiff.xlsx'):
+def report_diff(result, expected, diff=None, diff_series=None, country=None, excel_filename='output/outputdiff.xlsx'):
     column_order = COLUMN_ORDER
     # TODO: Fix all scales
     # column_order.remove('Scale')
     diff = (expected == result) | (expected != expected) & (result != result)
     result = result.reset_index()
+    if country in ALL_COUNTRIES:
+        excel_filename = 'output/{}/outputdiff.xlsx'.format(country)
     writer = pd.ExcelWriter(excel_filename, engine='xlsxwriter')
     result[column_order].to_excel(writer, index_label=[('Country Ameco', 'Variable Code')], sheet_name='result',
                                   index=False)

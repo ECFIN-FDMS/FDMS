@@ -33,12 +33,11 @@ class TestCountryCalculations(unittest.TestCase):
     # National Accounts (Value) - calculate additional components
 
     def setUp(self):
-        self.country = self.country or 'BE'
         ameco_filename = 'fdms/sample_data/AMECO_H.TXT'
         forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(self.country)
         self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
-        self.ameco_db_df = read_ameco_db_xls()
-        self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
+        self.ameco_db_df = read_ameco_db_xls(country=self.country)
+        self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True, country=self.country)
         self.dfexp = read_expected_result(country=self.country)
         self.scales = get_scales_from_forecast(self.country)
         step_1 = TransferMatrix(scales=self.scales, country=self.country)
@@ -237,4 +236,4 @@ class TestCountryCalculations(unittest.TestCase):
                 wrong_series.append(res.iloc[i])
         wrong_names = [series.name for series in wrong_series]
         res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
-        report_diff(res_wrong, exp_wrong)
+        report_diff(res_wrong, exp_wrong, country=self.country)
