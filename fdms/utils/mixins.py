@@ -124,10 +124,10 @@ class SumAndSpliceMixin(StepMixin):
                 if source.startswith('-'):
                     source = source[1:]
                     factor = -1
-                src_scale = self.get_scale(source, dataframe=df)
-                expected_scale = self.get_scale(variable)
-                if src_scale != expected_scale:
-                    factor = factor * pow(1000, self.codes[src_scale] - self.codes[expected_scale])
+                #src_scale = self.get_scale(source, dataframe=df)
+                #expected_scale = self.get_scale(variable)
+                #if src_scale != expected_scale:
+                    #factor = factor * pow(1000, self.codes[src_scale] - self.codes[expected_scale])
                 try:
                     source_data = factor * self.get_data(df, source)
                 except KeyError:
