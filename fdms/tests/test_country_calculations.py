@@ -18,6 +18,9 @@ from fdms.computation.country.annual.exchange_rates import ExchangeRates
 from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
 from fdms.computation.country.annual.household_sector import HouseholdSector
+from fdms.computation.country.annual.private_sector import PrivateSector
+from fdms.computation.country.annual.external_sector import ExternalSector
+
 from fdms.config import YEARS
 from fdms.config.scale_correction import fix_scales
 from fdms.config.variable_groups import NA_VO, T_VO
@@ -201,6 +204,14 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
+        # STEP 15
+        step_15 = PrivateSector(scales=self.scales)
+        result_15 = step_15.perform_computation(self.result_1, result_13, result_14, self.ameco_df)
+
+        # STEP 16
+        step_16 = ExternalSector(scales=self.scales)
+        result_16 = step_16.perform_computation(self.result_1, result_3, self.ameco_df)
+
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
                             result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
@@ -227,3 +238,5 @@ class TestCountryCalculations(unittest.TestCase):
         wrong_names = [series.name for series in wrong_series]
         res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
         report_diff(res_wrong, exp_wrong)
+
+        breakpoint()
