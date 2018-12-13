@@ -22,7 +22,10 @@ def export_to_excel(result, vars_filename=VARS_FILENAME, excel_filename=EXCEL_FI
                                        sheet_name=sheet_name, index=False)
     result_vars = result.index.get_level_values('Variable Code').tolist()
     # We shouldn't need this line
-    assert(os.path.exists(os.path.join(PROJECT_ROOT, 'output\\{}'.format(country))))
+    output_dir = os.path.join(PROJECT_ROOT, 'output\\{}'.format(country))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    assert(os.path.exists(output_dir))
     with open(vars_filename, 'w') as f:
         f.write('\n'.join(result_vars))
 
