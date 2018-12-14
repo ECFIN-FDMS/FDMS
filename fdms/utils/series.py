@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import re
 
 from fdms.config import VARS_FILENAME, EXCEL_FILENAME, COLUMN_ORDER, PROJECT_ROOT
 from fdms.config.country_groups import ALL_COUNTRIES
@@ -58,4 +59,15 @@ def remove_duplicates(result):
     result = result.reset_index()
     result.drop_duplicates(['Country Ameco', 'Variable Code'], keep='last', inplace=True)
     result = result.set_index(['Country Ameco', 'Variable Code'])
+    return result
+
+
+def get_input_series(country_excel='fdms/sample_data/IT_DB_orig.xlsx', sheet_name='A1996'):
+    df = pd.read_excel(country_excel, sheet_name=sheet_name, index_col=[0, 1])
+    result = pd.DataFrame()
+    df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
+    for index, row in df.iterrows():
+        if not re.match('.*\.', row['Variable Code']):
+            result = result.append(row, ignore_index=True, sort=True)
+    result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
     return result

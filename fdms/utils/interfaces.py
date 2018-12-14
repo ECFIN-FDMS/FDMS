@@ -97,6 +97,7 @@ def read_raw_data(country_forecast_filename, ameco_filename, ameco_sheet_name, f
 
 
 # TODO: check if we're using ameco historic instead of this one in some places by mistake
+# TODO: We need either our own database or a uniway to get data from the existing one,
 def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/AMECO_DB_BE.xlsx', frequency='annual', country=None,
                       all_data=False):
     sheet_name = 'BE'
