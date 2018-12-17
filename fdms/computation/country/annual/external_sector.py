@@ -87,4 +87,10 @@ class ExternalSector(SumAndSpliceMixin):
         series = series.append(dbgi_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
+        self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
+        self.apply_scale()
+
+        export_to_excel(self.result, step=16)
+
+
         return self.result

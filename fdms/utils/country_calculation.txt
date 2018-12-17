@@ -3,7 +3,8 @@ Country calculation
 Group: Country = Self, 1950A1-2020A1
 	If Country in group 'Forecast: Countries from transfer matrix'
 		Then
-			Convert all transfer matrix variables to 1.0.0.0 (except National Account (volume)) and splice in country desk forecast
+
+			Step 1: Convert all transfer matrix variables to 1.0.0.0 (except National Account (volume)) and splice in country desk forecast
 				Group: Variable in Transfer Matrix Variables
 					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
 					{Country}|{VariableParameter1}.Scale[t] = {Country}|{Variable}.Scale[t]
@@ -20,7 +21,8 @@ Group: Country = Self, 1950A1-2020A1
 											{Country}|{VariableParameter1}[t] = buttsplice(ratiosplice(AMECO Historical!{Country}|{VariableParameter1}[t], {Country}|{Variable}[t], MsSpliceDirection.Forward), {Country}|{Variable}[t], MsSpliceDirection.Forward)
 							{Country}|{VariableParameter1}.Source[t] = iin(AMECO Historical!{Country}|{VariableParameter1}[t], iin({Country}|{Variable}[t], "", "Country desk forecast")), (Now-5)-(Now+5)
 						Else
-			Population and related variables - splice AMECO Historical data with forecast data
+
+			Step 2: Population and related variables - splice AMECO Historical data with forecast data
 				{Country}|NLTN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLTN.1.0.0.0[t], {Country}|NUTN.1.0.0.0[t] + {Country}|NETN.1.0.0.0[t], MsSpliceDirection.Forward)
 				{Country}|NLTN.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLTN.1.0.0.0[t], iin({Country}|NUTN.1.0.0.0[t] + {Country}|NETN.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
 				{Country}|NSTD.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NSTD.1.0.0.0[t], {Country}|NETN.1.0.0.0[t] - {Country}|NWTD.1.0.0.0[t], MsSpliceDirection.Forward)
@@ -35,7 +37,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|NLHT.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLHT9.1.0.0.0[t], iin({Country}|NETD.1.0.0.0[t] * {Country}|NLHA.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
 				{Country}|NLCN.1.0.0.0[t] = ratiosplice(AMECO Historical!{Country}|NLCN.1.0.0.0[t], {Country}|NECN.1.0.0.0[t] + {Country}|NUTN.1.0.0.0[t], MsSpliceDirection.Forward)
 				{Country}|NLCN.1.0.0.0.Source[t] = iin(AMECO Historical!{Country}|NLCN.1.0.0.0[t], iin({Country}|NECN.1.0.0.0[t] + {Country}|NUTN.1.0.0.0[t], "", "Country desk forecast")), (Now-5)-(Now+5)
-			National Accounts - Calculate additional GDP components
+
+			Step 3: National Accounts - Calculate additional GDP components
 				{Country}|UMGS[t] = sum({Country}|UMGN[t], {Country}|UMSN[t])
 				{Country}|UXGS[t] = sum({Country}|UXGN[t], {Country}|UXSN[t])
 				{Country}|UBGN[t] = {Country}|UXGN[t] - {Country}|UMGN[t]
@@ -48,7 +51,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|UUNT[t] = sum({Country}|UCPH[t], {Country}|UCTG[t], {Country}|UIGT[t], {Country}|UIST[t])
 				{Country}|UUTT[t] = sum({Country}|UCPH[t], {Country}|UCTG[t], {Country}|UIGT[t], {Country}|UIST[t], {Country}|UXGN[t], {Country}|UXSN[t])
 				{Country}|UITT[t] = sum({Country}|UIGT[t], {Country}|UIST[t])
-			National Accounts (Value) - calculate additional components
+
+			    National Accounts (Value) - calculate additional components
 				{Country}|UMGS.1.0.0.0[t] = sum({Country}|UMGN.1.0.0.0[t], {Country}|UMSN.1.0.0.0[t])
 				{Country}|UMGS.1.0.0.0.Source[t] = merge({Country}|UMGN.1.0.0.0.Source[t], {Country}|UMSN.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|UXGS.1.0.0.0[t] = sum({Country}|UXGN.1.0.0.0[t], {Country}|UXSN.1.0.0.0[t])
@@ -73,7 +77,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|UUTT.1.0.0.0.Source[t] = merge({Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t], {Country}|UIGT.1.0.0.0.Source[t], {Country}|UIST.1.0.0.0.Source[t], {Country}|UXGN.1.0.0.0.Source[t], {Country}|UXSN.1.0.0.0.Source[t]), (Now-5)-(
 				{Country}|UITT.1.0.0.0[t] = sum({Country}|UIGT.1.0.0.0[t], {Country}|UIST.1.0.0.0[t])
 				{Country}|UITT.1.0.0.0.Source[t] = merge({Country}|UIGT.1.0.0.0.Source[t], {Country}|UIST.1.0.0.0.Source[t]), (Now-5)-(Now+5)
-			National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent change, per-capita GDP, and contribution to %change in GDP
+
+			Step 4: National Accounts (Volume) - splice AMECO Historical data with forecast data, calculate year/year percent change, per-capita GDP, and contribution to %change in GDP
 				Group: Variable in National Account variables (Volume)
 					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
 					{VariableParameter2} = texttoelement(concatenate("U", removeleft({Variable}, 1)), {VariableParameter2})
@@ -238,7 +243,8 @@ Group: Country = Self, 1950A1-2020A1
 						{VariableParameter1} = texttoelement(concatenate({Variable}, ".6.0.30.0"), {VariableParameter1})
 						{VariableParameter2} = texttoelement(concatenate({Variable}, ".6.0.0.0"), {VariableParameter2})
 						{Country}|{VariableParameter1}[t] = {Country}|{VariableParameter2}[t]
-			National Accounts (Value) - additional variables, and contribution to %change in cost
+
+			Step 5: National Accounts (Value) - additional variables, and contribution to %change in cost
 				{Country}|UVGN.1.0.0.0[t] = sum({Country}|UVGD.1.0.0.0[t], {Country}|UBRA.1.0.0.0[t])
 				{Country}|UVGN.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UBRA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|UOGD.1.0.0.0[t] = ignoremissingsum({Country}|UVGD.1.0.0.0[t], {Country}|UYVG.1.0.0.0[t], {Country}|UYEU.1.0.0.0[t], -{Country}|UWCD.1.0.0.0[t], -{Country}|UTVG.1.0.0.0[t], -{Country}|UTEU.1.0.0.0[t])
@@ -255,12 +261,14 @@ Group: Country = Self, 1950A1-2020A1
 					{VariableParameter1} = addtail({Variable}, ".1.0.0.0")
 					{VariableParameter2} = texttoelement(concatenate("CC", removeleft({Variable}, 1), ".1.0.0.0"), {VariableParameter2})
 					{Country}|{VariableParameter2}[t] = {Country}|{VariableParameter1}[t] / {Country}|UVGD.1.0.0.0[t] * pch({Country}|{VariableParameter1}[t] / {Country}|OVGD.1.0.0.0[t])
-			Recalculate UVGDH.1.0.0.0 and pull KNP.1.0.212.0 from AMECO
+
+			Step 6: Recalculate UVGDH.1.0.0.0 and pull KNP.1.0.212.0 from AMECO
 				{Country}|UVGDH.1.0.0.0[t] = iif(NOT isempty(AMECO!{Country}|UVGDH.1.0.0.0[t]), AMECO!{Country}|UVGDH.1.0.0.0[t], {Country}|UVGD.1.0.0.0[t])
 				// Historical UVGDH from AMECO_H and Forecast UVGDH from desk transfer UVGD (26.11.2014)
 				{Country}|UVGDH.1.0.0.0[t] = iif(NOT isempty(AMECO Historical!{Country}|UVGDH.1.0.0.0[t]), ratiosplice(AMECO Historical!{Country}|UVGDH.1.0.0.0[t], {Country}|UVGD.1.0.0.0[t], MsSpliceDirection.Forward), {Country}|UVGD.1.0.0.0[t])
 				{Country}|KNP.1.0.212.0[t] = AMECO!{Country}|KNP.1.0.212.0[t]
-			Prices - splice AMECO Historical data with forecast data and calculate percent change, and GNI (GDP deflator)
+
+			Step 7: Prices - splice AMECO Historical data with forecast data and calculate percent change, and GNI (GDP deflator)
 				{Country}|ZCPIH.6.0.0.0[t] = iif(isempty({Country}|ZCPIH[t]), {Country}|ZCPIN.6.0.0.0[t], {Country}|ZCPIH.6.0.0.0[t])
 				Group: Variable in Price Deflator variables
 					{VariableParameter1} = texttoelement(concatenate("U", removeleft(removeright({Variable}, 7), 1), "1.0.0.0"), {VariableParameter1})
@@ -275,7 +283,8 @@ Group: Country = Self, 1950A1-2020A1
 					{Country}|OVGN.1.0.0.0.Source[t] = merge({Country}|UVGN.1.0.0.0.Source[t], {Country}|PVGD.3.1.0.0.Source[t]), (Now-5)-(Now+5)
 					{Country}|OVGN.6.0.0.0[t] = pch({Country}|OVGN.1.0.0.0[t])
 					{Country}|OVGN.6.0.0.0.Source[t] = {Country}|OVGN.1.0.0.0.Source[t], (Now-5)-(Now+5)
-			Capital Stock and Total Factor Productivity
+
+			Step 8: Capital Stock and Total Factor Productivity
 				Group: Variable = 'OIGT.1.0.0.0', 'OVGD.1.0.0.0', 'UIGT.1.0.0.0'
 					If NOT IsEmpty({Country}|{Variable}[t])
 						Then
@@ -316,7 +325,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|OINT.1.0.0.0[t] = {Country}|OIGT.1.0.0.0[t] - {Country}|OKCT.1.0.0.0[t], {LastObservation}-2020A1
 				{Country}|UKCT.1.0.0.0[t] = {Country}|OKCT.1.0.0.0[t] * {Country}|UIGT.1.0.0.0[t] / {Country}|OIGT.1.0.0.0[t], {LastObservation}-2020A1
 				{Country}|ZVGDFA3.3.0.0.0[t] = ln({Country}|OVGD.1.0.0.0[t] / (power({Country}|NLHT9.1.0.0.0[t] * 1000, 0.65) * power({Country}|OKND.1.0.0.0[t], 0.35)))
-			Output Gap and Potential GDP
+
+			Step 9: Output Gap and Potential GDP
 				Group: Variable = 'ZNAWRU.1.0.0.0', 'AVGDGP.1.0.0.0', 'AVGDGT.1.0.0.0'
 					{Country}|{Variable}[t] = Output Gap!{Country}|{Variable}[t]
 				Group: Variable = 'OVGDP.1.0.0.0', 'OVGDT.1.0.0.0'
@@ -324,7 +334,8 @@ Group: Country = Self, 1950A1-2020A1
 				Group: Variable = 'OVGDP.1.0.0.0'
 					{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
 					{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
-			Exchange rates and Interest rates
+
+			Step 10: Exchange rates and Interest rates
 				Group: Variable = 'XNE.1.0.99.0'
 					If NOT isempty(XR-IR!{Country}|XNE.1.0.99.0[t])
 						Then
@@ -389,7 +400,8 @@ Group: Country = Self, 1950A1-2020A1
 					Group: Variable = 'XUNNQ.6.0.30.437', 'XUNRQ.6.0.30.437', 'XUNNQ.6.0.30.435', 'XUNNQ.6.0.30.436', 'XUNRQ.6.0.30.435', 'XUNRQ.6.0.30.436'
 						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 10), "3.0.30.", right({Variable}, 3)), {VariableParameter1})
 						{Country}|{Variable}[t] = pch({Country}|{VariableParameter1}[t])
-			Labour Market
+
+			Step 11: Labour Market
 				If Country in group 'Forecast: Countries reporting in FTEs'
 					Then
 						If not IsEmpty({Country}|FETD[t])
@@ -446,7 +458,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|ZATN9.1.0.0.0[t] = {Country}|NLTN.1.0.0.0[t] / {Country}|NPAN1.1.0.0.0[t] * 100
 				{Country}|ZETN9.1.0.0.0[t] = {Country}|NETN.1.0.0.0[t] / {Country}|NPAN1.1.0.0.0[t] * 100
 				{Country}|ZUTN9.1.0.0.0[t] = {Country}|NUTN.1.0.0.0[t] / {Country}|NLTN.1.0.0.0[t] * 100
-			Fiscal Sector
+
+			Step 12: Fiscal Sector
 				// Removed US 21.10.2016 from the following branch
 				If Country <> 'JP'
 					Then
@@ -532,7 +545,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|UUCGI.1.0.0.0.Source[t] = merge({Country}|UWCG.1.0.0.0.Source[t], {Country}|UYTGH.1.0.0.0.Source[t], {Country}|UYVG.1.0.0.0.Source[t], {Country}|UUOG.1.0.0.0.Source[t], {Country}|UCTGI.1.0.0.0.Source[t], {Country}|UYTGM.1.0.0.0.Source[t])
 				{Country}|UTCT.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UTCT.1.0.0.0[t], ignoremissingsum({Country}|UTVG.1.0.0.0[t], {Country}|UTEU.1.0.0.0[t], {Country}|UTYG.1.0.0.0[t], {Country}|UTSG.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UTCT.1.0.0.0.Source[t] = merge({Country}|UTVG.1.0.0.0.Source[t], {Country}|UTEU.1.0.0.0.Source[t], {Country}|UTYG.1.0.0.0.Source[t], {Country}|UTSG.1.0.0.0.Source[t])
-			Corporate Sector
+
+			Step 13: Corporate Sector
 				If Country <> 'JP'
 					Then
 						{Country}|USGC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGC.1.0.0.0[t], ignoremissingsum({Country}|UGVAC.1.0.0.0[t], {Country}|UYVC.1.0.0.0[t], -{Country}|UTVC.1.0.0.0[t], -{Country}|UWCC.1.0.0.0[t], {Country}|UYNC.1.0.0.0[t], {Country}|UCTRC.1
@@ -544,7 +558,8 @@ Group: Country = Self, 1950A1-2020A1
 						{Country}|USGC.1.0.0.0.Source[t] = merge({Country}|UGVAC.1.0.0.0.Source[t], {Country}|UYVC.1.0.0.0.Source[t], {Country}|UTVC.1.0.0.0.Source[t], {Country}|UWCC.1.0.0.0.Source[t], {Country}|UYNC.1.0.0.0.Source[t], {Country}|UCTRC.1.0.0.0.Source[t], {Country
 				{Country}|UBLC.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLC.1.0.0.0[t], ignoremissingsum({Country}|USGC.1.0.0.0[t], -{Country}|UITC.1.0.0.0[t], -{Country}|UKOC.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UBLC.1.0.0.0.Source[t] = merge({Country}|USGC.1.0.0.0.Source[t], {Country}|UITC.1.0.0.0.Source[t], {Country}|UKOC.1.0.0.0.Source[t]), (Now-5)-(Now+5)
-			Household Sector
+
+			Step 14: Household Sector
 				{Country}|UYOH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UYOH.1.0.0.0[t], ignoremissingsum({Country}|UOGH.1.0.0.0[t], {Country}|UYNH.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UYOH.1.0.0.0.Source[t] = merge({Country}|UOGH.1.0.0.0.Source[t], {Country}|UYNH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|UVGH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UVGH.1.0.0.0[t], ignoremissingsum({Country}|UWCH.1.0.0.0[t], {Country}|UYOH.1.0.0.0[t], {Country}|UCTRH.1.0.0.0[t], -{Country}|UTYH.1.0.0.0[t], -{Country}|UCTPH.1.0.0.0[t]), MsSpliceDirecti
@@ -559,14 +574,16 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|ASGH.1.0.0.0.Source[t] = merge({Country}|USGH.1.0.0.0.Source[t], {Country}|UVGHA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|UBLH.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLH.1.0.0.0[t], ignoremissingsubtract({Country}|USGH.1.0.0.0[t], {Country}|UITH.1.0.0.0[t], {Country}|UKOH.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UBLH.1.0.0.0.Source[t] = merge({Country}|USGH.1.0.0.0.Source[t], {Country}|UITH.1.0.0.0.Source[t], {Country}|UKOH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
-			Private Sector
+
+			Step 15: Private Sector
 				{Country}|UBLP.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBLP.1.0.0.0[t], ignoremissingsum({Country}|UBLC.1.0.0.0[t], {Country}|UBLH.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UBLP.1.0.0.0.Source[t] = merge({Country}|UBLC.1.0.0.0.Source[t], {Country}|UBLH.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|USGN.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGN.1.0.0.0[t], ignoremissingsum({Country}|UVGD[t], {Country}|UBRA[t], {Country}|UBTA[t], -{Country}|UCPH[t], -{Country}|UCTG[t]), MsSpliceDirection.Forward)
 				{Country}|USGN.1.0.0.0.Source[t] = merge({Country}|UVGD.1.0.0.0.Source[t], {Country}|UBRA.1.0.0.0.Source[t], {Country}|UBTA.1.0.0.0.Source[t], {Country}|UCPH.1.0.0.0.Source[t], {Country}|UCTG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|USGP.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|USGP.1.0.0.0[t], ignoremissingsubtract({Country}|USGN.1.0.0.0[t], {Country}|USGG.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|USGP.1.0.0.0.Source[t] = merge({Country}|USGN.1.0.0.0.Source[t], {Country}|USGG.1.0.0.0.Source[t]), (Now-5)-(Now+5)
-			External Sector
+
+			Step 16: External Sector
 				{Country}|UBYA.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBYA.1.0.0.0[t], sum({Country}|UBRA.1.0.0.0[t], {Country}|UBTA.1.0.0.0[t]), MsSpliceDirection.Forward)
 				{Country}|UBYA.1.0.0.0.Source[t] = merge({Country}|UBRA.1.0.0.0.Source[t], {Country}|UBTA.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|UBCA.1.0.0.0[t] = buttsplice(AMECO Historical!{Country}|UBCA.1.0.0.0[t], sum({Country}|UXGS[t], -{Country}|UMGS[t], {Country}|UBYA.1.0.0.0[t]), MsSpliceDirection.Forward)
@@ -583,7 +600,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|DBGE.1.0.0.0.Source[t] = merge({Country}|DMGE.1.0.0.0.Source[t], {Country}|DXGE.1.0.0.0.Source[t]), (Now-5)-(Now+5)
 				{Country}|DBGI.1.0.0.0[t] = {Country}|DXGI.1.0.0.0[t] - {Country}|DMGI.1.0.0.0[t]
 				{Country}|DBGI.1.0.0.0.Source[t] = merge({Country}|DXGI.1.0.0.0.Source[t], {Country}|DMGI.1.0.0.0.Source[t]), (Now-5)-(Now+5)
-			Extend input variables for RATS backward to 1960
+
+			Step 17: Extend input variables for RATS backward to 1960
 				Group: Variable in RATS Input variables, to be extended backward to 1960
 					If Variable <> 'OIGT.1.1.0.0', 'OVGD.1.1.0.0', 'OVGD.6.1.0.0'
 						Then
@@ -617,7 +635,8 @@ Group: Country = Self, 1950A1-2020A1
 								Else
 						{Country}|OVGD.6.0.0.0[t] = pch({Country}|OVGD.1.0.0.0[t])
 					Else
-			Convert value variables to EUR and USD, create variables in 1.1.0.0 and 6.1.0.0
+
+			Step 18: Convert value variables to EUR and USD, create variables in 1.1.0.0 and 6.1.0.0
 				Group: Variable in Full List of Variables
 					Convert value variables from national currency to euros (99)
 						If Variable <> 'XNE.1.0.99.0', 'XNEF.1.0.99.0', 'XNEB.1.0.99.0'
@@ -689,7 +708,8 @@ Group: Country = Self, 1950A1-2020A1
 											Else
 									Else
 							Else
-			Cyclically-adjusted variables, as a percentage of GDP (319)
+
+			Step 19: Cyclically-adjusted variables, as a percentage of GDP (319)
 				{Country}|UTCGCP.1.0.319.0[t] = (Cyclical adjustment!{Country}|Elasticity of revenue[2000-01-01] - 1) * 0.01 * Cyclical adjustment!{Country}|Current tax burden as % of GDP[2000-01-01] * {Country}|AVGDGP.1.0.0.0[t]
 				{Country}|UUCGCP.1.0.319.0[t] = (Cyclical adjustment!{Country}|Elasticity of expenditure[2000-01-01] - 1) * 0.01 * Cyclical adjustment!{Country}|Current expenditure excl. Interest (EDP definition) as % of GDP[2000-01-01] * {Country}|AVGDGP.1.0.0.0[t]
 				{Country}|UBLGCP.1.0.319.0[t] = {Country}|UTCGCP.1.0.319.0[t] - {Country}|UUCGCP.1.0.319.0[t]
@@ -697,7 +717,8 @@ Group: Country = Self, 1950A1-2020A1
 				{Country}|UBLGBP.1.0.319.0[t] = {Country}|UBLGIE.1.0.319.0[t] - {Country}|UBLGCP.1.0.319.0[t]
 				{Country}|UBLGAPS.1.0.319.0[t] = ({Country}|UBLGE.1.0.0.0[t] - {Country}|UOOMSR.1.0.0.0[t] - {Country}|UOOMSE.1.0.0.0[t]) / {Country}|UVGDH.1.0.0.0[t] * 100 - {Country}|UBLGCP.1.0.319.0[t]
 				{Country}|UBLGBPS.1.0.319.0[t] = ({Country}|UBLGIE.1.0.0.0[t] - {Country}|UOOMSR.1.0.0.0[t] - {Country}|UOOMSE.1.0.0.0[t]) / {Country}|UVGDH.1.0.0.0[t] * 100 - {Country}|UBLGCP.1.0.319.0[t]
-			Calculate percent change for Population and National Account variables (value)
+
+			Step 20: Calculate percent change for Population and National Account variables (value)
 				Group: Variable in Transfer Matrix Variables
 					Calculate percent change for population and CPI, and adjust scale for population variables
 						If (left({Variable}, 1) = "F") Or (left({Variable}, 1) = "N") or (left({Variable}, 4) = "ZCPI") 
@@ -734,7 +755,8 @@ Group: Country = Self, 1950A1-2020A1
 					Group: Variable = 'NLCN.1.0.0.0', 'NECN.1.0.0.0', 'NSTD.1.0.0.0'
 						{VariableParameter1} = texttoelement(concatenate(removeright({Variable}, 7), "6.0.0.0"), {VariableParameter1})
 						{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
-			Calculate percentage change for Index variables (Volume)
+
+			Step 21: Calculate percentage change for Index variables (Volume)
 				Group: Variable in Index variables (Volume)
 					If not IsEmpty({Country}|{Variable}[t])
 						Then
@@ -745,7 +767,8 @@ Group: Country = Self, 1950A1-2020A1
 									{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t])
 								Else
 						Else
-			Calculate percent change for Sector variables (value), and adjust scale
+
+			Step 22: Calculate percent change for Sector variables (value), and adjust scale
 				Group: Variable in Sector variables (Value)
 					If not IsEmpty({Country}|{Variable}[t])
 						Then
@@ -757,7 +780,8 @@ Group: Country = Self, 1950A1-2020A1
 								Else
 						Else
 					{Country}|{Variable}[t] = {Country}|{Variable}[t]
-			Calculate percent change in price indices in USD (P*.6.1.30.0)
+
+			Step 23: Calculate percent change in price indices in USD (P*.6.1.30.0)
 				Group: Variable in Price Deflator variables
 					{TextParameterForVariable} = concatenate(removeright({Variable}, 7), "6.1.30.0")
 					If timeseriesexist({TextParameterForVariable}[t])
@@ -766,6 +790,7 @@ Group: Country = Self, 1950A1-2020A1
 							{Country}|{VariableParameter1}[t] = pch({Country}|{Variable}[t] / {Country}|XNU.1.0.30.0[t])
 						Else
 		Else
+
 	If Country in group 'Forecast: Countries from small files'
 		Then
 			Group: Variable in Full List of Variables, for small countries/regions
