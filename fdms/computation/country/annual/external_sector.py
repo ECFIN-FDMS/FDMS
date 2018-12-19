@@ -77,15 +77,7 @@ class ExternalSector(SumAndSpliceMixin):
         series = series.append(dbge_data)
         self.result = self.result.append(series, ignore_index=True, sort=True)
 
-        # DBGI.1.0.0.0
-
-        dxgi_data = self.get_data(new_input_df, 'DXGI.1.0.0.0')
-        dmgi_data = self.get_data(new_input_df, 'DMGI.1.0.0.0')
-        dbgi_data = dxgi_data - dmgi_data
-        series_meta = self.get_meta('DBGI.1.0.0.0')
-        series = pd.Series(series_meta)
-        series = series.append(dbgi_data)
-        self.result = self.result.append(series, ignore_index=True, sort=True)
+        # TODO: DBGI.1.0.0.0
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
