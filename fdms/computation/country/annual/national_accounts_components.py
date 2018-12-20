@@ -17,7 +17,7 @@ from fdms.utils.series import export_to_excel
 class GDPComponents(StepMixin):
     def _add_series(self, variable, component_list, dataframe_list):
         # for variable in variable_list
-        # try to get the data from the dataframes in dataframe_list, or if it's ont there, try on self.result
+        # try to get the data from the dataframes in dataframe_list, or if it's not there, try on self.result
         # sum the data taking into account the sign, create a series and append the result to self.result
         pass
 
