@@ -66,6 +66,22 @@ class FiscalSector(SumAndSpliceMixin):
             'UDGGL.1.0.0.0': ['UDGG.1.0.0.0', ]
         }
         self._sum_and_splice(addends, df, ameco_h_df)
+        new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+        new_input_df = pd.concat([new_input_df, df], sort=True)
+
+        # UUCG.1.0.0.0
+
+        addends = {'UUCG.1.0.0.0': ['UWCG.1.0.0.0', 'UYTGH.1.0.0.0','UYIG.1.0.0.0','UYVG.1.0.0.0','UUOG.1.0.0.0','UCTGI.1.0.0.0','UYTGM.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df)
+        new_input_df = self.result.set_index(['Country Ameco', 'Variable Code'], drop=True)
+        new_input_df = pd.concat([new_input_df, df], sort=True)
+
+        # USGG.1.0.0.0
+
+        addends = {'USGG.1.0.0.0': ['-URCG.1.0.0.0', '-UUCG.1.0.0.0']}
+        self._sum_and_splice(addends, new_input_df, ameco_h_df)
+
+        # UDGG.1.0.0.0
 
         variable = 'UDGG.1.0.0.0'
         series_meta = self.get_meta(variable)
@@ -84,5 +100,8 @@ class FiscalSector(SumAndSpliceMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
+
         export_to_excel(self.result, 'output/outputvars12.txt', 'output/output12.xlsx')
+
         return self.result
+
