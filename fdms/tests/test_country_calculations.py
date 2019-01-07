@@ -204,9 +204,15 @@ class TestCountryCalculations(unittest.TestCase):
         step_16 = ExternalSector(scales=self.scales)
         result_16 = step_16.perform_computation(self.result_1, result_3, self.ameco_df)
 
+        # STEP 18
+        step_18 = ConvertEurUsd(scales=self.scales)
+        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
+                            result_9, result_10, result_11, result_12, result_13, result_14,result_15, result_16], sort=True)
+        result_18 = step_18.perform_computation(result)
+
         # TODO: Fix all scales
         result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
-                            result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
+                            result_9, result_10, result_11, result_12, result_13, result_14, result_15, result_16, result_18], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, self.country)
         export_to_excel(result, 'output/outputall.txt', 'output/outputall.xlsx')
