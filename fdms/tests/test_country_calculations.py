@@ -39,14 +39,9 @@ class TestCountryCalculations(unittest.TestCase):
         self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True)
         self.dfexp = read_expected_result_be()
         self.scales = get_scales_from_forecast(self.country)
+
         step_1 = TransferMatrix(scales=self.scales)
         self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
-        with open('errors_scale.txt', 'w') as f:
-            pass
-        with open('errors_scale.txt', 'w') as f:
-            pass
-        with open('raro.txt', 'a') as f:
-            pass
 
     def _get_ameco_df(self, ameco_vars):
         ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(ameco_vars, level='Variable Code')].copy().loc[
