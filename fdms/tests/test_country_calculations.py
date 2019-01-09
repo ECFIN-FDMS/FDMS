@@ -3,7 +3,7 @@ import pytest
 import pandas as pd
 import re
 
-from pandas.testing import assert_series_equal
+from fdms.config import YEARS
 
 from fdms.computation.country.annual.labour_market import LabourMarket
 from fdms.computation.country.annual.transfer_matrix import TransferMatrix
@@ -224,16 +224,18 @@ class TestCountryCalculations(unittest.TestCase):
         # exp.loc[:, YEARS] = exp.loc[:, YEARS].round(decimals=4)
         diff = (exp == res) | (exp != exp) & (res != res)
         diff_series = diff.all(axis=1)
-        wrong_series = []
+        wrong_series = set()
         for i in range(1, res.shape[0]):
-            if res.iloc[i].name[1] == 'OBSN.1.0.0.0':
-                # TODO: Fix - This value is wrong, probably due to a previous calculation
-                # res[i][2019] = -1.294279652
-                continue
-            try:
-                assert_series_equal(res.iloc[i], exp.iloc[i])
-            except AssertionError:
-                wrong_series.append(res.iloc[i])
-        wrong_names = [series.name for series in wrong_series]
+            series, expected = res.iloc[i], exp.iloc[i]
+            for year in YEARS:
+                p, q = series[year], expected[year]
+                if not all([pd.isna(p), pd.isna(q)]):
+                    if abs(p - q) < 5e-6:
+                        wrong_series.add(series.name)
+            # if res.iloc[i].name[1] == 'OBSN.1.0.0.0':
+            #     # TODO: Fix - This value is wrong, probably due to a previous calculation
+            #     # res[i][2019] = -1.294279652
+            #     continue
+        wrong_names = [name for name in wrong_series]
         res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
         report_diff(res_wrong, exp_wrong, country=self.country)
