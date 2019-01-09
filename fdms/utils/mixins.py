@@ -65,41 +65,54 @@ class StepMixin:
         return {'Country Ameco': self.country, 'Variable Code': variable, 'Frequency': self.frequency,
                 'Scale': self.get_scale(variable)}
 
-    def get_data(self, dataframe, variable, country=None, null_dates=None):
-        '''Get quarterly or yearly data from dataframe (input with MultiIndex or result with RangeIndex)'''
-        country = self.country if country is None else country
-        if type(dataframe.index) == pd.MultiIndex:
-            dataframe.sort_index(level=[0, 1], inplace=True)
-            series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}')
-            # if series.empty:
-            #     series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}Q[1234]')
-            if series.empty:
-                return None
-            # TODO: Log these and make sure that this is correct, check values and get the best one
-            if len(series.shape) > 1:
-                series = series.iloc[-1]
-            series = pd.to_numeric(series.squeeze(), errors='coerce')
-            if null_dates is not None:
-                for year in null_dates:
-                    series[year] = pd.np.nan
-            return series
+    def get_data(self, dataframe_s, variable, country=None, null_dates=None):
+        '''Get quarterly or yearly data from dataframe (input with MultiIndex or result with RangeIndex)
+        Get the numerical values from a series to perform vectorial operations
 
-        elif type(dataframe.index) == pd.RangeIndex:
-            result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country) & (
-                    dataframe['Variable Code'] == variable)].index.values[-1]
-            series = dataframe.loc[result_series_index]
-            series = series.filter(regex='[0-9]{4}')
-            # if series.empty:
-            #     series = dataframe.loc[result_series_index].filter(regex='[0-9]{4}Q[1234]')
-            if series.empty:
-                return None
-            if len(series.shape) > 1:
-                series = series.iloc[-1]
-            series = pd.to_numeric(series.squeeze(), errors='coerce')
-            if null_dates is not None:
-                for year in null_dates:
-                    series[year] = pd.np.nan
-            return series
+        dataframe_s -- Can be single dataframe or list of dataframes to look for the variable.
+                       It will return the series found first respecting dataframes order.
+                       If not found, it will try to find it in self.result.
+        variable    -- The variable to look up.
+
+        returns     -- pd.Series or None
+        '''
+        country = self.country if country is None else country
+        if type(dataframe_s) == pd.DataFrame:
+            dataframe_s = [dataframe_s]
+        dataframe_s.append(self.result)
+        for dataframe in dataframe_s:
+            if type(dataframe.index) == pd.MultiIndex:
+                dataframe.sort_index(level=[0, 1], inplace=True)
+                series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}')
+                # if series.empty:
+                #     series = dataframe.loc[(country, variable)].filter(regex='[0-9]{4}Q[1234]')
+                if series.empty:
+                    return None
+                # TODO: Log these and make sure that this is correct, check values and get the best one
+                if len(series.shape) > 1:
+                    series = series.iloc[-1]
+                series = pd.to_numeric(series.squeeze(), errors='coerce')
+                if null_dates is not None:
+                    for year in null_dates:
+                        series[year] = pd.np.nan
+                return series
+
+            elif type(dataframe.index) == pd.RangeIndex:
+                result_series_index = dataframe.loc[(dataframe['Country Ameco'] == country) & (
+                        dataframe['Variable Code'] == variable)].index.values[-1]
+                series = dataframe.loc[result_series_index]
+                series = series.filter(regex='[0-9]{4}')
+                # if series.empty:
+                #     series = dataframe.loc[result_series_index].filter(regex='[0-9]{4}Q[1234]')
+                if series.empty:
+                    return None
+                if len(series.shape) > 1:
+                    series = series.iloc[-1]
+                series = pd.to_numeric(series.squeeze(), errors='coerce')
+                if null_dates is not None:
+                    for year in null_dates:
+                        series[year] = pd.np.nan
+                return series
 
     def get_index(self, variable_code, dataframe=None, country=None):
         dataframe = self.result if dataframe is None else dataframe
