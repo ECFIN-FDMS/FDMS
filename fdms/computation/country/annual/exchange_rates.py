@@ -143,5 +143,5 @@ class ExchangeRates(StepMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars10.txt', 'output/output10.xlsx')
+        export_to_excel(self.result, step=10, country=self.country)
         return self.result

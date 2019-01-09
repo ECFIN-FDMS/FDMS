@@ -39,5 +39,5 @@ class CorporateSector(SumAndSpliceMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars13.txt', 'output/output13.xlsx')
+        export_to_excel(self.result, step=13, country=self.country)
         return self.result

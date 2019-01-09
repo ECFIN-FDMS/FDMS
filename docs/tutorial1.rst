@@ -1,7 +1,7 @@
 .. _tutorial1:
 
-Tutorial 1: Adding new country calculations
-=============================================
+Tutorial 1: Adding new country calculations (Household Sector)
+==============================================================
 
 We are using TDD, and currently we are focused on implementing all the country calculations for annual data. We are using tests/test_country_calculation.py for development and testing.
 Adding a new step consists on writing the new class and call it from tests/country_calculation.py with the correct set of input dataframes.

@@ -82,6 +82,8 @@ class CapitalStock(StepMixin):
         for year in range(last_observation + 1, LAST_YEAR):
             new_data[year] = new_data[year - 1] + oint_1[year]
         last_observation = self.result[self.result['Variable Code'] == 'OKCT.1.0.0.0'].iloc[-1].last_valid_index()
+        if type(last_observation) != int:
+            last_observation = 1993
 
         # Up until now we were discarding data before 1993, however here we need it if we want the same results
         # We need to pass all_data=True to read_ameco_db_xls and get the right ameco_db_df
@@ -118,5 +120,5 @@ class CapitalStock(StepMixin):
 
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/outputvars8.txt', 'output/output8.xlsx')
+        export_to_excel(self.result, step=8, country=self.country)
         return self.result

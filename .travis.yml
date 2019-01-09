@@ -5,7 +5,7 @@ python:
   - 3.6
 
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -r requirements-dev.txt
+install: pip install -r requirements-dev.txt && mkdir -p output/BE && mkdir -p output/AT
 
 # Command to run tests, e.g. python setup.py test
 script: pytest --cov fdms

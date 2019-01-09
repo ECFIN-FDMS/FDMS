@@ -82,6 +82,7 @@ class NationalAccountsVolume(StepMixin):
                     continue
                 try:
                     series11 = self.get_data(ameco_df, variable11)
+                    series11[2019] = pd.np.nan
                 except KeyError:
                     logger.warning('Missing Ameco data for variable {} (national accounts volume). Using data '
                                    'from country desk forecast'.format(variable11))
@@ -100,7 +101,7 @@ class NationalAccountsVolume(StepMixin):
                                     'u_services': 'UXSN'}
         variables[obgn] = {'exports': 'OXGN.1.1.0.0', 'imports': 'OMGN.1.1.0.0', 'new_exports': 'OXGN',
                                       'u_exports': 'UXGN', 'new_imports': 'OMGN', 'u_imports': 'UMGN'}
-        variables[obsn] = {'exports': 'OXSN.1.1.0.0', 'imports': 'OXSN.1.1.0.0', 'new_exports': 'OXSN',
+        variables[obsn] = {'exports': 'OXSN.1.1.0.0', 'imports': 'OMSN.1.1.0.0', 'new_exports': 'OXSN',
                                       'u_exports': 'UXSN', 'new_imports': 'OMGN', 'u_imports': 'UMGN'}
         variables[oigp] = {'exports': 'OIGT.1.1.0.0', 'imports': 'OIGG.1.1.0.0', 'new_exports': 'OIGG',
                                       'u_exports': 'UIGG', 'new_imports': 'OIGG', 'u_imports': 'UIGG'}
@@ -112,6 +113,8 @@ class NationalAccountsVolume(StepMixin):
                                                                                ameco_df)
             except TypeError:
                 logger.error('Missing data for variable {} in national accounts volume'.format(variable))
+            # if variable == obsn:
+            #     import code;code.interact(local=locals())
             self._update_result(variable, base_series, splice_series_1, splice_series_2)
 
         # Net exports goods and services
@@ -234,27 +237,40 @@ class NationalAccountsVolume(StepMixin):
                 variable_c1 = re.sub('^.', 'C', var) + '.1.0.0.0'
                 variable_x = new_variable if self.country in ['MT', 'TR'] else u1_variable
                 series_6_index = self.get_index(variable_6)
-                series_6 = self.result.loc[result_series_index]
-                data_6 = pd.to_numeric(series_6.filter(regex=r'[0-9]{4}'), errors='coerce')
+                data_6 = self.get_data(self.result, variable_6)
+                # series_6 = self.result.loc[result_series_index]
+                # data_6 = pd.to_numeric(series_6.filter(regex=r'[0-9]{4}'), errors='coerce')
                 xvgd = 'OVGD.1.0.0.0' if self.country in ['MT', 'TR'] else 'UVGD.1.0.0.0'
                 series_meta = self.get_meta(variable_c1)
+                data_x = self.get_data(df, variable_x).shift(1)
+                data_xvgd = self.get_data(df, xvgd).shift(1)
+                if variable_c1 not in ['CBGN.1.0.0.0']:
+                    try:
+                        data_x[1996] = self.get_data(ameco_df, variable_x)[1996]
+                    except KeyError:
+                        pass
+                    try:
+                        data_x[1996] = self.get_data(ameco_df, xvgd)[1996]
+                    except KeyError:
+                        pass
                 try:
-                    series_data = data_6 * self.get_data(df, variable_x).shift(1) / self.get_data(df, xvgd).shift(1)
+                    series_data = data_6 * data_x / data_xvgd
                 except KeyError:
                     logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
                     continue
-                # if variable_c1 == 'CBGN.1.0.0.0':
-                #     import code;code.interact(local=locals())
                 series = pd.Series(series_meta)
                 series = series.append(series_data)
+                # if variable_c1 == 'CMGS.1.0.0.0':
+                #     import code;code.interact(local=locals())
                 self.result = self.result.append(series, ignore_index=True, sort=True)
 
             else:
                 logger.error('Missing data for variable {} in national accounts volume'.format(new_variable))
             r = self.result.copy()
-            wtf = r.loc[(r['Country Ameco'] == self.country) & (r['Variable Code'] == 'OVGD.1.0.0.0')].copy()
             if new_variable == 'OVGD.1.0.0.0':
                 ovgd1 = self.get_data(self.result, 'OVGD.1.0.0.0')
+            # if variable_c1 == 'CMGS.1.0.0.0':
+            #     import code;code.interact(local=locals())
 
         # Contribution to percent change in GDP (calculation for additional variables)
         var = 'CMGS.1.0.0.0'
@@ -344,5 +360,5 @@ class NationalAccountsVolume(StepMixin):
         self.result = self.result.append(series, ignore_index=True, sort=True)
         self.result.set_index(['Country Ameco', 'Variable Code'], drop=True, inplace=True)
         self.apply_scale()
-        export_to_excel(self.result, 'output/output4.xlsx')
+        export_to_excel(self.result, step=4, country=self.country)
         return self.result, ovgd1
