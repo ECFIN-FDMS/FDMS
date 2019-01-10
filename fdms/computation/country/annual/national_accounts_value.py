@@ -36,12 +36,12 @@ class NationalAccountsValue(SumAndSpliceMixin):
             series_meta = self.get_meta(variable_cc)
             try:
                 pch = self.get_data(self.result, variable_1) / ovgd1
-            except IndexError:
+            except (IndexError, KeyError):
                 pch = self.get_data(df, variable_1) / ovgd1
             pch = pch.pct_change() * 100
             try:
                 series_data = self.get_data(self.result, variable_1) / self.get_data(df, 'UVGD.1.0.0.0') * pch
-            except IndexError:
+            except (IndexError, KeyError):
                 series_data = self.get_data(df, variable_1) / self.get_data(df, 'UVGD.1.0.0.0') * pch
             series = pd.Series(series_meta)
             series = series.append(series_data)

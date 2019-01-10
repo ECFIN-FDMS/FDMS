@@ -52,14 +52,8 @@ class GDPComponents(StepMixin):
         country = 'BE'
         for index, variable in enumerate(variables):
             series_meta = self.get_meta(variable)
-            try:
-                exports_data = self.get_data(df, exports_goods_and_services[index])
-            except KeyError:
-                exports_data = self.get_data(self.result, exports_goods_and_services[index])
-            try:
-                imports_data = self.get_data(df, imports_goods_and_services[index])
-            except KeyError:
-                imports_data = self.get_data(self.result, imports_goods_and_services[index])
+            exports_data = self.get_data(df, exports_goods_and_services[index])
+            imports_data = self.get_data(df, imports_goods_and_services[index])
             if not isinstance(exports_data.name, type(imports_data.name)):
                 imports_data.name = None
             series_data = exports_data - imports_data

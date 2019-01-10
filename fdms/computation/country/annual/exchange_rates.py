@@ -112,7 +112,7 @@ class ExchangeRates(StepMixin):
             series_meta = self.get_meta(variable)
             try:
                 series_data = self.get_data(self.result, sources[index]).copy().pct_change() * 100
-            except IndexError:
+            except (KeyError, IndexError):
                 missing_vars.append(variable)
             else:
                 series = pd.Series(series_meta)
@@ -127,7 +127,7 @@ class ExchangeRates(StepMixin):
             series_meta = self.get_meta(variable)
             try:
                 series_data = self.get_data(self.result, sources[index]).copy().pct_change() * 100
-            except IndexError:
+            except (KeyError, IndexError):
                 missing_vars.append(variable)
             else:
                 series = pd.Series(series_meta)

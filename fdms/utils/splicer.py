@@ -124,7 +124,7 @@ class Splicer:
             if start_splice_loc is not None:
                 pct_change = stripped_splice.iloc[start_splice_loc - 1:].pct_change()[1:]
                 new_data = pct_change[1:].copy()
-                new_data.iloc[0] = stripped_base.iloc[-1] * (new_data.iloc[0] + 1)
+                new_data.iloc[0] = float(stripped_base.iloc[-1]) * (new_data.iloc[0] + 1)
                 for index, item in list(pct_change.iteritems())[2:]:
                     new_data.loc[index] = new_data.loc[index - 1] * (item + 1)
                 result = pd.concat([stripped_base, new_data, splice_series.iloc[splice_series.index.get_loc(
