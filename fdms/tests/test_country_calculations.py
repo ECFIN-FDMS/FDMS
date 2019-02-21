@@ -20,12 +20,15 @@ from fdms.computation.country.annual.fiscal_sector import FiscalSector
 from fdms.computation.country.annual.corporate_sector import CorporateSector
 from fdms.computation.country.annual.household_sector import HouseholdSector
 from fdms.config.scale_correction import fix_scales
-from fdms.config.variable_groups import NA_VO
+from fdms.config.variable_groups import NA_VO, TM
 from fdms.utils.interfaces import (
     read_country_forecast_excel, read_ameco_txt, read_expected_result, read_ameco_db_xls, read_output_gap_xls,
     read_xr_ir_xls, read_ameco_xne_us_xls, get_scales_from_forecast)
 from fdms.utils.series import report_diff, remove_duplicates, export_to_excel
 
+from fdms.computation.comparator import compare
+
+pd.set_option('display.max_columns', 20)
 
 @pytest.mark.usefixtures('country')
 class TestCountryCalculations(unittest.TestCase):
@@ -33,21 +36,26 @@ class TestCountryCalculations(unittest.TestCase):
     # National Accounts (Value) - calculate additional components
 
     def setUp(self):
-        ameco_filename = 'fdms/sample_data/AMECO_H.TXT'
+
         forecast_filename = 'fdms/sample_data/{}.Forecast.SF2018.xlsm'.format(self.country)
-        self.df, self.ameco_df = read_country_forecast_excel(forecast_filename), read_ameco_txt(ameco_filename)
+
+        ameco_filename = 'fdms/sample_data/AMECO_H.xlsx'
+
+        self.ameco_df = pd.read_excel(ameco_filename)
+        self.ameco_df = self.ameco_df.set_index(['Country Ameco', 'Variable Code','Unit of the series'])
+        self.ameco_df.columns = self.ameco_df.columns.astype(int)
+        self.ameco_df = self.ameco_df.reset_index()
+        self.ameco_df = self.ameco_df.set_index(['Country Ameco', 'Variable Code'])
+
+        self.df = read_country_forecast_excel(forecast_filename)
+
         self.ameco_db_df = read_ameco_db_xls(country=self.country)
         self.ameco_db_df_all_data = read_ameco_db_xls(all_data=True, country=self.country)
+
         self.dfexp = read_expected_result(country=self.country)
+
         self.scales = get_scales_from_forecast(self.country)
-        step_1 = TransferMatrix(scales=self.scales, country=self.country)
-        self.result_1 = step_1.perform_computation(self.df, self.ameco_df)
-        with open('errors_scale.txt', 'w') as f:
-            pass
-        with open('errors_scale.txt', 'w') as f:
-            pass
-        with open('raro.txt', 'a') as f:
-            pass
+
 
     def _get_ameco_df(self, ameco_vars):
         ameco_series = self.ameco_df.loc[self.ameco_df.index.isin(ameco_vars, level='Variable Code')].copy().loc[
@@ -59,17 +67,40 @@ class TestCountryCalculations(unittest.TestCase):
         return ameco_df
 
     def test_country_calculation_BE(self):
+
+        # STEP 1
+        step_1 = TransferMatrix(scales=self.scales, country=self.country)
+        result_1 = step_1.perform_computation(self.df, self.ameco_df)
+
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_vars = list(pd.Series(TM) + '.1.0.0.0')
+        expected_1 = expected.loc[expected['Variable Code'].isin(expected_vars)]
+        filename_1 = 'output/SE/output1.xlsx'
+        summary_1, wrong_vars_1, missing_1 = compare('Test_1', expected_1, result_1, filename_1)
+
+
         # STEP 2
         step_2 = Population(scales=self.scales, country=self.country)
         step_2_vars = ['NUTN.1.0.0.0', 'NETN.1.0.0.0', 'NWTD.1.0.0.0', 'NETD.1.0.0.0', 'NPAN1.1.0.0.0', 'NETN',
                        'NLHA.1.0.0.0']
         # NECN.1.0.0.0 is calculated and used in step_2
-        step_2_df = self.result_1.loc[self.result_1.index.isin(step_2_vars, level='Variable Code')].copy()
+        step_2_df = result_1.loc[result_1.index.isin(step_2_vars, level='Variable Code')].copy()
         result_2 = step_2.perform_computation(step_2_df, self.ameco_df)
         variables = ['NLTN.1.0.0.0', 'NETD.1.0.414.0', 'NECN.1.0.0.0', 'NLHT.1.0.0.0', 'NLHT9.1.0.0.0',
                      'NLCN.1.0.0.0', 'NSTD.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_2.loc[self.country].index)]
-        self.assertFalse(missing_vars)
+
+        #missing_vars = [v for v in variables if v not in list(result_2.loc[self.country].index)]
+        #self.assertFalse(missing_vars)
+
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_2 = expected.loc[expected['Variable Code'].isin(variables)]
+        filename_2 = 'output/SE/output2.xlsx'
+        summary_2, wrong_vars_2, missing_2 = compare('Test_2', expected_2, result_2, filename_2)
+
 
         # STEP 3
         step_3 = GDPComponents(scales=self.scales, country=self.country)
@@ -79,12 +110,19 @@ class TestCountryCalculations(unittest.TestCase):
                                   'UMSN.1.0.0.0', 'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UIGG0.1.0.0.0', 'UIGT.1.0.0.0',
                                   'UIGG.1.0.0.0', 'UIGCO.1.0.0.0', 'UIGDW.1.0.0.0', 'UCPH.1.0.0.0', 'UCTG.1.0.0.0',
                                   'UIGT.1.0.0.0', 'UIST.1.0.0.0', 'UXGN', 'UMGN']
-        result_3 = step_3.perform_computation(self.result_1, self.ameco_df)
+        result_3 = step_3.perform_computation(result_1, self.ameco_df)
         variables = ['UMGS', 'UXGS', 'UBGN', 'UBSN', 'UBGS', 'UIGG', 'UIGP', 'UIGNR', 'UUNF', 'UUNT', 'UUTT', 'UITT',
                      'UMGS.1.0.0.0', 'UXGS.1.0.0.0', 'UBGN.1.0.0.0', 'UBSN.1.0.0.0', 'UBGS.1.0.0.0', 'UIGG.1.0.0.0',
                      'UIGP.1.0.0.0', 'UIGNR.1.0.0.0', 'UUNF.1.0.0.0', 'UUNT.1.0.0.0', 'UUTT.1.0.0.0', 'UITT.1.0.0.0']
-        missing_vars = [v for v in variables if v not in list(result_3.loc[self.country].index)]
-        self.assertFalse(missing_vars)
+        #missing_vars = [v for v in variables if v not in list(result_3.loc[self.country].index)]
+        #self.assertFalse(missing_vars)
+
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_3 = expected.loc[expected['Variable Code'].isin(variables)]
+        filename_3 = 'output/SE/output3.xlsx'
+        summary_3, wrong_vars_3, missing_3 = compare('Test_3', expected_3, result_3, filename_3)
 
         # STEP 4
         step_4 = NationalAccountsVolume(scales=self.scales, country=self.country)
@@ -106,15 +144,26 @@ class TestCountryCalculations(unittest.TestCase):
         df_input[1993] = pd.np.nan
         df_input[1994] = pd.np.nan
         df_input[1995] = pd.np.nan
-        step_4_df = pd.concat([df_input, self.result_1, result_3], sort=True)
-        # result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
+        step_4_df = pd.concat([df_input, result_1, result_3], sort=True)
+        #result_4, ovgd1 = step_4.perform_computation(step_4_df, ameco_df)
         result_4, ovgd1 = step_4.perform_computation(step_4_df, self.ameco_df)
         # missing_vars = [v for v in step_4_1000vars if v not in list(result_4.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+
+        variables = step_4_uvars + step_4_1000vars + step_4_1100vars
+        expected = self.dfexp.copy().reset_index()
+        expected_4 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_4 = 'output/SE/output4.xlsx'
+
+        #summary_4, wrong_vars_4, missing_4 = compare('Test_4', expected_4, result_4, filename_4)
+
         # STEP 5
         step_5 = NationalAccountsValue(scales=self.scales, country=self.country)
-        step_5_df = self.result_1.copy()
+        step_5_df = result_1.copy()
         result_5 = step_5.perform_computation(step_5_df, self.ameco_db_df, ovgd1)
         variables = ['UVGN.1.0.0.0', 'UVGN.1.0.0.0', 'UOGD.1.0.0.0', 'UOGD.1.0.0.0', 'UTVNBP.1.0.0.0', 'UTVNBP.1.0.0.0',
                      'UVGE.1.0.0.0', 'UVGE.1.0.0.0', 'UWCDA.1.0.0.0', 'UWCDA.1.0.0.0', 'UWSC.1.0.0.0', 'UWSC.1.0.0.0']
@@ -136,45 +185,85 @@ class TestCountryCalculations(unittest.TestCase):
                 'UXGS.1.0.0.0', 'UMGS.1.0.0.0', 'UXGN.1.0.0.0', 'UXSN.1.0.0.0', 'UMGN.1.0.0.0', 'UMSN.1.0.0.0',
                 'UIGP.1.0.0.0', 'UIST.1.0.0.0', 'UVGE.1.0.0.0']
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_5 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_5 = 'output/SE/output5.xlsx'
+
+        summary_5, wrong_vars_5, missing_5 = compare('Test_5', expected_5, result_5, filename_5)
+
+
         # STEP 6
         ameco_vars = ['UVGDH.1.0.0.0', 'KNP.1.0.212.0']
         ameco_df = self._get_ameco_df(ameco_vars)
         step_6 = RecalculateUvgdh(scales=self.scales, country=self.country)
         result_6 = step_6.perform_computation(self.df, ameco_df)
 
+        # comparison and reporting
+
+        variables = ameco_vars
+        expected = self.dfexp.copy().reset_index()
+        expected_6 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_6 = 'output/SE/output6.xlsx'
+
+        summary_6, wrong_vars_6, missing_6 = compare('Test_6', expected_6, result_6, filename_6)
+
+
         # STEP 7
         step_7 = Prices(scales=self.scales, country=self.country)
-        step_7_df = pd.concat([self.result_1, result_3, result_4, result_5], sort=True)
+        step_7_df = pd.concat([result_1, result_3, result_4, result_5], sort=True)
         result_7 = step_7.perform_computation(step_7_df)
         variables = list(PD)
         missing_vars = [v for v in variables if v not in list(result_7.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_7 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_7 = 'output/SE/output7.xlsx'
+
+        summary_7, wrong_vars_7, missing_7 = compare('Test_7', expected_7, result_7, filename_7)
+
         # STEP 8
         step_8 = CapitalStock(scales=self.scales, country=self.country)
-        step_8_df = pd.concat([self.result_1, result_2, result_3, result_4, result_5], sort=True)
+        step_8_df = pd.concat([result_1, result_2, result_3, result_4, result_5], sort=True)
         result_8 = step_8.perform_computation(step_8_df, self.ameco_df, self.ameco_db_df_all_data)
-        # variables = list(PD)
+        variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_8.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_8 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_8 = 'output/SE/output8.xlsx'
+
+        summary_8, wrong_vars_8, missing_8 = compare('Test_8', expected_8, result_8, filename_8)
+
+
         # STEP 9
-        step_9 = OutputGap(scales=self.scales, country=self.country)
-        result_9 = step_9.perform_computation(read_output_gap_xls())
+        #step_9 = OutputGap(scales=self.scales, country=self.country)
+        #result_9 = step_9.perform_computation(read_output_gap_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_9.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 10
-        step_10 = ExchangeRates(scales=self.scales, country=self.country)
-        result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
+        #step_10 = ExchangeRates(scales=self.scales, country=self.country)
+        #result_10 = step_10.perform_computation(self.ameco_db_df, read_xr_ir_xls(), read_ameco_xne_us_xls())
         # variables = list(PD)
         # missing_vars = [v for v in variables if v not in list(result_10.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
         # STEP 11
         step_11 = LabourMarket(scales=self.scales, country=self.country)
-        step_11_df = pd.concat([self.result_1, result_2, result_4, result_5, result_7], sort=True)
+        step_11_df = pd.concat([result_1, result_2, result_4, result_5, result_7], sort=True)
         result_11 = step_11.perform_computation(step_11_df, self.ameco_df)
         variables = ['FETD9.1.0.0.0', 'FWTD9.1.0.0.0', 'HWCDW.1.0.0.0', 'RWCDC.3.1.0.0', 'HWWDW.1.0.0.0',
                      'RWWDC.3.1.0.0', 'HWSCW.1.0.0.0', 'RWSCC.3.1.0.0', 'RVGDE.1.0.0.0', 'RVGEW.1.0.0.0',
@@ -184,30 +273,72 @@ class TestCountryCalculations(unittest.TestCase):
         missing_vars = [v for v in variables if v not in list(result_11.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_11 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_11 = 'output/SE/output11.xlsx'
+
+        #summary_11, wrong_vars_11, missing_11 = compare('Test_11', expected_11, result_11, filename_11)
+
+
         # STEP 12
         step_12 = FiscalSector(scales=self.scales, country=self.country)
-        result_12 = step_12.perform_computation(self.result_1, self.ameco_df)
-        # variables = list(PD)
+        result_12 = step_12.perform_computation(result_1, self.ameco_df)
+
         # missing_vars = [v for v in variables if v not in list(result_12.loc[self.country].index)]
         # self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        variables = list(PD)
+        expected = self.dfexp.copy().reset_index()
+        expected_12 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_12 = 'output/SE/output12.xlsx'
+
+        summary_12, wrong_vars_12, missing_12 = compare('Test_12', expected_12, result_12, filename_12)
+
+
         # STEP 13
         step_13 = CorporateSector(scales=self.scales, country=self.country)
-        result_13 = step_13.perform_computation(self.result_1, self.ameco_df)
+        result_13 = step_13.perform_computation(result_1, self.ameco_df)
         variables = ['USGC.1.0.0.0', 'UOGC.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_13.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_13 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_13 = 'output/SE/output13.xlsx'
+
+        summary_13, wrong_vars_13, missing_13 = compare('Test_13', expected_13, result_13, filename_13)
+
         # STEP 14
         step_14 = HouseholdSector(scales=self.scales, country=self.country)
-        result_14 = step_14.perform_computation(self.result_1, result_7, self.ameco_df)
+        result_14 = step_14.perform_computation(result_1, result_7, self.ameco_df)
         variables = ['UYOH.1.0.0.0', 'UVGH.1.0.0.0', 'UVGHA.1.0.0.0', 'OVGHA.3.0.0.0', 'USGH.1.0.0.0', 'ASGH.1.0.0.0',
                      'UBLH.1.0.0.0']
         missing_vars = [v for v in variables if v not in list(result_14.loc[self.country].index)]
         self.assertFalse(missing_vars)
 
+        # comparison and reporting
+
+        expected = self.dfexp.copy().reset_index()
+        expected_14 = expected.loc[expected['Variable Code'].isin(variables)]
+
+        filename_14 = 'output/SE/output14.xlsx'
+
+        summary_14, wrong_vars_14, missing_14 = compare('Test_14', expected_14, result_14, filename_14)
+
+        breakpoint()
+
+
         # TODO: Fix all scales
-        result = pd.concat([self.result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
+        result = pd.concat([result_1, result_2, result_3, result_4, result_5, result_6, result_7, result_8,
                             result_9, result_10, result_11, result_12, result_13, result_14], sort=True)
         result = remove_duplicates(result)
         fix_scales(result, self.country)
@@ -239,3 +370,4 @@ class TestCountryCalculations(unittest.TestCase):
         wrong_names = [name for name in wrong_series]
         res_wrong, exp_wrong = res.loc[wrong_names].copy(), exp.loc[wrong_names].copy()
         report_diff(res_wrong, exp_wrong, country=self.country)
+

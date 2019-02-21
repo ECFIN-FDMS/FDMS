@@ -109,12 +109,15 @@ def read_ameco_db_xls(ameco_db_excel='fdms/sample_data/AMECO_DB_BE.xlsx', freque
     df.rename(columns={c: int(c) for c in df.columns if re.match('^[0-9]+$', str(c))}, inplace=True)
     df.rename(columns={'Variable': 'Variable Code', 'Country': 'Country Ameco'}, inplace=True)
     df['Frequency'] = 'Annual'
+
     # TODO: We need to update this db?
     if 2019 not in df.columns:
         df[2019] = pd.np.nan
+
     if all_data is False:
-        df = df[COLUMN_ORDER]
-    df = df.set_index(['Country Ameco', 'Variable Code'])
+        COLUMNS = ['Country AMECO', 'Variable Code', 'Frequency', 'Scale Name', 1993, 1994, 1995, 1996, 1997, 1998,1999, 2000,2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016,2017,2018, 2019]
+        df = df[COLUMNS]
+    df = df.set_index(['Country AMECO', 'Variable Code'])
     return df
 
 

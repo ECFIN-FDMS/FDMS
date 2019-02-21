@@ -118,9 +118,10 @@ class Splicer:
             return splice_series
         name = base_series.name
         result = None
+
+
         if kind == 'forward' or kind == 'both':
-            stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(
-                base_series, splice_series)
+            stripped_base, stripped_splice, start_splice_loc = self._strip_and_get_forward_splice_boundaries(base_series, splice_series)
             if start_splice_loc is not None:
                 pct_change = stripped_splice.iloc[start_splice_loc - 1:].pct_change()[1:]
                 new_data = pct_change[1:].copy()
@@ -134,8 +135,7 @@ class Splicer:
                 variable, country = 'unknown', 'unknown'
                 if type(base_series.name) == tuple:
                     variable, country = base_series.name[1], base_series.name[0]
-                logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(
-                    variable, country))
+                    logger.warning('Failed to splice {} forward, country {}, splice series ends before base series'.format(variable, country))
                 if kind == 'forward':
                     return base_series
 
